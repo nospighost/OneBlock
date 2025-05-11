@@ -17,7 +17,7 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.java.JavaPlugin;
-import de.Main.OneBlock.Manager;
+
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -37,26 +37,31 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-
         YamlConfiguration config = Manager.getIslandConfig(player);
-        if (!config.contains("created") || !config.contains("owner") || !config.contains("owner-uuid") || !config.contains("location") || !config.contains("EigeneInsel") || !config.contains("z-position") || !config.contains("x-position") || !config.contains("IslandSpawn-x") || !config.contains("IslandSpawn-z")) {
+        if (!config.contains("created") || !config.contains("WorldBorderSize") || !config.contains("owner") || !config.contains("owner-uuid") || !config.contains("location") || !config.contains("EigeneInsel") || !config.contains("z-position") || !config.contains("x-position") || !config.contains("IslandSpawn-x") || !config.contains("IslandSpawn-z")) {
             config.set("created", System.nanoTime());
             config.set("owner", player.getName());
             config.set("owner-uuid", player.getUniqueId().toString());
             config.set("location", "0,100,0");
             config.set("EigeneInsel", false);
-            config.set("z-position", 0);
-            config.set("x-position", 0);
-            config.set("IslandSpawn-x", 0);
-            config.set("IslandSpawn-z", 101);
+            config.set("z-position", 0); // NormalerSpawn
+            config.set("x-position", 0); // NormalerSpawn
+            config.set("WorldBorderSize", 50);
             Manager.saveIslandConfig(player, config);
         }
 
         World world = Bukkit.getWorld(WORLD_NAME);
         if (world != null) {
-            event.getPlayer().teleport(new Location(world, config.getInt("x-position"), 101, config.getInt("z-position")));
+            Location spawn = new Location(world, config.getInt("x-position"), 100, config.getInt("z-position"));
+            player.teleport(spawn);
+            int size = config.getInt("WorldBorderSize");
+            world.getWorldBorder().setCenter(spawn);
+            world.getWorldBorder().setSize(size);
+            world.getWorldBorder().setDamageBuffer(0);
+            world.getWorldBorder().setDamageAmount(0.5);
+            world.getWorldBorder().setWarningDistance(5);
+            world.getWorldBorder().setWarningTime(15);
         }
-
     }
 
     @EventHandler
@@ -70,42 +75,30 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
-
-        String Level = "Oberwelt"; // der Wert kommt später irgendwoher
-
+        YamlConfiguration config = Manager.getIslandConfig(player);
+        String Level = "Oberwelt";
         List<String> nextBlocks = Main.config.getStringList("oneblockblocks." + Level);
-
         if (nextBlocks.isEmpty()) {
             return;
         }
-
         int randomIndex = ThreadLocalRandom.current().nextInt(nextBlocks.size());
-
         String nextBlock = nextBlocks.get(randomIndex);
-
-
-
-
-        Material blockMaterial = null;
+        Material blockMaterial;
         try {
             blockMaterial = Material.valueOf(nextBlock);
         } catch (IllegalArgumentException e) {
             Bukkit.getLogger().warning("Ungültiger Blockname in der Konfiguration: " + nextBlock);
             blockMaterial = Material.STONE;
         }
-
         Block block = event.getBlock();
         Location blockLocation = block.getLocation();
         World world = Bukkit.getWorld("OneBlock");
-
         if (world != null &&
                 blockLocation.getWorld().equals(world) &&
-                blockLocation.getBlockX() == 0 &&
+                blockLocation.getBlockX() == config.getInt("OneBlock-x") &&
                 blockLocation.getBlockY() == 100 &&
-                blockLocation.getBlockZ() == 0) {
-
+                blockLocation.getBlockZ() == config.getInt("OneBlock-z")) {
             block.setType(Material.AIR);
-
             regenerateOneBlock(blockLocation, blockMaterial);
         }
     }
@@ -118,13 +111,10 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onEntityExplode(EntityExplodeEvent event) {
         event.blockList().removeIf(this::isOneBlock);
-
         List<String> nextBlocks = Main.config.getStringList("oneblockblocks.block");
         if (nextBlocks.isEmpty()) return;
-
         int randomIndex = ThreadLocalRandom.current().nextInt(nextBlocks.size());
         String nextBlock = nextBlocks.get(randomIndex);
-
         Material blockMaterial;
         try {
             blockMaterial = Material.valueOf(nextBlock);
@@ -132,7 +122,6 @@ public class PlayerListener implements Listener {
             Bukkit.getLogger().warning("Ungültiger Blockname in der Konfiguration: " + nextBlock);
             blockMaterial = Material.STONE;
         }
-
         Material finalBlockMaterial = blockMaterial;
         Bukkit.getScheduler().runTask(JavaPlugin.getPlugin(Main.class), () -> {
             Block oneBlock = Bukkit.getWorld(WORLD_NAME).getBlockAt(ONEBLOCK_LOCATION);
@@ -145,7 +134,6 @@ public class PlayerListener implements Listener {
         Bukkit.getScheduler().runTaskLater(JavaPlugin.getPlugin(Main.class), () -> {
             Block newBlock = Bukkit.getWorld(WORLD_NAME).getBlockAt(blockLocation);
             newBlock.setType(finalBlockMaterial);
-
             BlockData blockData = newBlock.getBlockData();
             if (blockData instanceof Piston) {
                 newBlock.setBlockData(blockData);
