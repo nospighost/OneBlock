@@ -1,0 +1,8 @@
+islandjoinmessage:
+  join: "§a Du wurdest zu deiner Insel teleportiert"
+defaultworldbordersize:
+  size: 75
+oneblockblocks:
+  block:
+    - STONE
+    - DIRT
