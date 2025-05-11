@@ -3,6 +3,15 @@ islandjoinmessage:
 defaultworldbordersize:
   size: 75
 oneblockblocks:
-  block:
+  Anfänger:
     - STONE
     - DIRT
+    - COBBLESTONE
+  Oberwelt:
+    - IRON_ORE
+    - COAL_ORE
+    - GRANITE
+  Eis:
+    - DIAMOND_ORE
+    - GOLD_ORE
+    - REDSTONE_ORE
