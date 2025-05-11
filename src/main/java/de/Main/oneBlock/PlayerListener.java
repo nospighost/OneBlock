@@ -7,6 +7,8 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.type.Piston;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -15,8 +17,9 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.java.JavaPlugin;
-
+import de.Main.OneBlock.Manager;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class PlayerListener implements Listener {
@@ -33,10 +36,27 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+
+        YamlConfiguration config = Manager.getIslandConfig(player);
+        if (!config.contains("created") || !config.contains("owner") || !config.contains("owner-uuid") || !config.contains("location") || !config.contains("EigeneInsel") || !config.contains("z-position") || !config.contains("x-position") || !config.contains("IslandSpawn-x") || !config.contains("IslandSpawn-z")) {
+            config.set("created", System.nanoTime());
+            config.set("owner", player.getName());
+            config.set("owner-uuid", player.getUniqueId().toString());
+            config.set("location", "0,100,0");
+            config.set("EigeneInsel", false);
+            config.set("z-position", 0);
+            config.set("x-position", 0);
+            config.set("IslandSpawn-x", 0);
+            config.set("IslandSpawn-z", 101);
+            Manager.saveIslandConfig(player, config);
+        }
+
         World world = Bukkit.getWorld(WORLD_NAME);
         if (world != null) {
-            event.getPlayer().teleport(new Location(world, 0, 101, 0));
+            event.getPlayer().teleport(new Location(world, config.getInt("x-position"), 101, config.getInt("z-position")));
         }
+
     }
 
     @EventHandler
@@ -49,6 +69,8 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
+        Player player = event.getPlayer();
+
         String Level = "Oberwelt"; // der Wert kommt später irgendwoher
 
         List<String> nextBlocks = Main.config.getStringList("oneblockblocks." + Level);

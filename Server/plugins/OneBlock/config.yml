@@ -1,7 +1,8 @@
 islandjoinmessage:
   join: "§a Du wurdest zu deiner Insel teleportiert"
+  notowned: "§cDeine Insel Wurde Erstellt"
 defaultworldbordersize:
-  size: 75
+  size: 200
 oneblockblocks:
   Anfänger:
     - STONE

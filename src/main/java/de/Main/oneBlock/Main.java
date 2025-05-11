@@ -11,13 +11,15 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
+
 public class Main extends JavaPlugin implements Listener {
 
     private static final String WORLD_NAME = "OneBlock";
-    private static final int WORLD_BORDER_SIZE = 50;  // Größe der WorldBorder (50 Blöcke)
     private World oneBlockWorld;
 
     public static FileConfiguration config;
+    public static File islandDataFolder;
 
     @Override
     public void onEnable() {
@@ -27,6 +29,11 @@ public class Main extends JavaPlugin implements Listener {
         // Listener registrieren
         Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
         getLogger().info("OneBlockPlugin aktiviert!");
+        //Ordner Erstellen//
+        islandDataFolder = new File(getDataFolder(), "IslandData");
+        if (!islandDataFolder.exists()) {
+            islandDataFolder.mkdirs();
+        }
 
 
         //Befehle
@@ -58,6 +65,8 @@ public class Main extends JavaPlugin implements Listener {
         }
 
         setInitialOneBlock();
+
+
     }
 
     @Override
