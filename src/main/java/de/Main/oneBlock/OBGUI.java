@@ -9,12 +9,17 @@ import org.bukkit.inventory.Inventory;
 
 public class OBGUI implements CommandExecutor {
     @Override
-    public boolean onCommand(CommandSender commandSender, Command command, String s, String[] strings) {
-        Player player = (Player) commandSender;
-        Inventory MainGUI = Bukkit.createInventory(null, 8 * 8, "OneBlock");
-        Inventory Settings = Bukkit.createInventory(null, 8 * 8, "OneBlock-Settings");
-        player.openInventory(MainGUI);
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage("Dieser Befehl kann nur von einem Spieler ausgeführt werden.");
+            return true;
+        }
 
-       return true;
+        Player player = (Player) sender;
+        Inventory mainGUI = Bukkit.createInventory(null, 6 * 9, "OneBlock"); // 6 Zeilen * 9 Slots
+        player.openInventory(mainGUI);
+
+        return true;
     }
+
 }
