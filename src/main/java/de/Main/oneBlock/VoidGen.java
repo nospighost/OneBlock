@@ -11,6 +11,6 @@ public class VoidGen extends ChunkGenerator {
         // Gib einen leeren Chunk zurück, damit keine Blöcke generiert werden
         ChunkData chunkData = createChunkData(world);
         return chunkData;
-    }
-    }
 
+    }
+}
