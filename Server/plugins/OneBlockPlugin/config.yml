@@ -10,6 +10,7 @@ oneblockblocks:
   - STONE
   - DIRT
   - COBBLESTONE
+  - OAK_LOG
   Oberwelt:
   - IRON_ORE
   - COAL_ORE
@@ -18,4 +19,3 @@ oneblockblocks:
   - DIAMOND_ORE
   - GOLD_ORE
   - REDSTONE_ORE
-value: 400
