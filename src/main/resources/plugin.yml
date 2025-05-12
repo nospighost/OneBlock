@@ -6,4 +6,5 @@ commands:
   ob:
     description: OneBlock Command
     usage: /ob join
-
+  obgui:
+    description: OneBlock Commasnd
