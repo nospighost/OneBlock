@@ -12,6 +12,7 @@ public class OBGUI implements CommandExecutor {
     public boolean onCommand(CommandSender commandSender, Command command, String s, String[] strings) {
         Player player = (Player) commandSender;
         Inventory MainGUI = Bukkit.createInventory(null, 8 * 8, "OneBlock");
+        Inventory Settings = Bukkit.createInventory(null, 8 * 8, "OneBlock-Settings");
         player.openInventory(MainGUI);
 
         return false;
