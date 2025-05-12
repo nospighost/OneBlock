@@ -21,7 +21,7 @@ public class OneBlockCommands implements Listener, CommandExecutor {
         Player player = (Player) sender;
 
 
-        Manager.createOrJoinIsland(player, args);
+        Manager.createOrJoinIsland(player, args); //test
 
 
         return true;
