@@ -50,7 +50,7 @@ public class PlayerListener implements Listener {
             config.set("x-position", 0);
             config.set("WorldBorderSize", 50);
             config.set("MissingBlocksToLevelUp", 10);
-            config.set("IslandLevel", 2);
+            config.set("IslandLevel", 1);
             Manager.saveIslandConfig(player, config);
         }
 
@@ -88,7 +88,7 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
-        YamlConfiguration config = Manager.getIslandConfig(player);
+        YamlConfiguration config = Manager.getIslandConfig(player); //Island Configint blockstolevelup = config.getInt("MissingBlocksToLevelUp");
 
 
         int blockstolevelup = config.getInt("MissingBlocksToLevelUp");
@@ -97,12 +97,11 @@ public class PlayerListener implements Listener {
         blockstolevelup -= 1;
         config.set("MissingBlocksToLevelUp", blockstolevelup);
 
-        if (blockstolevelup < 1) {
+        if (blockstolevelup <= 1) {
             IslandLevel += 1;
             config.set("IslandLevel", IslandLevel);
             config.set("MissingBlocksToLevelUp", 10);
         }
-
 
         Manager.saveIslandConfig(player, config);
 
