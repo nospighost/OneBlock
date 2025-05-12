@@ -49,8 +49,8 @@ public class PlayerListener implements Listener {
             config.set("z-position", 0);
             config.set("x-position", 0);
             config.set("WorldBorderSize", 50);
-            config.set("MissingBlocksToLevelUp", 100);
-            config.set("IslandLevel", 1);
+            config.set("MissingBlocksToLevelUp", 10);
+            config.set("IslandLevel", 2);
             Manager.saveIslandConfig(player, config);
         }
 
@@ -100,8 +100,9 @@ public class PlayerListener implements Listener {
         if (blockstolevelup < 1) {
             IslandLevel += 1;
             config.set("IslandLevel", IslandLevel);
-            config.set("MissingBlocksToLevelUp", 100);
+            config.set("MissingBlocksToLevelUp", 10);
         }
+
 
         Manager.saveIslandConfig(player, config);
 
