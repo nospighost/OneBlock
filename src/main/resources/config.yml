@@ -3,6 +3,8 @@ islandjoinmessage:
   notowned: "§cDeine Insel Wurde Erstellt"
 defaultworldbordersize:
   size: 200
+InselPadding:
+  value: 400
 oneblockblocks:
   Anfänger:
     - STONE

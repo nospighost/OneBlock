@@ -12,24 +12,33 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static de.Main.OneBlock.Main.config;
+import static de.Main.OneBlock.Main.oneBlockWorld;
+
 public class Manager implements Listener {
 
     public static boolean createOrJoinIsland(Player player, String[] args) {
+
         if (args.length == 1 && args[0].equalsIgnoreCase("join")) {
+
             YamlConfiguration config = Manager.getIslandConfig(player);
-            if (!config.contains("IslandSpawn-x") || !config.contains("IslandSpawn-z")) {
-                config.set("OneBlock-x", 400);
-                config.set("OneBlock-z", 400);
-                config.set("IslandSpawn-x", 400); //InselPosition
-                config.set("IslandSpawn-z", 400); //InselPosition
+            if (!config.contains("IslandSpawn-x") || !config.contains("EigeneInsel") || !config.contains("IslandSpawn-z") || !config.contains("OneBlock-x") || !config.contains("OneBlock-z")) {
+
+                Integer z = getIslandCords(config.getInt("value"));
+                oneBlockWorld.setSpawnLocation(config.getInt("IslandSpawn-x"), 100, config.getInt("IslandSpawn-z"));
+                config.set("OneBlock-x", z);
+                config.set("OneBlock-z", z);
                 config.set("EigeneInsel", true);
+                config.set("IslandSpawn-x", z); //InselPosition
+                config.set("IslandSpawn-z", z); //InselPosition
                 config.set("WorldBorderSize", 50);
+
 
                 Manager.saveIslandConfig(player, config);
                 Main.setWorldBorder(player); // Welt Border wird erstellt mit dem Player
                 World world = Bukkit.getWorld("OneBlock");
                 if (world != null) {
-                    Location spawn = new Location(world, 400, 101, 400);
+                    Location spawn = new Location(world, config.getInt("IslandSpawn-x"), 101, config.getInt("IslandSpawn-z"));
                     player.teleport(spawn);
                 }
                 player.sendMessage(Main.config.getString("islandjoinmessage.notowned"));
@@ -102,12 +111,13 @@ public class Manager implements Listener {
     }
 
 
-
-public static int getIslandCords(Player player){
-
-   return 1;
-}
-
+    public static int getIslandCords(Integer x) {
+        x = config.getInt("InselPadding.value") + 400;
+        System.out.println("Voher:" + x);
+        config.set("InselPadding.value", x);
+        Main.getInstance().saveConfig();
+        return x;
+    }
 
 
 }

@@ -1,0 +1,21 @@
+islandjoinmessage:
+  join: §a Du wurdest zu deiner Insel teleportiert
+  notowned: §cDeine Insel Wurde Erstellt
+defaultworldbordersize:
+  size: 200
+InselPadding:
+  value: 800
+oneblockblocks:
+  Anfänger:
+  - STONE
+  - DIRT
+  - COBBLESTONE
+  Oberwelt:
+  - IRON_ORE
+  - COAL_ORE
+  - GRANITE
+  Eis:
+  - DIAMOND_ORE
+  - GOLD_ORE
+  - REDSTONE_ORE
+value: 400
