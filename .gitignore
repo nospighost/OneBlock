@@ -114,3 +114,7 @@ run/
 /Server/logs/
 /Server/world/
 /Server/crash-reports/
+/Server/world/
+/Server/void_world/
+/Server/world_nether/
+/Server/world_the_end/

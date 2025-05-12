@@ -73,7 +73,7 @@ public class Main extends JavaPlugin implements Listener {
             worldBorder.setWarningDistance(5);
             worldBorder.setWarningTime(15);
         } else {
-            getLogger().warning("Fehler beim Erstellen der OneBlock-Welt.");
+            getLogger().warning("Fehler beim Erstellen der OneBlock-Welt");
         }
 
         // Hol alle Inselbesitzer und setze deren Border
