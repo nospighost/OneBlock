@@ -129,7 +129,7 @@ public class PlayerListener implements Listener {
                 Bukkit.getLogger().warning("Ungültiger Blockname in der Konfiguration:: " + nextBlock);
                 blockMaterial = Material.STONE;
             }
-
+//
             // Block Drop
             Material originalType = block.getType();
             event.setDropItems(false);
