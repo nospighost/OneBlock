@@ -1,12 +1,11 @@
-name: OneBlockPlugin  # Dies ist gültig
+name: OneBlockPlugin
 version: '1.0'
 main: de.Main.OneBlock.Main
 api-version: '1.21'
 commands:
   ob:
     description: OneBlock Command
-    usage: /ob join
+    usage: /ob join | /ob setspawn
   obgui:
     description: Öffnet das OneBlock GUI
     usage: /obgui
-

@@ -41,7 +41,7 @@ public class Main extends JavaPlugin implements Listener {
     public void onEnable() {
 
 
-        saveResource("Blockhive.zip", false); // Exportiere Datei falls noch nicht vorhanden
+
 
 
 
