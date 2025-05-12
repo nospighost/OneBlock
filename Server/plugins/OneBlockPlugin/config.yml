@@ -4,7 +4,7 @@ islandjoinmessage:
 defaultworldbordersize:
   size: 200
 InselPadding:
-  value: 800
+  value: 1200
 oneblockblocks:
   Anfänger:
   - STONE
