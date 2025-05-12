@@ -62,6 +62,7 @@ public class PlayerListener implements Listener {
 
             WorldBorder border = world.getWorldBorder();
             border.setCenter(x, z);
+            System.out.println("test");
             border.setSize(size);
             border.setDamageBuffer(0);
             border.setDamageAmount(0.5);
@@ -88,50 +89,49 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
-        YamlConfiguration config = Manager.getIslandConfig(player);
-
+        YamlConfiguration config = Manager.getIslandConfig(player); // Island Config
 
         int blockstolevelup = config.getInt("MissingBlocksToLevelUp");
         int IslandLevel = config.getInt("IslandLevel");
 
-        blockstolevelup -= 1;
-        config.set("MissingBlocksToLevelUp", blockstolevelup); //list
-
-        if (blockstolevelup == 0) {
-            IslandLevel += 1;
-            config.set("IslandLevel", IslandLevel);
-            config.set("MissingBlocksToLevelUp", 10);
-        }
-
-
-        Manager.saveIslandConfig(player, config);
-
-
-
-        List<String> nextBlocks = Main.config.getStringList("oneblockblocks." + IslandLevel);
-        if (nextBlocks.isEmpty()) {
-            return;
-        }
-        int randomIndex = ThreadLocalRandom.current().nextInt(nextBlocks.size());
-        String nextBlock = nextBlocks.get(randomIndex);
-        Material blockMaterial;
-        try {
-            blockMaterial = Material.valueOf(nextBlock);
-        } catch (IllegalArgumentException e) {
-            Bukkit.getLogger().warning("Ungültiger Blockname in der Konfiguration: " + nextBlock);
-            blockMaterial = Material.STONE;
-        }
-
         Block block = event.getBlock();
         Location blockLocation = block.getLocation();
         World world = Bukkit.getWorld("OneBlock");
+
         if (world != null &&
                 blockLocation.getWorld().equals(world) &&
                 blockLocation.getBlockX() == config.getInt("OneBlock-x") &&
                 blockLocation.getBlockY() == 100 &&
                 blockLocation.getBlockZ() == config.getInt("OneBlock-z")) {
 
-//Block Drop
+            // Counter NUR verringern, wenn es der OneBlock ist
+            blockstolevelup -= 1;
+            config.set("MissingBlocksToLevelUp", blockstolevelup);
+
+            if (blockstolevelup == 0) {
+                IslandLevel += 1;
+                config.set("IslandLevel", IslandLevel);
+                config.set("MissingBlocksToLevelUp", 100);
+            }
+
+            Manager.saveIslandConfig(player, config);
+
+            List<String> nextBlocks = Main.config.getStringList("oneblockblocks." + IslandLevel);
+            if (nextBlocks.isEmpty()) {
+                return;
+            }
+
+            int randomIndex = ThreadLocalRandom.current().nextInt(nextBlocks.size());
+            String nextBlock = nextBlocks.get(randomIndex);
+            Material blockMaterial;
+            try {
+                blockMaterial = Material.valueOf(nextBlock);
+            } catch (IllegalArgumentException e) {
+                Bukkit.getLogger().warning("Ungültiger Blockname in der Konfiguration:: " + nextBlock);
+                blockMaterial = Material.STONE;
+            }
+
+            // Block Drop
             Material originalType = block.getType();
             event.setDropItems(false);
             ItemStack droppedItem = new ItemStack(originalType);
@@ -144,6 +144,7 @@ public class PlayerListener implements Listener {
             Manager.saveIslandConfig(player, config);
         }
     }
+
 
     @EventHandler
     public void onBlockPistonMove(BlockPistonExtendEvent event) {
