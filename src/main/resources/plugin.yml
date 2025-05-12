@@ -1,4 +1,4 @@
-name: OneBlock
+name: OneBlockPlugin  # Dies ist gültig
 version: '1.0'
 main: de.Main.OneBlock.Main
 api-version: '1.21'

@@ -40,22 +40,20 @@ public class PlayerListener implements Listener {
         Player player = event.getPlayer();
         YamlConfiguration config = Manager.getIslandConfig(player);
 
-        // Überprüfen, ob die Konfiguration vollständig ist, ansonsten initialisieren
         if (!config.contains("created") || !config.contains("WorldBorderSize") || !config.contains("owner") || !config.contains("owner-uuid") || !config.contains("location") || !config.contains("EigeneInsel") || !config.contains("z-position") || !config.contains("x-position") || !config.contains("IslandSpawn-x") || !config.contains("IslandSpawn-z")) {
             config.set("created", System.nanoTime());
             config.set("owner", player.getName());
             config.set("owner-uuid", player.getUniqueId().toString());
             config.set("location", "0,100,0");
             config.set("EigeneInsel", false);
-            config.set("z-position", 0); // NormalerSpawn
-            config.set("x-position", 0); // NormalerSpawn
+            config.set("z-position", 0);
+            config.set("x-position", 0);
             config.set("WorldBorderSize", 50);
             Manager.saveIslandConfig(player, config);
         }
 
-
         World world = Bukkit.getWorld(WORLD_NAME);
-        if (world != null) {
+        if (world != null && player.getWorld().getName().equals(WORLD_NAME)) { // Überprüfung, ob der Spieler in der richtigen Welt ist
             int x = config.getInt("OneBlock-x", 0);
             int z = config.getInt("OneBlock-z", 0);
             int size = config.getInt("WorldBorderSize", 50);
@@ -68,9 +66,7 @@ public class PlayerListener implements Listener {
             border.setWarningDistance(5);
             border.setWarningTime(15);
 
-
             player.setWorldBorder(border);
-
 
             Location spawn = new Location(world, config.getInt("x-position"), 100, config.getInt("z-position"));
             player.teleport(spawn);
@@ -91,7 +87,7 @@ public class PlayerListener implements Listener {
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
         YamlConfiguration config = Manager.getIslandConfig(player);
-        String level = "Anfänger"; // Beispiellevel, könnte dynamisch gesetzt werden
+        String level = "Anfänger";
         List<String> nextBlocks = Main.config.getStringList("oneblockblocks." + level);
         if (nextBlocks.isEmpty()) {
             return;
@@ -115,7 +111,7 @@ public class PlayerListener implements Listener {
                 blockLocation.getBlockY() == 100 &&
                 blockLocation.getBlockZ() == config.getInt("OneBlock-z")) {
 
-
+//Block Drop
             Material originalType = block.getType();
             event.setDropItems(false);
             ItemStack droppedItem = new ItemStack(originalType);
