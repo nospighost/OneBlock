@@ -62,6 +62,7 @@ public class PlayerListener implements Listener {
 
             WorldBorder border = world.getWorldBorder();
             border.setCenter(x, z);
+            System.out.println("test");
             border.setSize(size);
             border.setDamageBuffer(0);
             border.setDamageAmount(0.5);
@@ -129,7 +130,7 @@ public class PlayerListener implements Listener {
                 Bukkit.getLogger().warning("Ungültiger Blockname in der Konfiguration:: " + nextBlock);
                 blockMaterial = Material.STONE;
             }
-//
+
             // Block Drop
             Material originalType = block.getType();
             event.setDropItems(false);
