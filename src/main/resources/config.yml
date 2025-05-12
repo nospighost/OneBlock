@@ -6,15 +6,15 @@ defaultworldbordersize:
 InselPadding:
   value: 400
 oneblockblocks:
-  Anfänger:
+  1:
     - STONE
     - DIRT
     - COBBLESTONE
-  Oberwelt:
+  2:
     - IRON_ORE
     - COAL_ORE
     - GRANITE
-  Eis:
+  3:
     - DIAMOND_ORE
     - GOLD_ORE
     - REDSTONE_ORE
