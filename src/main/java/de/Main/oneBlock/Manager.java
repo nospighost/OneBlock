@@ -44,7 +44,7 @@ public class Manager implements Listener {
                     Location spawn = new Location(world, config.getInt("IslandSpawn-x"), 101, config.getInt("IslandSpawn-z"));
                     player.teleport(spawn);
                 }
-                player.sendMessage(Main.config.getString("islandjoinmessage.notowned" + "yipi"));
+                player.sendMessage(Main.config.getString("islandjoinmessage.notowned"));
             } else {
                 World world = Bukkit.getWorld("OneBlock");
                 if (world != null) {
