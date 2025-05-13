@@ -66,6 +66,8 @@ public class Main extends JavaPlugin implements Listener {
         // Befehle
         getCommand("ob").setExecutor(new OneBlockCommands());
         getCommand("obgui").setExecutor(new OBGUI());
+        getServer().getPluginManager().registerEvents(new OBGUI(), this);
+
         // Void Gen für OneBlock-Welt
         WorldCreator worldCreator = new WorldCreator(WORLD_NAME);
         worldCreator.environment(World.Environment.NORMAL);
