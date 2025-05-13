@@ -1,10 +1,17 @@
+# Nachricht, die angezeigt wird, wenn der Spieler zu seiner Insel teleportiert wird
 islandjoinmessage:
-  join: §a Du wurdest zu deiner Insel teleportiert
-  notowned: §aDeine Insel Wurde Erstellt
+  join: "§a Du wurdest zu deiner Insel teleportiert"
+  notowned: "§aDeine Insel Wurde Erstellt"
+
+# Standardgröße der Weltgrenze
 defaultworldbordersize:
   size: 200
+
+# Der Pufferabstand für Inseln
 InselPadding:
   value: 400
+
+# Definiert die Blöcke, die bei einem OneBlock nach bestimmten Insel-Leveln erscheinen
 oneblockblocks:
   '1':
     - STONE
@@ -23,7 +30,6 @@ oneblockblocks:
     - JUNGLE_LEAVES
     - ACACIA_LEAVES
     - DARK_OAK_LEAVES
-    - SPRUCE_LEAVES
     - DIRT
     - GRASS_BLOCK
     - STONE
@@ -40,4 +46,24 @@ oneblockblocks:
     - DIAMOND_ORE
     - GOLD_ORE
     - REDSTONE_ORE
+
+# Loot-Kisten-Optionen und deren Inhalte
+available-chests:
+  - "basic_chest"
+  - "advanced_chest"
+
+# Hier definierst du die Loot-Inhalte für jede Kiste
+chests:
+  basic_chest:
+    - "STONE:5"
+    - "IRON_ORE:3"
+    - "GOLD_ORE:2"
+    - "COAL_ORE:8"
+  advanced_chest:
+    - "DIAMOND_ORE:1"
+    - "EMERALD_ORE:1"
+    - "GOLD_BLOCK:3"
+    - "IRON_BLOCK:5"
+
+# Andere Konfigurationsoptionen
 value: 400
