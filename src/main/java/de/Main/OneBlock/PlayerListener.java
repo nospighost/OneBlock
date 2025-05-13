@@ -37,13 +37,13 @@ public class PlayerListener implements Listener {
                 && WORLD_NAME.equals(world.getName())
                 && block.getLocation().equals(ONEBLOCK_LOCATION);
     }
-//test
+
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         YamlConfiguration config = Manager.getIslandConfig(player);
 
-        if (!config.contains("created") || !config.contains("WorldBorderSize") || !config.contains("owner") || !config.contains("owner-uuid") || !config.contains("location") || !config.contains("EigeneInsel") || !config.contains("z-position") || !config.contains("x-position") || !config.contains("IslandSpawn-x") || !config.contains("IslandSpawn-z")) {
+        if (!config.contains("created") || !config.contains("WorldBorderSize") || !config.contains("owner") || !config.contains("owner-uuid") || !config.contains("EigeneInsel") || !config.contains("z-position") || !config.contains("x-position") || !config.contains("IslandSpawn-x") || !config.contains("IslandSpawn-z")) {
             config.set("created", System.nanoTime());
             config.set("owner", player.getName());
             config.set("owner-uuid", player.getUniqueId().toString());
@@ -53,8 +53,8 @@ public class PlayerListener implements Listener {
             config.set("WorldBorderSize", 50);
             config.set("MissingBlocksToLevelUp", 10);
             config.set("IslandLevel", 1);
-            config.set("OneBlock-x", 0);  // Füge Standardwert für OneBlock-x hinzu
-            config.set("OneBlock-z", 0);  // Füge Standardwert für OneBlock-z hinzu
+            config.set("OneBlock-x", 0);
+            config.set("OneBlock-z", 0);
             Manager.saveIslandConfig(player, config);
         }
 
