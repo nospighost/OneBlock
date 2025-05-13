@@ -143,6 +143,11 @@ public class Main extends JavaPlugin implements Listener {
         // Optional: OneBlock wieder setzen
        if (oneBlockWorld != null) {
            Location blockLocation = new Location(oneBlockWorld, x, 100, z);
+           if( blockLocation.getBlock().getType() == Material.AIR) {
+               oneBlockWorld.setType(blockLocation, Material.OAK_LOG);
+           } else {
+               oneBlockWorld.getBlockAt(blockLocation).setType(blockLocation.getBlock().getType());
+           }
 
        }
     }

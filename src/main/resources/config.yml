@@ -10,7 +10,6 @@ oneblockblocks:
     - STONE
     - DIRT
     - GRASS_BLOCK
-    - GRAVEL
     - COBBLESTONE
 
 

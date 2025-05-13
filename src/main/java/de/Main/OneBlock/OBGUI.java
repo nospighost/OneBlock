@@ -116,5 +116,6 @@ int[] GLASS1 = {10, 20, 30, 40};
                 player.closeInventory();
                 player.performCommand("ob delete"); //wenn OB Delete mal geht UND NICHT IN EINEM GUI sondern als Command PIG
             }
+
         }
     }
