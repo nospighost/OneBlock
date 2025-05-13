@@ -91,7 +91,7 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
-        YamlConfiguration config = Manager.getIslandConfig(player); // Island Config
+        YamlConfiguration config = Manager.getIslandConfig(player);
 
         int blockstolevelup = config.getInt("MissingBlocksToLevelUp");
         int IslandLevel = config.getInt("IslandLevel");
@@ -106,7 +106,6 @@ public class PlayerListener implements Listener {
                 blockLocation.getBlockY() == 100 &&
                 blockLocation.getBlockZ() == config.getInt("OneBlock-z")) {
 
-            // Counter NUR verringern, wenn es der OneBlock ist
             blockstolevelup -= 1;
             config.set("MissingBlocksToLevelUp", blockstolevelup);
 
@@ -117,6 +116,52 @@ public class PlayerListener implements Listener {
             }
 
             Manager.saveIslandConfig(player, config);
+
+            // 10 % Chance auf eine Loot-Kiste
+            if (ThreadLocalRandom.current().nextDouble() < 1.00) {
+                block.setType(Material.CHEST);
+
+                Bukkit.getScheduler().runTaskLater(JavaPlugin.getPlugin(Main.class), () -> {
+                    if (block.getState() instanceof org.bukkit.block.Chest chest) {
+                        org.bukkit.inventory.Inventory chestInventory = chest.getBlockInventory();
+
+                        List<String> availableChests = Main.config.getStringList("available-chests");
+                        if (availableChests.isEmpty()) {
+                            Bukkit.getLogger().warning("Keine verfügbaren Kisten unter 'available-chests' gefunden.");
+                            return;
+                        }
+
+                        String selectedChest = availableChests.get(ThreadLocalRandom.current().nextInt(availableChests.size()));
+                        List<String> lootStrings = Main.config.getStringList("chests." + selectedChest);
+                        if (lootStrings.isEmpty()) {
+                            Bukkit.getLogger().warning("Keine Loot-Daten für Kiste '" + selectedChest + "' gefunden.");
+                            return;
+                        }
+
+                        for (String entry : lootStrings) {
+                            String[] parts = entry.split(":");
+                            if (parts.length != 2) continue;
+
+                            try {
+                                Material material = Material.valueOf(parts[0].toUpperCase());
+                                int amount = Integer.parseInt(parts[1]);
+
+                                if (ThreadLocalRandom.current().nextBoolean()) {
+                                    chestInventory.addItem(new ItemStack(material, amount));
+                                }
+                            } catch (Exception e) {
+                                Bukkit.getLogger().warning("Ungültiger Loot-Eintrag: " + entry);
+                            }
+                        }
+
+                        // Optional: Kistentitel
+                        chest.setCustomName(ChatColor.GOLD + selectedChest.substring(0, 1).toUpperCase() + selectedChest.substring(1) + " Chest");
+                        chest.update();
+                    }
+                }, 2L);
+
+                return; // Kiste wurde gesetzt, OneBlock nicht ersetzen
+            }
 
             List<String> nextBlocks = Main.config.getStringList("oneblockblocks." + IslandLevel);
             if (nextBlocks.isEmpty()) {
@@ -134,7 +179,6 @@ public class PlayerListener implements Listener {
             }
 
             // Block Drop
-
             Material originalType = block.getType();
             event.setDropItems(false);
             ItemStack droppedItem = new ItemStack(originalType);
@@ -147,6 +191,7 @@ public class PlayerListener implements Listener {
             Manager.saveIslandConfig(player, config);
         }
     }
+
 
 
     @EventHandler
