@@ -10,11 +10,14 @@ import org.bukkit.WorldType;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.io.IOException;
 
 public class Main extends JavaPlugin implements Listener {
     private static Main instance; // <- Hier
@@ -24,14 +27,25 @@ public class Main extends JavaPlugin implements Listener {
 
     public static FileConfiguration config;
     public static File islandDataFolder;
-
     public static Main getInstance() {
         return instance;
     }
 
+    @EventHandler
+    public void onJoin(PlayerJoinEvent event) {
+        event.getPlayer().setResourcePack("http://127.0.0.1/Blockhive.zip"); // Beispiel
+
+    }
+
     @Override
     public void onEnable() {
-        //config
+
+
+
+
+
+
+    //config
         saveDefaultConfig();
         config = getConfig();
         instance = this; // <- Hier
@@ -51,7 +65,7 @@ public class Main extends JavaPlugin implements Listener {
 
         // Befehle
         getCommand("ob").setExecutor(new OneBlockCommands());
-       // getCommand("obgui").setExecutor(new OBGUI());
+        getCommand("obgui").setExecutor(new OBGUI());
         // Void Gen für OneBlock-Welt
         WorldCreator worldCreator = new WorldCreator(WORLD_NAME);
         worldCreator.environment(World.Environment.NORMAL);
@@ -105,6 +119,7 @@ public class Main extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
+
         Manager.saveIslandConfig(null, null);
         saveDefaultConfig();
         getLogger().info("OneBlockPlugin deaktiviert.");
