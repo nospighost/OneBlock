@@ -126,7 +126,7 @@ public class PlayerListener implements Listener {
             try {
                 blockMaterial = Material.valueOf(nextBlock);
             } catch (IllegalArgumentException e) {
-                Bukkit.getLogger().warning("Ungültiger Blockname in der Konfiguration:: " + nextBlock);
+                Bukkit.getLogger().warning("Ungültiger Blockname in der Konfiguration: " + nextBlock);
                 blockMaterial = Material.STONE;
             }
 

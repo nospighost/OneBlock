@@ -31,11 +31,7 @@ public class Main extends JavaPlugin implements Listener {
         return instance;
     }
 
-    @EventHandler
-    public void onJoin(PlayerJoinEvent event) {
-        event.getPlayer().setResourcePack("http://127.0.0.1/Blockhive.zip"); // Beispiel
 
-    }
 
     @Override
     public void onEnable() {
@@ -145,9 +141,9 @@ public class Main extends JavaPlugin implements Listener {
         player.setWorldBorder(border);
 
         // Optional: OneBlock wieder setzen
-        if (oneBlockWorld != null) {
-            Location blockLocation = new Location(oneBlockWorld, x, 100, z);
-            oneBlockWorld.getBlockAt(blockLocation).setType(Material.STONE);
-        }
+       if (oneBlockWorld != null) {
+           Location blockLocation = new Location(oneBlockWorld, x, 100, z);
+
+       }
     }
 }
