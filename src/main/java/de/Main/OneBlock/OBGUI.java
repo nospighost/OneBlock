@@ -5,6 +5,7 @@ import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -114,7 +115,7 @@ int[] GLASS1 = {10, 20, 30, 40};
 
                 Player player = (Player) event.getWhoClicked();
                 player.closeInventory();
-                player.performCommand("ob delete"); //wenn OB Delete mal geht UND NICHT IN EINEM GUI sondern als Command PIG LOL
+                player.performCommand("ob delete"); //wenn OB Delete mal geht UND NICHT IN EINEM GUI sondern als Command PIG
             }
         }
     }

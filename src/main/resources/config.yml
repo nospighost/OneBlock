@@ -7,8 +7,8 @@ InselPadding:
   value: 400
 oneblockblocks:
   1:
-    - STONE
     - DIRT
+    - STONE
     - GRASS_BLOCK
     - GRAVEL
     - COBBLESTONE
