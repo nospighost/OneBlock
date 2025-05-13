@@ -1,8 +1,6 @@
 package de.Main.OneBlock;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
@@ -22,7 +20,7 @@ public class Manager implements Listener {
         if (args.length == 1 && args[0].equalsIgnoreCase("join")) {
 
             YamlConfiguration config = Manager.getIslandConfig(player);
-            if (!config.contains("IslandSpawn-x") || !config.contains("EigeneInsel") || !config.contains("IslandSpawn-z") || !config.contains("OneBlock-x") || !config.contains("OneBlock-z")) {
+            if (!config.contains("IslandSpawn-x") || !config.getBoolean("EigeneInsel") || !config.contains("IslandSpawn-z") || !config.contains("OneBlock-x") || !config.contains("OneBlock-z")) {
 
                 Integer z = getIslandCords(config.getInt("value"));
                 oneBlockWorld.setSpawnLocation(config.getInt("IslandSpawn-x"), 100, config.getInt("IslandSpawn-z"));
@@ -30,11 +28,10 @@ public class Manager implements Listener {
                 config.set("OneBlock-z", z);
                 config.set("z-position", z);
                 config.set("x-position", z);
-                config.set("EigeneInsel", true);
                 config.set("IslandSpawn-x", z); //InselPosition
                 config.set("IslandSpawn-z", z); //InselPosition
                 config.set("WorldBorderSize", 50);
-
+                config.set("EigeneInsel", true);
 
 
                 Manager.saveIslandConfig(player, config);
@@ -43,6 +40,7 @@ public class Manager implements Listener {
                 if (world != null) {
                     Location spawn = new Location(world, config.getInt("IslandSpawn-x"), 101, config.getInt("IslandSpawn-z"));
                     player.teleport(spawn);
+
                 }
                 player.sendMessage(Main.config.getString("islandjoinmessage.notowned"));
             } else {
@@ -121,6 +119,60 @@ public class Manager implements Listener {
         Main.getInstance().saveConfig();
         return x;
     }
+
+    public static void deleteIsland(Player player) {
+        YamlConfiguration config = getIslandConfig(player);
+        World world = Bukkit.getWorld("OneBlock");
+
+        if (world == null) {
+            player.sendMessage("§cOneBlock-Welt nicht gefunden.");
+            return;
+        }
+
+        if (!config.getBoolean("EigeneInsel", false)) {
+            player.sendMessage("§cDu besitzt keine Insel.");
+            return;
+        }
+
+        int x = config.getInt("OneBlock-x");
+        int z = config.getInt("OneBlock-z");
+        int size = config.getInt("WorldBorderSize", 50); // Die Größe der Weltgrenze, die aus der config kommt
+
+        // Spieler zum Spawn teleportieren
+        player.teleport(new Location(world, 0, 100, 0));
+
+        // 1. Blöcke in der Inselregion löschen
+        for (int dx = -size / 2; dx <= size / 2; dx++) {
+            for (int dz = -size / 2; dz <= size / 2; dz++) {
+                for (int dy = 90; dy <= 110; dy++) {
+                    Location loc = new Location(world, x + dx, dy, z + dz);
+                    world.getBlockAt(loc).setType(Material.AIR);
+                }
+            }
+        }
+
+        // 2. WorldBorder für den Spieler zurücksetzen
+
+
+        // 3. Config-Reset (Felder löschen)
+        config.set("EigeneInsel", false);
+        config.set("IslandLevel", 1);
+        config.set("MissingBlocksToLevelUp", 10);
+        config.set("IslandSpawn-x", null);
+        config.set("IslandSpawn-z", null);
+        config.set("x-position", null);
+        config.set("z-position", null);
+        config.set("OneBlock-x", null);
+        config.set("OneBlock-z", null);
+        config.set("WorldBorderSize", 50); // Lösche die Größe der Weltgrenze aus der Config
+
+        saveIslandConfig(player, config);
+
+        player.sendMessage("§aDeine Insel wurde vollständig gelöscht.");
+    }
+
+
+
 
 
 }

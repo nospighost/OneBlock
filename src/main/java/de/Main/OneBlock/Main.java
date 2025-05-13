@@ -27,34 +27,25 @@ public class Main extends JavaPlugin implements Listener {
 
     public static FileConfiguration config;
     public static File islandDataFolder;
+
     public static Main getInstance() {
         return instance;
     }
 
-    @EventHandler
-    public void onJoin(PlayerJoinEvent event) {
-        event.getPlayer().setResourcePack("http://127.0.0.1/Blockhive.zip"); // Beispiel
-
-    }
 
     @Override
     public void onEnable() {
-
-
-
-
-
-
-    //config
+        //config
         saveDefaultConfig();
         config = getConfig();
-        instance = this; // <- Hier
+        instance = this;
         if (!config.contains("value")) {
-            config.set("value", 400);  // Setze den Startwert für "value"
-            saveConfig();  // Speichere die Konfiguration mit dem neuen Wert
+            config.set("value", 400);
+            saveConfig();
         }
         // Listener registrieren
         Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
+        getCommand("ob").setTabCompleter(new TabCompleter());
         getLogger().info("OneBlockPlugin aktiviert!");
 
         // Ordner Erstellen//
@@ -133,8 +124,7 @@ public class Main extends JavaPlugin implements Listener {
         int x = config.getInt("OneBlock-x");
         int z = config.getInt("OneBlock-z");
         int size = config.getInt("WorldBorderSize");
-
-        WorldBorder border = Bukkit.createWorldBorder();
+        WorldBorder border = player.getWorld().getWorldBorder();
         border.setCenter(x, z);
         border.setSize(size);
         border.setDamageBuffer(0);
@@ -143,11 +133,15 @@ public class Main extends JavaPlugin implements Listener {
         border.setWarningTime(15);
 
         player.setWorldBorder(border);
-
         // Optional: OneBlock wieder setzen
         if (oneBlockWorld != null) {
             Location blockLocation = new Location(oneBlockWorld, x, 100, z);
-            oneBlockWorld.getBlockAt(blockLocation).setType(Material.STONE);
+            if (blockLocation.getBlock().getType() == Material.AIR) {
+                oneBlockWorld.setType(blockLocation, Material.OAK_LOG);
+            } else {
+                oneBlockWorld.getBlockAt(blockLocation).setType(blockLocation.getBlock().getType());
+            }
+
         }
     }
 }

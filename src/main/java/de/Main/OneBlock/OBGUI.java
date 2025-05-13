@@ -96,26 +96,32 @@ int[] GLASS1 = {10, 20, 30, 40};
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player)) return;
+        Player player = (Player) event.getWhoClicked();
+
+        if (event.getClickedInventory() == null) return;
+        if (event.getCurrentItem() == null) return;
+
+        ItemStack clickedItem = event.getCurrentItem();
+
+
         if (event.getView().getTitle().equals("OneBlock")) {
             event.setCancelled(true);
 
-            if (!(event.getWhoClicked() instanceof Player)) return;
-            if (event.getCurrentItem() == null || event.getCurrentItem().getType() != Material.GRASS_BLOCK) return;
+            Material type = clickedItem.getType();
 
-            Player player = (Player) event.getWhoClicked();
-            player.closeInventory();
-            player.performCommand("ob join");
-        }
-
-            if (event.getView().getTitle().equals("OneBlock")) {
-                event.setCancelled(true);
-
-                if (!(event.getWhoClicked() instanceof Player)) return;
-                if (event.getCurrentItem() == null || event.getCurrentItem().getType() != Material.BARRIER) return;
-
-                Player player = (Player) event.getWhoClicked();
+            if (type == Material.GRASS_BLOCK) {
                 player.closeInventory();
-                player.performCommand("ob delete"); //wenn OB Delete mal geht UND NICHT IN EINEM GUI sondern als Command PIG
+                player.performCommand("ob join");
+            } else if (type == Material.BARRIER) {
+                player.closeInventory();
+                player.performCommand("ob delete");
             }
         }
+
+
     }
+
+
+
+}

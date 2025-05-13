@@ -10,10 +10,7 @@ oneblockblocks:
     - DIRT
     - STONE
     - GRASS_BLOCK
-    - GRAVEL
     - COBBLESTONE
-
-
   2:
     - OAK_LOG
     - SPRUCE_LOG
@@ -33,9 +30,6 @@ oneblockblocks:
     - COBBLESTONE
     - COARSE_DIRT
     - PODZOL
-    - GRAVEL
-
-
   3:
     - IRON_ORE
     - COAL_ORE

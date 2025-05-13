@@ -20,11 +20,12 @@ public class OneBlockCommands implements Listener, CommandExecutor {
 
         Player player = (Player) sender;
 
-        if (args.length == 1 && args[0].equalsIgnoreCase("join")){
+        if (args.length == 1 && args[0].equalsIgnoreCase("join")) {
+            player.sendMessage("§a Insel wird erstellt bitte habe Geduld");
             Manager.createOrJoinIsland(player, args);
         } else if (args.length == 1 && args[0].equalsIgnoreCase("delete")){
-            OBGUI.openmaingui(player);
-        } else {
+                Manager.deleteIsland(player);
+            }else {
             player.sendMessage("Nutze: /ob join | /ob delete");
         }
 
