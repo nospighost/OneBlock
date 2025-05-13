@@ -89,7 +89,7 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
-        YamlConfiguration config = Manager.getIslandConfig(player);
+        YamlConfiguration config = Manager.getIslandConfig(player); // Island Config
 
         int blockstolevelup = config.getInt("MissingBlocksToLevelUp");
         int IslandLevel = config.getInt("IslandLevel");
@@ -98,13 +98,13 @@ public class PlayerListener implements Listener {
         Location blockLocation = block.getLocation();
         World world = Bukkit.getWorld("OneBlock");
 
-        // Überprüfe, ob es der OneBlock ist
         if (world != null &&
                 blockLocation.getWorld().equals(world) &&
                 blockLocation.getBlockX() == config.getInt("OneBlock-x") &&
                 blockLocation.getBlockY() == 100 &&
                 blockLocation.getBlockZ() == config.getInt("OneBlock-z")) {
 
+            // Counter NUR verringern, wenn es der OneBlock ist
             blockstolevelup -= 1;
             config.set("MissingBlocksToLevelUp", blockstolevelup);
 
@@ -116,65 +116,6 @@ public class PlayerListener implements Listener {
 
             Manager.saveIslandConfig(player, config);
 
-            // 10 % Chance auf eine Loot-Kiste
-            if (ThreadLocalRandom.current().nextDouble() < 0.10) {
-                // Setze den Block als Kiste
-                block.setType(Material.CHEST);
-
-                // Debugging: Logge die Kistenänderung
-                Bukkit.getLogger().info("Loot Chest wurde gesetzt bei: " + blockLocation.toString());
-
-                // Erstelle die Kiste nach kurzer Verzögerung
-                Bukkit.getScheduler().runTaskLater(JavaPlugin.getPlugin(Main.class), () -> {
-                    if (block.getState() instanceof org.bukkit.block.Chest chest) {
-                        org.bukkit.inventory.Inventory chestInventory = chest.getBlockInventory();
-
-                        List<String> availableChests = Main.config.getStringList("available-chests");
-                        if (availableChests.isEmpty()) {
-                            Bukkit.getLogger().warning("Keine verfügbaren Kisten unter 'available-chests' gefunden.");
-                            return;
-                        }
-
-                        // Wähle eine Kiste zufällig aus der verfügbaren Liste
-                        String selectedChest = availableChests.get(ThreadLocalRandom.current().nextInt(availableChests.size()));
-                        List<String> lootStrings = Main.config.getStringList("chests." + selectedChest);
-                        if (lootStrings.isEmpty()) {
-                            Bukkit.getLogger().warning("Keine Loot-Daten für Kiste '" + selectedChest + "' gefunden.");
-                            return;
-                        }
-
-                        // Füge die Loot-Items zur Kiste hinzu
-                        for (String entry : lootStrings) {
-                            String[] parts = entry.split(":");
-                            if (parts.length != 2) continue;
-
-                            try {
-                                Material material = Material.valueOf(parts[0].toUpperCase());
-                                int amount = Integer.parseInt(parts[1]);
-
-                                // 50% Chance, dass ein Item hinzugefügt wird
-                                if (ThreadLocalRandom.current().nextBoolean()) {
-                                    chestInventory.addItem(new ItemStack(material, amount));
-                                    Bukkit.getLogger().info("Item hinzugefügt: " + material.toString() + " mit Menge: " + amount);
-                                }
-                            } catch (Exception e) {
-                                Bukkit.getLogger().warning("Ungültiger Loot-Eintrag: " + entry);
-                            }
-                        }
-
-                        // Optional: Setze den Titel für die Kiste
-                        chest.setCustomName(ChatColor.GOLD + selectedChest.substring(0, 1).toUpperCase() + selectedChest.substring(1) + " Chest");
-                        chest.update();
-
-                        // Debugging: Logge die Kisteninhalt-Änderung
-                        Bukkit.getLogger().info("Loot für Kiste '" + selectedChest + "' hinzugefügt.");
-                    }
-                }, 2L);
-
-                return; // Kiste wurde gesetzt, OneBlock nicht ersetzen
-            }
-
-            // Wenn keine Kiste, dann normaler OneBlock regenerieren
             List<String> nextBlocks = Main.config.getStringList("oneblockblocks." + IslandLevel);
             if (nextBlocks.isEmpty()) {
                 return;
@@ -191,6 +132,7 @@ public class PlayerListener implements Listener {
             }
 
             // Block Drop
+
             Material originalType = block.getType();
             event.setDropItems(false);
             ItemStack droppedItem = new ItemStack(originalType);
@@ -205,15 +147,12 @@ public class PlayerListener implements Listener {
     }
 
 
-
     public class OneBlockListener implements Listener {
 
         private static final String USER_DATA_FOLDER = "plugins/YourPluginName/islanddata"; // Den Pfad zu deinen Userdaten
 
         @EventHandler
-        public void onBlockPistonExtend(BlockPistonExtendEvent event) {
-            System.out.println("Piston extend event triggered!");  // Test-Ausgabe
-
+        public void onBlockPiston(BlockPistonExtendEvent event) {
             for (Block block : event.getBlocks()) {
                 if (block.getY() != 100) continue;
 
@@ -230,6 +169,7 @@ public class PlayerListener implements Listener {
                     if (world != null) {
                         Location oneBlockLocation = new Location(world, x, 100, z);
 
+
                         if (block.getLocation().equals(oneBlockLocation)) {
                             event.setCancelled(true);
                             return;
@@ -238,11 +178,12 @@ public class PlayerListener implements Listener {
                 }
             }
         }
+
     }
 
 
 
-        @EventHandler
+    @EventHandler
     public void onEntityExplode(EntityExplodeEvent event) {
         event.blockList().removeIf(this::isOneBlock);
         List<String> nextBlocks = Main.config.getStringList("oneblockblocks.block");
