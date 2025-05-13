@@ -30,7 +30,6 @@ public class Manager implements Listener {
                 config.set("OneBlock-z", z);
                 config.set("z-position", z);
                 config.set("x-position", z);
-                config.set("EigeneInsel", true);
                 config.set("IslandSpawn-x", z); //InselPosition
                 config.set("IslandSpawn-z", z); //InselPosition
                 config.set("WorldBorderSize", 50);
