@@ -55,7 +55,7 @@ public class Main extends JavaPlugin implements Listener {
         }
 
         // Befehle
-        getCommand("ob").setExecutor(new OneBlockCommands());
+        getCommand("ob").setExecutor(new de.Main.OneBlock.OneBlockCommands());
         getCommand("obgui").setExecutor(new OBGUI());
         getServer().getPluginManager().registerEvents(new OBGUI(), this);
 
