@@ -149,21 +149,21 @@ public class PlayerListener implements Listener {
     }
 
 
- // @EventHandler
- // public void onBlockPistonExtend(BlockPistonExtendEvent event) {
- //     for (Block block : event.getBlocks()) {
- //         if (block.getY() != 100) continue;
+ @EventHandler
+ public void onBlockPistonExtend(BlockPistonExtendEvent event) {
+     for (Block block : event.getBlocks()) {
+         if (block.getY() != 100) continue;
 
- //         for (Location obLoc : Manager.oneBlockLocations.values()) {
- //             if (block.getWorld().equals(obLoc.getWorld()) &&
- //                     block.getX() == obLoc.getBlockX() &&
- //                     block.getZ() == obLoc.getBlockZ()) {
- //                 event.setCancelled(true);
- //                 return;
- //             }
- //         }
- //     }
- // }
+         for (Location obLoc : Manager.oneBlockLocations.values()) {
+             if (block.getWorld().equals(obLoc.getWorld()) &&
+                     block.getX() == obLoc.getBlockX() &&
+                     block.getZ() == obLoc.getBlockZ()) {
+                 event.setCancelled(true);
+                 return;
+             }
+         }
+     }
+ }
 
 
 
