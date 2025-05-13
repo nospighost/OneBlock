@@ -1,6 +1,6 @@
 islandjoinmessage:
   join: §a Du wurdest zu deiner Insel teleportiert
-  notowned: §cDeine Insel Wurde Erstellt
+  notowned: §aDeine Insel Wurde Erstellt
 defaultworldbordersize:
   size: 200
 InselPadding:

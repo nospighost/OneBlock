@@ -37,7 +37,7 @@ public class PlayerListener implements Listener {
                 && WORLD_NAME.equals(world.getName())
                 && block.getLocation().equals(ONEBLOCK_LOCATION);
     }
-
+//test
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
