@@ -15,7 +15,7 @@ public class OBGUI implements CommandExecutor {
     // Speichert das GUI, damit es nicht mehrfach erstellt wird
     public static Inventory mainGUI;
     public static Inventory OBLÖSCHUNG;
-
+int[] GLASS1 = {10, 20, 30, 40};
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
