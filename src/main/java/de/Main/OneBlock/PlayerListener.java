@@ -20,6 +20,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
+import java.io.File;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -149,21 +150,39 @@ public class PlayerListener implements Listener {
     }
 
 
- @EventHandler
- public void onBlockPistonExtend(BlockPistonExtendEvent event) {
-     for (Block block : event.getBlocks()) {
-         if (block.getY() != 100) continue;
+    public class OneBlockListener implements Listener {
 
-         for (Location obLoc : Manager.oneBlockLocations.values()) {
-             if (block.getWorld().equals(obLoc.getWorld()) &&
-                     block.getX() == obLoc.getBlockX() &&
-                     block.getZ() == obLoc.getBlockZ()) {
-                 event.setCancelled(true);
-                 return;
-             }
-         }
-     }
- }
+        private static final String USER_DATA_FOLDER = "plugins/YourPluginName/islanddata"; // Den Pfad zu deinen Userdaten
+
+        @EventHandler
+        public void onBlockPistonExtend(BlockPistonExtendEvent event) {
+            for (Block block : event.getBlocks()) {
+                if (block.getY() != 100) continue;
+
+                // Durchlaufe alle User-Dateien
+                File folder = new File(USER_DATA_FOLDER);
+                for (File file : folder.listFiles()) {
+                    if (!file.getName().endsWith(".yml")) continue; // Nur .yml-Dateien
+
+                    YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+                    int x = config.getInt("OneBlock-x");
+                    int z = config.getInt("OneBlock-z");
+
+                    World world = Bukkit.getWorld("OneBlock");
+                    if (world != null) {
+                        Location oneBlockLocation = new Location(world, x, 100, z);
+
+                        // Vergleiche die Position des Blocks
+                        if (block.getLocation().equals(oneBlockLocation)) {
+                            event.setCancelled(true); // Block bewegt sich, weil es ein OneBlock ist
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 
 
 

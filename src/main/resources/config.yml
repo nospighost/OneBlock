@@ -1,0 +1,43 @@
+islandjoinmessage:
+  join: §a Du wurdest zu deiner Insel teleportiert
+  notowned: §cDeine Insel Wurde Erstellt
+defaultworldbordersize:
+  size: 200
+InselPadding:
+  value: 400
+oneblockblocks:
+  '1':
+    - STONE
+    - DIRT
+    - GRASS_BLOCK
+    - COBBLESTONE
+  '2':
+    - OAK_LOG
+    - SPRUCE_LOG
+    - BIRCH_LOG
+    - JUNGLE_LOG
+    - ACACIA_LOG
+    - DARK_OAK_LOG
+    - OAK_LEAVES
+    - BIRCH_LEAVES
+    - JUNGLE_LEAVES
+    - ACACIA_LEAVES
+    - DARK_OAK_LEAVES
+    - SPRUCE_LEAVES
+    - DIRT
+    - GRASS_BLOCK
+    - STONE
+    - COBBLESTONE
+    - COARSE_DIRT
+    - PODZOL
+  '3':
+    - IRON_ORE
+    - COAL_ORE
+    - COPPER_ORE
+    - GRANITE
+    - ANDESITE
+  '4':
+    - DIAMOND_ORE
+    - GOLD_ORE
+    - REDSTONE_ORE
+value: 400
