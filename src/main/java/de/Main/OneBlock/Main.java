@@ -133,7 +133,7 @@ public class Main extends JavaPlugin implements Listener {
         border.setWarningTime(15);
 
         player.setWorldBorder(border);
-        // Optional: OneBlock wieder setzen
+
         if (oneBlockWorld != null) {
             Location blockLocation = new Location(oneBlockWorld, x, 100, z);
             if (blockLocation.getBlock().getType() == Material.AIR) {

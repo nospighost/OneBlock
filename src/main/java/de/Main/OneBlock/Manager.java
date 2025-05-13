@@ -125,23 +125,23 @@ public class Manager implements Listener {
         World world = Bukkit.getWorld("OneBlock");
 
         if (world == null) {
-            player.sendMessage("§cOneBlock-Welt nicht gefunden.");
+            player.sendMessage("§4OneBlock-Welt nicht gefunden.");
             return;
         }
 
         if (!config.getBoolean("EigeneInsel", false)) {
-            player.sendMessage("§cDu besitzt keine Insel.");
+            player.sendMessage("§aDu besitzt keine Insel.");
             return;
         }
 
         int x = config.getInt("OneBlock-x");
         int z = config.getInt("OneBlock-z");
-        int size = config.getInt("WorldBorderSize", 50); // Die Größe der Weltgrenze, die aus der config kommt
+        int size = config.getInt("WorldBorderSize", 50);
 
-        // Spieler zum Spawn teleportieren
+
         player.teleport(new Location(world, 0, 100, 0));
 
-        // 1. Blöcke in der Inselregion löschen
+
         for (int dx = -size / 2; dx <= size / 2; dx++) {
             for (int dz = -size / 2; dz <= size / 2; dz++) {
                 for (int dy = 90; dy <= 110; dy++) {
@@ -151,10 +151,10 @@ public class Manager implements Listener {
             }
         }
 
-        // 2. WorldBorder für den Spieler zurücksetzen
 
 
-        // 3. Config-Reset (Felder löschen)
+
+
         config.set("EigeneInsel", false);
         config.set("IslandLevel", 1);
         config.set("MissingBlocksToLevelUp", 10);
@@ -164,15 +164,12 @@ public class Manager implements Listener {
         config.set("z-position", null);
         config.set("OneBlock-x", null);
         config.set("OneBlock-z", null);
-        config.set("WorldBorderSize", 50); // Lösche die Größe der Weltgrenze aus der Config
+        config.set("WorldBorderSize", 50);
 
         saveIslandConfig(player, config);
 
         player.sendMessage("§aDeine Insel wurde vollständig gelöscht.");
     }
-
-
-
 
 
 }
