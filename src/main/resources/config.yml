@@ -42,6 +42,7 @@ oneblockblocks:
     - COPPER_ORE
     - GRANITE
     - ANDESITE
+    - GRAS_BLOCK
   '4':
     - DIAMOND_ORE
     - GOLD_ORE
