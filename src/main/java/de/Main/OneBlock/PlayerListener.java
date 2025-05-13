@@ -9,10 +9,7 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockPhysicsEvent;
-import org.bukkit.event.block.BlockPistonExtendEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.block.*;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
@@ -59,7 +56,7 @@ public class PlayerListener implements Listener {
         }
 
         World world = Bukkit.getWorld(WORLD_NAME);
-        if (world != null && player.getWorld().getName().equals(WORLD_NAME)) { // Überprüfung, ob der Spieler in der richtigen Welt ist
+        if (world != null && player.getWorld().getName().equals(WORLD_NAME)) {
             int x = config.getInt("OneBlock-x", 0);
             int z = config.getInt("OneBlock-z", 0);
             int size = config.getInt("WorldBorderSize", 50);
@@ -215,6 +212,8 @@ public class PlayerListener implements Listener {
 
         @EventHandler
         public void onBlockPistonExtend(BlockPistonExtendEvent event) {
+            System.out.println("Piston extend event triggered!");  // Test-Ausgabe
+
             for (Block block : event.getBlocks()) {
                 if (block.getY() != 100) continue;
 
@@ -226,14 +225,13 @@ public class PlayerListener implements Listener {
                     YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
                     int x = config.getInt("OneBlock-x");
                     int z = config.getInt("OneBlock-z");
-
+                    System.out.println("x:" + x + " z:" + z);
                     World world = Bukkit.getWorld("OneBlock");
                     if (world != null) {
                         Location oneBlockLocation = new Location(world, x, 100, z);
 
-                        // Vergleiche die Position des Blocks
                         if (block.getLocation().equals(oneBlockLocation)) {
-                            event.setCancelled(true); // Block bewegt sich, weil es ein OneBlock ist
+                            event.setCancelled(true);
                             return;
                         }
                     }
@@ -244,10 +242,7 @@ public class PlayerListener implements Listener {
 
 
 
-
-
-
-    @EventHandler
+        @EventHandler
     public void onEntityExplode(EntityExplodeEvent event) {
         event.blockList().removeIf(this::isOneBlock);
         List<String> nextBlocks = Main.config.getStringList("oneblockblocks.block");
