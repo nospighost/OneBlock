@@ -12,6 +12,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
@@ -45,13 +46,14 @@ public class PlayerListener implements Listener {
             config.set("created", System.nanoTime());
             config.set("owner", player.getName());
             config.set("owner-uuid", player.getUniqueId().toString());
-            config.set("location", "0,100,0");
             config.set("EigeneInsel", false);
             config.set("z-position", 0);
             config.set("x-position", 0);
             config.set("WorldBorderSize", 50);
             config.set("MissingBlocksToLevelUp", 10);
             config.set("IslandLevel", 1);
+            config.set("OneBlock-x", 0);  // Füge Standardwert für OneBlock-x hinzu
+            config.set("OneBlock-z", 0);  // Füge Standardwert für OneBlock-z hinzu
             Manager.saveIslandConfig(player, config);
         }
 
@@ -63,6 +65,7 @@ public class PlayerListener implements Listener {
 
             WorldBorder border = world.getWorldBorder();
             border.setCenter(x, z);
+            player.sendMessage("x:"+ x + " z:" + z);
             border.setSize(size);
             border.setDamageBuffer(0);
             border.setDamageAmount(0.5);
@@ -148,9 +151,15 @@ public class PlayerListener implements Listener {
 
 
     @EventHandler
-    public void onBlockPistonMove(BlockPistonExtendEvent event) {
-        event.getBlocks().removeIf(this::isOneBlock);
+    public void onBlockPistonExtend(BlockPistonExtendEvent event) {
+        for (Block block : event.getBlocks()) {
+            if (isOneBlock(block)) {
+                event.setCancelled(true);
+                return;
+            }
+        }
     }
+
 
     @EventHandler
     public void onEntityExplode(EntityExplodeEvent event) {
@@ -184,6 +193,8 @@ public class PlayerListener implements Listener {
             }
         }, 1L);
     }
+
+
 
 
 }

@@ -27,21 +27,15 @@ public class Main extends JavaPlugin implements Listener {
 
     public static FileConfiguration config;
     public static File islandDataFolder;
+
     public static Main getInstance() {
         return instance;
     }
 
 
-
     @Override
     public void onEnable() {
-
-
-
-
-
-
-    //config
+        //config
         saveDefaultConfig();
         config = getConfig();
         instance = this; // <- Hier
@@ -129,8 +123,7 @@ public class Main extends JavaPlugin implements Listener {
         int x = config.getInt("OneBlock-x");
         int z = config.getInt("OneBlock-z");
         int size = config.getInt("WorldBorderSize");
-
-        WorldBorder border = Bukkit.createWorldBorder();
+        WorldBorder border = player.getWorld().getWorldBorder();
         border.setCenter(x, z);
         border.setSize(size);
         border.setDamageBuffer(0);
@@ -139,16 +132,15 @@ public class Main extends JavaPlugin implements Listener {
         border.setWarningTime(15);
 
         player.setWorldBorder(border);
-
         // Optional: OneBlock wieder setzen
-       if (oneBlockWorld != null) {
-           Location blockLocation = new Location(oneBlockWorld, x, 100, z);
-           if( blockLocation.getBlock().getType() == Material.AIR) {
-               oneBlockWorld.setType(blockLocation, Material.OAK_LOG);
-           } else {
-               oneBlockWorld.getBlockAt(blockLocation).setType(blockLocation.getBlock().getType());
-           }
+        if (oneBlockWorld != null) {
+            Location blockLocation = new Location(oneBlockWorld, x, 100, z);
+            if (blockLocation.getBlock().getType() == Material.AIR) {
+                oneBlockWorld.setType(blockLocation, Material.OAK_LOG);
+            } else {
+                oneBlockWorld.getBlockAt(blockLocation).setType(blockLocation.getBlock().getType());
+            }
 
-       }
+        }
     }
 }
