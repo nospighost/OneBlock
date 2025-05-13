@@ -38,13 +38,14 @@ public class Main extends JavaPlugin implements Listener {
         //config
         saveDefaultConfig();
         config = getConfig();
-        instance = this; // <- Hier
+        instance = this;
         if (!config.contains("value")) {
-            config.set("value", 400);  // Setze den Startwert für "value"
-            saveConfig();  // Speichere die Konfiguration mit dem neuen Wert
+            config.set("value", 400);
+            saveConfig();
         }
         // Listener registrieren
         Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
+        getCommand("ob").setTabCompleter(new TabCompleter());
         getLogger().info("OneBlockPlugin aktiviert!");
 
         // Ordner Erstellen//
