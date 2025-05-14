@@ -1,5 +1,8 @@
 package de.Main.OneBlock;
 
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
+
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
@@ -17,10 +20,12 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
+import java.awt.*;
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static de.Main.OneBlock.Main.config;
 import static de.Main.OneBlock.Main.oneBlockWorld;
 
 public class PlayerListener implements Listener {
@@ -40,7 +45,7 @@ public class PlayerListener implements Listener {
         Player player = event.getPlayer();
         YamlConfiguration config = Manager.getIslandConfig(player);
 
-        if (!config.contains("created") || !config.contains("WorldBorderSize") || !config.contains("owner") || !config.contains("owner-uuid") || !config.contains("EigeneInsel") || !config.contains("z-position") || !config.contains("x-position") || !config.contains("IslandSpawn-x") || !config.contains("IslandSpawn-z")) {
+        if (!config.contains("created") || !config.contains("WorldBorderSize") || !config.contains("TotalBlocks") || !config.contains("owner") || !config.contains("owner-uuid") || !config.contains("EigeneInsel") || !config.contains("z-position") || !config.contains("x-position") || !config.contains("IslandSpawn-x") || !config.contains("IslandSpawn-z")) {
             config.set("created", System.nanoTime());
             config.set("owner", player.getName());
             config.set("owner-uuid", player.getUniqueId().toString());
@@ -49,6 +54,7 @@ public class PlayerListener implements Listener {
             config.set("x-position", 0);
             config.set("WorldBorderSize", 50);
             config.set("MissingBlocksToLevelUp", 10);
+            config.set("TotalBlocks", 100);
             config.set("IslandLevel", 1);
             config.set("OneBlock-x", 0);
             config.set("OneBlock-z", 0);
@@ -93,6 +99,7 @@ public class PlayerListener implements Listener {
 
         int blockstolevelup = config.getInt("MissingBlocksToLevelUp");
         int IslandLevel = config.getInt("IslandLevel");
+        int totalblocks = config.getInt("TotalBlocks");
 
         Block block = event.getBlock();
         Location blockLocation = block.getLocation();
@@ -108,10 +115,17 @@ public class PlayerListener implements Listener {
             blockstolevelup -= 1;
             config.set("MissingBlocksToLevelUp", blockstolevelup);
 
+            // Actionbar anzeigen
+            sendActionbarProgress(player, IslandLevel, blockstolevelup);
+
             if (blockstolevelup == 0) {
                 IslandLevel += 1;
                 config.set("IslandLevel", IslandLevel);
                 config.set("MissingBlocksToLevelUp", 100);
+
+                Integer v = totalblocks * 2;
+                config.set("TotalBlocks", v);
+
             }
 
             Manager.saveIslandConfig(player, config);
@@ -146,6 +160,32 @@ public class PlayerListener implements Listener {
         }
     }
 
+    private void sendActionbarProgress(Player player, int currentLevel, int missingBlocks) {
+        YamlConfiguration config = Manager.getIslandConfig(player); // Island Con
+        int totalBlocks = config.getInt("TotalBlocks"); // Anzahl der Blöcke bis zum nächsten Level-Up
+        double progress = (double) (totalBlocks - missingBlocks) / totalBlocks; // Berechne den Fortschritt (zwischen 0 und 1)
+
+
+        player.sendMessage(String.valueOf(totalBlocks));
+
+        // Erstelle den Balken (10 Schritte, für jedes 10% des Fortschritts)
+        int progressLength = (int) (progress * 10);
+        StringBuilder bar = new StringBuilder("§7[");
+        for (int i = 0; i < 10; i++) {
+            if (i < progressLength) {
+                bar.append("§a█"); // Grüner Teil des Balkens (Fortschritt)
+            } else {
+                bar.append("§7█"); // Grauer Teil des Balkens (Rest)
+            }
+        }
+        bar.append("§7]");
+
+        // Actionbar-Nachricht zusammenbauen
+        String message = "§bLevel: §e" + currentLevel + " §8| §7" + bar.toString() + " §7Noch §c" + missingBlocks + " §7Blöcke bis zum nächsten Level";
+
+        // Sende die Nachricht an den Spieler
+        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(message));
+    }
 
     public class OneBlockListener implements Listener {
 
@@ -169,7 +209,6 @@ public class PlayerListener implements Listener {
                     if (world != null) {
                         Location oneBlockLocation = new Location(world, x, 100, z);
 
-
                         if (block.getLocation().equals(oneBlockLocation)) {
                             event.setCancelled(true);
                             return;
@@ -178,10 +217,7 @@ public class PlayerListener implements Listener {
                 }
             }
         }
-
     }
-
-
 
     @EventHandler
     public void onEntityExplode(EntityExplodeEvent event) {
@@ -215,6 +251,4 @@ public class PlayerListener implements Listener {
             }
         }, 1L);
     }
-
-
 }

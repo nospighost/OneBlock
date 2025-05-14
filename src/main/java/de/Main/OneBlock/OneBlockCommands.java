@@ -23,14 +23,17 @@ public class OneBlockCommands implements Listener, CommandExecutor {
         if (args.length == 1 && args[0].equalsIgnoreCase("join")) {
             player.sendMessage("§a Insel wird erstellt bitte habe Geduld");
             Manager.createOrJoinIsland(player, args);
-        } else if (args.length == 1 && args[0].equalsIgnoreCase("delete")){
-                Manager.deleteIsland(player);
-            }else {
-            player.sendMessage("Nutze: /ob join | /ob delete");
-        }
+        } else if (args.length == 1 && args[0].equalsIgnoreCase("delete")) {
+            Manager.deleteIsland(player);
+        }else if (args.length == 2 && args[0].equalsIgnoreCase("visit")) {
+                String targetName = args[1];
+                Manager.visitIsland(player, targetName);
+            }
+         else {
+                player.sendMessage("Nutze: /ob join | /ob delete");
+            }
 
 
-
-        return true;
+            return true;
     }
 }

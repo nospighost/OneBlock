@@ -13,38 +13,135 @@ InselPadding:
 
 # Definiert die Blöcke, die bei einem OneBlock nach bestimmten Insel-Leveln erscheinen
 oneblockblocks:
-  '1':
-    - STONE
+  '1': # Grundstufe – Startressourcen
     - DIRT
     - GRASS_BLOCK
+    - STONE
     - COBBLESTONE
-  '2':
+    - SAND
     - OAK_LOG
+    - OAK_LEAVES
+
+  '2': # Holz- & Naturphase
     - SPRUCE_LOG
     - BIRCH_LOG
     - JUNGLE_LOG
     - ACACIA_LOG
     - DARK_OAK_LOG
-    - OAK_LEAVES
+    - SPRUCE_LEAVES
     - BIRCH_LEAVES
     - JUNGLE_LEAVES
     - ACACIA_LEAVES
     - DARK_OAK_LEAVES
-    - DIRT
-    - GRASS_BLOCK
-    - STONE
-    - COBBLESTONE
     - COARSE_DIRT
     - PODZOL
-  '3':
-    - IRON_ORE
+    - CLAY
+    - SUGAR_CANE
+
+  '3': # Grundlegende Erze & Gestein
     - COAL_ORE
     - COPPER_ORE
     - GRANITE
+    - DIORITE
     - ANDESITE
-    - GRAS_BLOCK
-  '4':
-    - DIAMOND_ORE
-    - GOLD_ORE
+    - SANDSTONE
+    - GRAVEL
+    - TUFF
+    - MOSS_BLOCK
+
+  '4': # Wertvollere Erze & seltene Blöcke
+    - IRON_ORE
+    - LAPIS_ORE
     - REDSTONE_ORE
+    - DRIPSTONE_BLOCK
+    - MOSSY_COBBLESTONE
+    - ROOTED_DIRT
+    - GLOWSTONE
+    - ICE
+    - SNOW_BLOCK
+
+  '5': # Edelmetalle & unterirdische Ressourcen
+    - GOLD_ORE
+    - DIAMOND_ORE
+    - EMERALD_ORE
+    - DEEPSLATE
+    - DEEPSLATE_IRON_ORE
+    - DEEPSLATE_GOLD_ORE
+    - DEEPSLATE_REDSTONE_ORE
+    - OBSIDIAN
+    - BASALT
+    - BLACKSTONE
+
+  '6': # Nether-Phase
+    - NETHERRACK
+    - SOUL_SAND
+    - SOUL_SOIL
+    - NETHER_QUARTZ_ORE
+    - NETHER_GOLD_ORE
+    - MAGMA_BLOCK
+    - CRIMSON_NYLIUM
+    - WARPED_NYLIUM
+    - CRIMSON_STEM
+    - WARPED_STEM
+    - SHROOMLIGHT
+
+  '7': # Festungs- und Loot-Stufe
+    - NETHER_BRICKS
+    - CHEST
+    - BLAZE_ROD
+    - ENDER_PEARL
+    - GILDED_BLACKSTONE
+    - WARPED_WART_BLOCK
+    - CRIMSON_WART_BLOCK
+    - SOUL_LANTERN
+    - ANCIENT_DEBRIS
+
+  '8': # End-Stufe
+    - END_STONE
+    - PURPUR_BLOCK
+    - END_ROD
+    - CHORUS_FLOWER
+    - CHORUS_PLANT
+    - OBSIDIAN
+    - DRAGON_HEAD
+    - ELYTRA
+    - SHULKER_BOX
+    - BEACON
+
+  '9': # Landwirtschaft & Tiere
+    - WHEAT_SEEDS
+    - CARROT
+    - POTATO
+    - MELON
+    - PUMPKIN
+    - CACTUS
+    - BEE_NEST
+    - HAY_BLOCK
+    - WHEAT
+    - FARMLAND
+
+  '10': # Technik & Redstone
+    - REDSTONE
+    - PISTON
+    - STICKY_PISTON
+    - OBSERVER
+    - HOPPER
+    - DROPPER
+    - DISPENSER
+    - REDSTONE_LAMP
+    - NOTE_BLOCK
+    - COMPARATOR
+    - REPEATER
+
+  '11': # Magie & Verzauberung
+    - ENCHANTING_TABLE
+    - BOOKSHELF
+    - LAPIS_LAZULI
+    - BREWING_STAND
+    - NETHER_WART
+    - GLASS_BOTTLE
+    - EXPERIENCE_BOTTLE
+    - ANVIL
+    - GRINDSTONE
+    - LODESTONE
 

@@ -8,7 +8,6 @@ import org.bukkit.event.Listener;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import static de.Main.OneBlock.Main.config;
@@ -154,9 +153,6 @@ public class Manager implements Listener {
         }
 
 
-
-
-
         config.set("EigeneInsel", false);
         config.set("IslandLevel", 1);
         config.set("MissingBlocksToLevelUp", 10);
@@ -172,6 +168,36 @@ public class Manager implements Listener {
 
         player.sendMessage("§aDeine Insel wurde vollständig gelöscht.");
     }
+
+
+    public static void visitIsland(Player visitor, String ownerName) {
+        // Dateipfad zur Insel-Konfig
+        File file = new File("plugins/OneBlockPlugin/IslandData", ownerName + ".yml");
+
+        if (!file.exists()) {
+            visitor.sendMessage("§cDie Insel von §e" + ownerName + " §cwurde nicht gefunden.");
+            return;
+        }
+
+        // Konfiguration laden
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+        World world = Bukkit.getWorld("OneBlock");
+
+        if (world == null) {
+            visitor.sendMessage("§cDie Welt 'OneBlock' konnte nicht gefunden werden.");
+            return;
+        }
+
+        // Koordinaten auslesen
+        int x = config.getInt("IslandSpawn-x");
+        int z = config.getInt("IslandSpawn-z");
+
+        // Teleportieren
+        Location spawn = new Location(world, x, 101, z);
+        visitor.teleport(spawn);
+        visitor.sendMessage("§aDu wurdest zur Insel von §e" + ownerName + " §ateleportiert.");
+    }
+
 
 
 }

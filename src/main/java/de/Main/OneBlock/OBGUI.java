@@ -1,11 +1,13 @@
 package de.Main.OneBlock;
 
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -16,10 +18,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 public class OBGUI implements CommandExecutor, Listener {
 
-    // Speichert das GUI, damit es nicht mehrfach erstellt wird
     public static Inventory mainGUI;
     public static Inventory OBLÖSCHUNG;
-int[] GLASS1 = {10, 20, 30, 40};
+
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
@@ -32,6 +33,7 @@ int[] GLASS1 = {10, 20, 30, 40};
         if (mainGUI == null) {
             mainGUI = Bukkit.createInventory(null, 6 * 9, "OneBlock");
 
+            // Schwarze Glasscheiben für den Rand
             ItemStack blackGlass = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
             ItemMeta glassMeta = blackGlass.getItemMeta();
             if (glassMeta != null) {
@@ -45,31 +47,34 @@ int[] GLASS1 = {10, 20, 30, 40};
                 }
             }
 
+            // Item: Zu deinem OneBlock teleportieren
             ItemStack grass = new ItemStack(Material.GRASS_BLOCK);
-            ItemMeta meta = grass.getItemMeta();
-            if (meta != null) {
-                meta.setDisplayName("§aZu deinem OneBlock Teleportieren");
-                grass.setItemMeta(meta);
+            ItemMeta grassMeta = grass.getItemMeta();
+            if (grassMeta != null) {
+                grassMeta.setDisplayName("§aZu deinem OneBlock teleportieren");
+                grass.setItemMeta(grassMeta);
             }
-
             mainGUI.setItem(20, grass);
+
+            // Item: OneBlock löschen
+            ItemStack barrier = new ItemStack(Material.BARRIER);
+            ItemMeta barrierMeta = barrier.getItemMeta();
+            if (barrierMeta != null) {
+                barrierMeta.setDisplayName("§cDeinen OneBlock löschen");
+                barrier.setItemMeta(barrierMeta);
+            }
+            mainGUI.setItem(22, barrier);
+
+            // Item: Andere Insel besuchen
+            ItemStack visit = new ItemStack(Material.ENDER_PEARL);
+            ItemMeta visitMeta = visit.getItemMeta();
+            if (visitMeta != null) {
+                visitMeta.setDisplayName("§bAndere Insel besuchen");
+                visit.setItemMeta(visitMeta);
+            }
+            mainGUI.setItem(24, visit);
         }
 
-        ItemStack barrier = new ItemStack(Material.BARRIER);
-        ItemMeta meta = barrier.getItemMeta();
-        if (meta != null) {
-            meta.setDisplayName("§cDeinen OneBlock löschen");
-            barrier.setItemMeta(meta);
-        }
-
-        mainGUI.setItem(22, barrier);
-
-
-
-
-
-
-        // Itemstack erstellen...
         player.openInventory(mainGUI);
         return true;
     }
@@ -77,51 +82,62 @@ int[] GLASS1 = {10, 20, 30, 40};
     public static void openmaingui(Player player) {
         if (OBLÖSCHUNG == null) {
             OBLÖSCHUNG = Bukkit.createInventory(null, 3 * 9, "OneBlock-Löschung");
+
+            ItemStack itemstack = new ItemStack(Material.STONE);
+            ItemMeta meta = itemstack.getItemMeta();
+            if (meta != null) {
+                meta.setDisplayName("Test");
+                itemstack.setItemMeta(meta);
+            }
+
+            OBLÖSCHUNG.setItem(14, itemstack);
         }
-
-
-        ItemStack itemstack = new ItemStack(Material.STONE);
-        ItemMeta meta = itemstack.getItemMeta();
-        if (meta != null) {
-            meta.setDisplayName("Test");
-            itemstack.setItemMeta(meta);
-        }
-
-        OBLÖSCHUNG.setItem(14, itemstack);
 
         player.openInventory(OBLÖSCHUNG);
     }
-
-    //nospi der Command
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player)) return;
         Player player = (Player) event.getWhoClicked();
 
-        if (event.getClickedInventory() == null) return;
-        if (event.getCurrentItem() == null) return;
+        if (event.getClickedInventory() == null || event.getCurrentItem() == null) return;
 
-        ItemStack clickedItem = event.getCurrentItem();
+        if (!event.getView().getTitle().equalsIgnoreCase("OneBlock")) return;
 
+        event.setCancelled(true);
+        ItemStack clicked = event.getCurrentItem();
+        Material type = clicked.getType();
 
-        if (event.getView().getTitle().equals("OneBlock")) {
-            event.setCancelled(true);
-
-            Material type = clickedItem.getType();
-
-            if (type == Material.GRASS_BLOCK) {
+        switch (type) {
+            case GRASS_BLOCK:
                 player.closeInventory();
                 player.performCommand("ob join");
-            } else if (type == Material.BARRIER) {
+                break;
+
+            case BARRIER:
                 player.closeInventory();
                 player.performCommand("ob delete");
-            }
+                break;
+
+            case ENDER_PEARL:
+                player.closeInventory();
+
+                // Soundeffekt beim Klick (optional)
+                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+
+                // Nachricht mit klickbarem Vorschlag
+                TextComponent msg = new TextComponent("§aKlicke hier, um den Besuchsbefehl einzugeben: ");
+                TextComponent commandPart = new TextComponent("§e/ob visit ");
+
+                commandPart.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/ob visit "));
+                msg.addExtra(commandPart);
+
+                player.spigot().sendMessage(msg);
+                break;
+
+            default:
+                break;
         }
-
-
     }
-
-
-
 }
