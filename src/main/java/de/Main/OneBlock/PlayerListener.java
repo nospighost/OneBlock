@@ -166,7 +166,6 @@ public class PlayerListener implements Listener {
         double progress = (double) (totalBlocks - missingBlocks) / totalBlocks; // Berechne den Fortschritt (zwischen 0 und 1)
 
 
-        player.sendMessage(String.valueOf(totalBlocks));
 
         // Erstelle den Balken (10 Schritte, für jedes 10% des Fortschritts)
         int progressLength = (int) (progress * 10);
@@ -180,10 +179,10 @@ public class PlayerListener implements Listener {
         }
         bar.append("§7]");
 
-        // Actionbar-Nachricht zusammenbauen
+
         String message = "§bLevel: §e" + currentLevel + " §8| §7" + bar.toString() + " §7Noch §c" + missingBlocks + " §7Blöcke bis zum nächsten Level";
 
-        // Sende die Nachricht an den Spieler
+        // Sende die Nachricht an den Spiexler
         player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(message));
     }
 
