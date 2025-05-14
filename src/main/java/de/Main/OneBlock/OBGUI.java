@@ -19,7 +19,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 public class OBGUI implements CommandExecutor, Listener {
 
     public static Inventory mainGUI;
-    public static Inventory OBLÖSCHUNG;
+    public static Inventory UpgradeShop;
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -29,6 +29,25 @@ public class OBGUI implements CommandExecutor, Listener {
         }
 
         Player player = (Player) sender;
+
+
+        if (UpgradeShop == null) {
+            UpgradeShop = Bukkit.createInventory(null, 6 * 9, "Upgrade-Shop");
+
+            ItemStack shop = new ItemStack(Material.NETHER_STAR);
+            ItemMeta shopMeta = shop.getItemMeta();
+            if (shopMeta != null) {
+                shopMeta.setDisplayName("§aWorldBorder vergrößern!");
+                shop.setItemMeta(shopMeta);
+            }
+            UpgradeShop.setItem(20, shop);
+        }
+
+        player.openInventory(UpgradeShop);
+
+
+
+
 
         if (mainGUI == null) {
             mainGUI = Bukkit.createInventory(null, 6 * 9, "OneBlock");
@@ -73,28 +92,21 @@ public class OBGUI implements CommandExecutor, Listener {
                 visit.setItemMeta(visitMeta);
             }
             mainGUI.setItem(24, visit);
+
+            ItemStack shop = new ItemStack(Material.BEACON);
+            ItemMeta shopMeta = shop.getItemMeta();
+            if (shopMeta != null) {
+                shopMeta.setDisplayName("§aZum OneBlock Shop");
+                shop.setItemMeta(shopMeta);
+            }
+            mainGUI.setItem(28, shop);
+
         }
 
         player.openInventory(mainGUI);
         return true;
     }
 
-    public static void openmaingui(Player player) {
-        if (OBLÖSCHUNG == null) {
-            OBLÖSCHUNG = Bukkit.createInventory(null, 3 * 9, "OneBlock-Löschung");
-
-            ItemStack itemstack = new ItemStack(Material.STONE);
-            ItemMeta meta = itemstack.getItemMeta();
-            if (meta != null) {
-                meta.setDisplayName("Test");
-                itemstack.setItemMeta(meta);
-            }
-
-            OBLÖSCHUNG.setItem(14, itemstack);
-        }
-
-        player.openInventory(OBLÖSCHUNG);
-    }
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
@@ -122,6 +134,13 @@ public class OBGUI implements CommandExecutor, Listener {
 
             case ENDER_PEARL:
                 player.closeInventory();
+                break;
+
+            case BEACON:
+                player.closeInventory();
+                player.openInventory(UpgradeShop);
+
+
 
                 // Soundeffekt beim Klick (optional)
                 player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
@@ -135,7 +154,6 @@ public class OBGUI implements CommandExecutor, Listener {
 
                 player.spigot().sendMessage(msg);
                 break;
-
             default:
                 break;
         }

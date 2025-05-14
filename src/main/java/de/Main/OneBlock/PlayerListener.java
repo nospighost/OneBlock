@@ -121,10 +121,10 @@ public class PlayerListener implements Listener {
             if (blockstolevelup == 0) {
                 IslandLevel += 1;
                 config.set("IslandLevel", IslandLevel);
-                config.set("MissingBlocksToLevelUp", 100);
-
                 Integer v = totalblocks * 2;
                 config.set("TotalBlocks", v);
+                config.set("MissingBlocksToLevelUp", v);
+
 
             }
 
@@ -165,8 +165,6 @@ public class PlayerListener implements Listener {
         int totalBlocks = config.getInt("TotalBlocks"); // Anzahl der Blöcke bis zum nächsten Level-Up
         double progress = (double) (totalBlocks - missingBlocks) / totalBlocks; // Berechne den Fortschritt (zwischen 0 und 1)
 
-
-
         // Erstelle den Balken (10 Schritte, für jedes 10% des Fortschritts)
         int progressLength = (int) (progress * 10);
         StringBuilder bar = new StringBuilder("§7[");
@@ -179,10 +177,10 @@ public class PlayerListener implements Listener {
         }
         bar.append("§7]");
 
-
+        // Actionbar-Nachricht zusammenbauen
         String message = "§bLevel: §e" + currentLevel + " §8| §7" + bar.toString() + " §7Noch §c" + missingBlocks + " §7Blöcke bis zum nächsten Level";
 
-        // Sende die Nachricht an den Spiexler
+        // Sende die Nachricht an den Spieler
         player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(message));
     }
 
