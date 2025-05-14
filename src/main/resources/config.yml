@@ -13,135 +13,113 @@ InselPadding:
 
 # Definiert die Blöcke, die bei einem OneBlock nach bestimmten Insel-Leveln erscheinen
 oneblockblocks:
-  '1': # Grundstufe – Startressourcen
+  '1': # Natur & Erde
     - DIRT
     - GRASS_BLOCK
-    - STONE
-    - COBBLESTONE
+    - COARSE_DIRT
+    - PODZOL
     - SAND
-    - OAK_LOG
-    - OAK_LEAVES
+    - CLAY
+    - GRAVEL
 
-  '2': # Holz- & Naturphase
+  '2': # Holz & Bäume
+    - OAK_LOG
     - SPRUCE_LOG
     - BIRCH_LOG
     - JUNGLE_LOG
     - ACACIA_LOG
     - DARK_OAK_LOG
+    - OAK_WOOD
+    - SPRUCE_WOOD
+    - BIRCH_WOOD
+    - STRIPPED_OAK_LOG
+    - STRIPPED_SPRUCE_LOG
+    - STRIPPED_BIRCH_LOG
+    - STRIPPED_JUNGLE_LOG
+    - OAK_LEAVES
     - SPRUCE_LEAVES
     - BIRCH_LEAVES
     - JUNGLE_LEAVES
     - ACACIA_LEAVES
     - DARK_OAK_LEAVES
-    - COARSE_DIRT
-    - PODZOL
-    - CLAY
-    - SUGAR_CANE
-
-  '3': # Grundlegende Erze & Gestein
-    - COAL_ORE
-    - COPPER_ORE
-    - GRANITE
-    - DIORITE
-    - ANDESITE
-    - SANDSTONE
-    - GRAVEL
-    - TUFF
     - MOSS_BLOCK
-
-  '4': # Wertvollere Erze & seltene Blöcke
-    - IRON_ORE
-    - LAPIS_ORE
-    - REDSTONE_ORE
-    - DRIPSTONE_BLOCK
     - MOSSY_COBBLESTONE
-    - ROOTED_DIRT
-    - GLOWSTONE
-    - ICE
-    - SNOW_BLOCK
 
-  '5': # Edelmetalle & unterirdische Ressourcen
-    - GOLD_ORE
-    - DIAMOND_ORE
-    - EMERALD_ORE
+  '3': # Stein & Gestein
+    - STONE
+    - COBBLESTONE
+    - ANDESITE
+    - DIORITE
+    - GRANITE
+    - TUFF
+    - STONE_BRICKS
+    - CRACKED_STONE_BRICKS
+
+  '4': # Unterirdische Materialien
+    - COAL_BLOCK
+    - IRON_BLOCK
+    - COPPER_BLOCK
     - DEEPSLATE
-    - DEEPSLATE_IRON_ORE
-    - DEEPSLATE_GOLD_ORE
-    - DEEPSLATE_REDSTONE_ORE
-    - OBSIDIAN
-    - BASALT
-    - BLACKSTONE
+    - COBBLED_DEEPSLATE
+    - POLISHED_DEEPSLATE
+    - DEEPSLATE_BRICKS
+    - DEEPSLATE_TILES
 
-  '6': # Nether-Phase
+  '5': # Edelmetalle & Seltenes
+    - GOLD_BLOCK
+    - REDSTONE_BLOCK
+    - LAPIS_BLOCK
+    - EMERALD_BLOCK
+    - DIAMOND_BLOCK
+    - OBSIDIAN
+
+  '6': # Nether-Biomaterialien
     - NETHERRACK
     - SOUL_SAND
     - SOUL_SOIL
-    - NETHER_QUARTZ_ORE
-    - NETHER_GOLD_ORE
-    - MAGMA_BLOCK
+    - BASALT
+    - POLISHED_BASALT
+    - BLACKSTONE
+    - POLISHED_BLACKSTONE
+    - NETHER_BRICKS
+    - RED_NETHER_BRICKS
+
+  '7': # Nether-Wald
     - CRIMSON_NYLIUM
     - WARPED_NYLIUM
     - CRIMSON_STEM
     - WARPED_STEM
+    - STRIPPED_CRIMSON_STEM
+    - STRIPPED_WARPED_STEM
+    - CRIMSON_HYPHAE
+    - WARPED_HYPHAE
     - SHROOMLIGHT
-
-  '7': # Festungs- und Loot-Stufe
-    - NETHER_BRICKS
-    - CHEST
-    - BLAZE_ROD
-    - ENDER_PEARL
-    - GILDED_BLACKSTONE
-    - WARPED_WART_BLOCK
-    - CRIMSON_WART_BLOCK
-    - SOUL_LANTERN
-    - ANCIENT_DEBRIS
 
   '8': # End-Stufe
     - END_STONE
     - PURPUR_BLOCK
-    - END_ROD
-    - CHORUS_FLOWER
-    - CHORUS_PLANT
+    - PURPUR_PILLAR
+    - END_STONE_BRICKS
     - OBSIDIAN
-    - DRAGON_HEAD
-    - ELYTRA
-    - SHULKER_BOX
+    - CHISELED_PURPUR_BLOCK
+
+  '9': # Magie & Reichtum
+    - QUARTZ_BLOCK
+    - CHISELED_QUARTZ_BLOCK
+    - SMOOTH_QUARTZ
+    - HONEY_BLOCK
+    - SLIME_BLOCK
+    - GILDED_BLACKSTONE
+    - ANCIENT_DEBRIS
+    - NETHERITE_BLOCK
+
+  '10': # Dekor & Luxus
+    - GLOWSTONE
+    - SEA_LANTERN
+    - PRISMARINE
+    - PRISMARINE_BRICKS
+    - DARK_PRISMARINE
     - BEACON
-
-  '9': # Landwirtschaft & Tiere
-    - WHEAT_SEEDS
-    - CARROT
-    - POTATO
-    - MELON
-    - PUMPKIN
-    - CACTUS
-    - BEE_NEST
-    - HAY_BLOCK
-    - WHEAT
-    - FARMLAND
-
-  '10': # Technik & Redstone
-    - REDSTONE
-    - PISTON
-    - STICKY_PISTON
-    - OBSERVER
-    - HOPPER
-    - DROPPER
-    - DISPENSER
-    - REDSTONE_LAMP
-    - NOTE_BLOCK
-    - COMPARATOR
-    - REPEATER
-
-  '11': # Magie & Verzauberung
-    - ENCHANTING_TABLE
-    - BOOKSHELF
-    - LAPIS_LAZULI
-    - BREWING_STAND
-    - NETHER_WART
-    - GLASS_BOTTLE
-    - EXPERIENCE_BOTTLE
-    - ANVIL
-    - GRINDSTONE
     - LODESTONE
+
 
