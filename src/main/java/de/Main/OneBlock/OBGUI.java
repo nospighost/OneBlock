@@ -142,7 +142,7 @@ public class OBGUI implements CommandExecutor, Listener {
 
 
 
-                // Soundeffekt beim Klick (optional)
+                // Soundeffekt beim Klick (optional) w
                 player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
 
                 // Nachricht mit klickbarem Vorschlag

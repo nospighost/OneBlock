@@ -165,7 +165,7 @@ public class PlayerListener implements Listener {
         int totalBlocks = config.getInt("TotalBlocks"); // Anzahl der Blöcke bis zum nächsten Level-Up
         double progress = (double) (totalBlocks - missingBlocks) / totalBlocks; // Berechne den Fortschritt (zwischen 0 und 1)
 
-        // Erstelle den Balken (10 Schritte, für jedes 10% des Fortschritts)
+        // Erstelle den Balken (10 Schritte, für jedes 10% des Fortschritts)w
         int progressLength = (int) (progress * 10);
         StringBuilder bar = new StringBuilder("§7[");
         for (int i = 0; i < 10; i++) {
