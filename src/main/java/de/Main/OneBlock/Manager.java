@@ -1,5 +1,6 @@
 package de.Main.OneBlock;
 
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
@@ -7,20 +8,23 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static de.Main.OneBlock.Main.config;
-import static de.Main.OneBlock.Main.oneBlockWorld;
+import static de.Main.OneBlock.Main.*;
 
 public class Manager implements Listener {
+    public static Economy economy; // <-- jetzt static
 
+    public Manager(Economy eco) {
+        economy = eco;
+    }
 
     public static boolean createOrJoinIsland(Player player, String[] args) {
-
         if (args.length == 1 && args[0].equalsIgnoreCase("join")) {
 
             YamlConfiguration config = Manager.getIslandConfig(player);
@@ -226,13 +230,14 @@ public class Manager implements Listener {
         meta.addEnchant(Enchantment.MENDING, 1, true);
 
         meta.addEnchant(Enchantment.FORTUNE, 2, true);
-
         stack.setItemMeta(meta);
 
         player.getInventory().addItem(stack); //a
 
+        economy.depositPlayer(player, 1000);
 
         player.sendMessage("§aDeine Insel wurde erfolgreich Rebirthed");
         saveIslandConfig(player, config);
     }
+
 }

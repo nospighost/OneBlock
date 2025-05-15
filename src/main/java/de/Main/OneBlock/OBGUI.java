@@ -100,7 +100,7 @@ public class OBGUI implements CommandExecutor, Listener {
         int neededLevel = costLevel * 2;
         int playerLevel = config.getInt("IslandLevel", 1);
 
-        ItemStack upgradeItem = new ItemStack(Material.NETHER_STAR);
+        ItemStack upgradeItem = new ItemStack(Material.STRUCTURE_VOID);
         ItemMeta meta = upgradeItem.getItemMeta();
         if (meta != null) {
             meta.setDisplayName("§aWorldBorder vergrößern!");
@@ -119,6 +119,14 @@ public class OBGUI implements CommandExecutor, Listener {
 
         upgradeShop.setItem(20, upgradeItem);
         player.openInventory(upgradeShop);
+
+        ItemStack rebirth = new ItemStack(Material.TOTEM_OF_UNDYING);
+        ItemMeta rebirthMeta = rebirth.getItemMeta();
+        if (rebirthMeta != null) {
+            rebirthMeta.setDisplayName(" ");
+            rebirth.setItemMeta(rebirthMeta);
+            upgradeShop.setItem(22, rebirth);
+        }
     }
 
     @EventHandler
@@ -163,7 +171,7 @@ public class OBGUI implements CommandExecutor, Listener {
 
 
 
-            if (type == Material.NETHER_STAR) {
+            if (type == Material.STRUCTURE_VOID) {
                 YamlConfiguration config = Manager.getIslandConfig(player);
                 int currentSize = config.getInt("WorldBorderSize", 50);
 
@@ -185,6 +193,8 @@ public class OBGUI implements CommandExecutor, Listener {
                 }else {
                     player.sendMessage("§cDu hast das Limit erreicht");
                 }
+
+
                 }
 
         }

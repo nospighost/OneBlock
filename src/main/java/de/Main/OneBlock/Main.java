@@ -1,5 +1,6 @@
 package de.Main.OneBlock;
 
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -14,6 +15,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -28,13 +30,17 @@ public class Main extends JavaPlugin implements Listener {
     public static FileConfiguration config;
     public static File islandDataFolder;
 
+
     public static Main getInstance() {
         return instance;
     }
 
+    private static Economy economy = null;
 
     @Override
     public void onEnable() {
+
+
         //config
         saveDefaultConfig();
         config = getConfig();
@@ -43,9 +49,23 @@ public class Main extends JavaPlugin implements Listener {
             config.set("value", 400);
             saveConfig();
         }
+
+
+        setupEconomy();
+
+
         // Listener registrieren
         Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
+        if (economy != null) {
+            Bukkit.getPluginManager().registerEvents(new Manager(economy), this);
+            getLogger().info("Vault Economy erfolgreich erkannt.");
+        } else {
+            getLogger().warning("Vault wurde nicht gefunden – Economy wird deaktiviert.");
+            Bukkit.getPluginManager().registerEvents(new Manager(null), this); // Optional: wenn Manager auch ohne economy funktioniert
+        }
+
         getCommand("ob").setTabCompleter(new TabCompleter());
+
 
 
         getLogger().info("OneBlockPlugin aktiviert!");
@@ -108,6 +128,7 @@ public class Main extends JavaPlugin implements Listener {
                 }
             }
         }
+
     }
 
 
@@ -117,6 +138,7 @@ public class Main extends JavaPlugin implements Listener {
         Manager.saveIslandConfig(null, null);
         saveDefaultConfig();
         getLogger().info("OneBlockPlugin deaktiviert.");
+
     }
 
 
@@ -145,4 +167,16 @@ public class Main extends JavaPlugin implements Listener {
 
         }
     }
+
+    private boolean setupEconomy() {
+        RegisteredServiceProvider<Economy> rsp = Bukkit.getServicesManager().getRegistration(Economy.class);
+        if (rsp != null) {
+            economy = rsp.getProvider();
+        }
+        return economy != null;
+    }
+    public static Economy getEconomy() {
+        return economy;
+    }
+
 }
