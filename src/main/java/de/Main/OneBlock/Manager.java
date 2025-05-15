@@ -2,8 +2,11 @@ package de.Main.OneBlock;
 
 import org.bukkit.*;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.File;
 import java.io.IOException;
@@ -206,6 +209,28 @@ public class Manager implements Listener {
         config.set("IslandLevel", 1);
         config.set("TotalBlocks", 200);
         config.set("MissingBlocksToLevelUp", 200);
+
+
+        ItemStack stack = new ItemStack(Material.NETHERITE_PICKAXE);
+        ItemMeta meta = stack.getItemMeta();
+        meta.setDisplayName("§cRebirth Pickaxe");
+        ArrayList<String> lore = new ArrayList<>();
+        lore.add(" ");
+        lore.add(ChatColor.WHITE + "Diese Spitzhacke bekommst du beim Rebirth");
+        lore.add("");
+        meta.setLore(lore);
+        meta.addEnchant(Enchantment.EFFICIENCY, 6, true);
+
+        meta.addEnchant(Enchantment.UNBREAKING, 5, true);
+
+        meta.addEnchant(Enchantment.MENDING, 1, true);
+
+        meta.addEnchant(Enchantment.FORTUNE, 2, true);
+
+        stack.setItemMeta(meta);
+
+        player.getInventory().addItem(stack);
+
 
         player.sendMessage("§aDeine Insel wurde erfolgreich Rebirthed");
         saveIslandConfig(player, config);

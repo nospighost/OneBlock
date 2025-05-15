@@ -18,9 +18,7 @@ oneblockblocks:
     - GRASS_BLOCK
     - COARSE_DIRT
     - PODZOL
-    - SAND
     - CLAY
-    - GRAVEL
 
   '2': # Holz & Bäume
     - OAK_LOG
