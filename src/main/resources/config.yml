@@ -63,7 +63,7 @@ oneblockblocks:
     - DEEPSLATE_BRICKS
     - DEEPSLATE_TILES
 
-  '5': # Edelmetalle & Seltenes
+  '5': # Edelmetalle & Seltenesss
     - GOLD_BLOCK
     - REDSTONE_BLOCK
     - LAPIS_BLOCK

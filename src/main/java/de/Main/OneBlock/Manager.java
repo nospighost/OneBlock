@@ -229,7 +229,7 @@ public class Manager implements Listener {
 
         stack.setItemMeta(meta);
 
-        player.getInventory().addItem(stack);
+        player.getInventory().addItem(stack); //a
 
 
         player.sendMessage("§aDeine Insel wurde erfolgreich Rebirthed");
