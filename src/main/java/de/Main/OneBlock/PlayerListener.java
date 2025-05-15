@@ -1,5 +1,7 @@
 package de.Main.OneBlock;
 
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -184,35 +186,35 @@ public class PlayerListener implements Listener {
 
 
 
-        private static final String USER_DATA_FOLDER = "plugins/OneBlockPlugin/IslandData"; // Den Pfad zu deinen Userdaten
+    private static final String USER_DATA_FOLDER = "plugins/OneBlockPlugin/IslandData"; // Den Pfad zu deinen Userdaten
 
-        @EventHandler
-        public void onBlockPiston(BlockPistonExtendEvent event) {
-            System.out.println("Piston event ");
-            for (Block block : event.getBlocks()) {
-                if (block.getY() != 100) continue;
+    @EventHandler
+    public void onBlockPiston(BlockPistonExtendEvent event) {
+        System.out.println("Piston event ");
+        for (Block block : event.getBlocks()) {
+            if (block.getY() != 100) continue;
 
-                File folder = new File(USER_DATA_FOLDER);
-                for (File file : folder.listFiles()) {
-                    if (!file.getName().endsWith(".yml")) continue; // Nur .yml-Dateien
+            File folder = new File(USER_DATA_FOLDER);
+            for (File file : folder.listFiles()) {
+                if (!file.getName().endsWith(".yml")) continue; // Nur .yml-Dateien
 
-                    YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-                    int x = config.getInt("OneBlock-x");
-                    int z = config.getInt("OneBlock-z");
-                    System.out.println("x:" + x + " z:" + z);
-                    World world = Bukkit.getWorld("OneBlock");
-                    if (world != null) {
-                        Location oneBlockLocation = new Location(world, x, 100, z);
+                YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+                int x = config.getInt("OneBlock-x");
+                int z = config.getInt("OneBlock-z");
+                System.out.println("x:" + x + " z:" + z);
+                World world = Bukkit.getWorld("OneBlock");
+                if (world != null) {
+                    Location oneBlockLocation = new Location(world, x, 100, z);
 
-                        if (block.getLocation().equals(oneBlockLocation)) {
-                            System.out.println("Piston stop eig");
-                            event.setCancelled(true);
-                            return;
-                        }
+                    if (block.getLocation().equals(oneBlockLocation)) {
+                        System.out.println("Piston stop eig");
+                        event.setCancelled(true);
+                        return;
                     }
                 }
             }
         }
+    }
 
 
     @EventHandler
