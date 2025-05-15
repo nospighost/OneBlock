@@ -29,7 +29,7 @@ public class OneBlockCommands implements Listener, CommandExecutor {
                 String targetName = args[1];
                 Manager.visitIsland(player, targetName);
         } else if (args.length == 1 && args[0].equalsIgnoreCase("rebirth")) {
-            Manager.rebirthIsland(player);//a
+            Manager.rebirthIsland(player);
             }
          else {
                 player.sendMessage("Nutze: /ob join | /ob delete");
