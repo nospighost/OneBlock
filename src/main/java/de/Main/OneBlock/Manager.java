@@ -199,5 +199,14 @@ public class Manager implements Listener {
     }
 
 
+    public static void rebirthIsland(Player player) {
+        YamlConfiguration config = getIslandConfig(player);
 
+        config.set("IslandLevel", 1);
+        config.set("TotalBlocks", 200);
+        config.set("MissingBlocksToLevelUp", 200);
+
+        player.sendMessage("§aDeine Insel wurde erfolgreich Rebirthed");
+        saveIslandConfig(player, config);
+    }
 }
