@@ -17,7 +17,7 @@ public class TabCompleter implements org.bukkit.command.TabCompleter {
 
 
             if (args.length == 1) {
-                List<String> subCommands = Arrays.asList("join", "delete");
+                List<String> subCommands = Arrays.asList("join", "delete", "visit");
                 List<String> result = new ArrayList<>();
 
                 for (String sub : subCommands) {
