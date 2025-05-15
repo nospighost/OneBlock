@@ -164,7 +164,7 @@ public class Manager implements Listener {
         config.set("OneBlock-x", null);
         config.set("OneBlock-z", null);
         config.set("WorldBorderSize", 50);
-
+//
         saveIslandConfig(player, config);
 
         player.sendMessage("§aDeine Insel wurde vollständig gelöscht.");
