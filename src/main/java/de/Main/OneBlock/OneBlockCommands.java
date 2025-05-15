@@ -29,8 +29,8 @@ public class OneBlockCommands implements Listener, CommandExecutor {
         } else if (args.length == 1 && args[0].equalsIgnoreCase("delete")) {
             Manager.deleteIsland(player);
         }else if (args.length == 2 && args[0].equalsIgnoreCase("visit")) {
-                String targetName = args[1];
-                Manager.visitIsland(player, targetName);
+            String targetName = args[1];
+            Manager.visitIsland(player, targetName);
         } else if (args.length == 1 && args[0].equalsIgnoreCase("rebirth")) {
 
             if (config.getInt("IslandLevel")== 4 && (player.getInventory().firstEmpty() == -1)){  //a
@@ -43,12 +43,12 @@ public class OneBlockCommands implements Listener, CommandExecutor {
                 Manager.rebirthIsland(player);
             }
 
-            }
-         else {
-                player.sendMessage("Nutze: /ob join | /ob delete");
-            }
+        }
+        else {
+            player.sendMessage("Nutze: /ob join | /ob delete");
+        }
 
 
-            return true;
+        return true;
     }
 }
