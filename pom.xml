@@ -90,5 +90,6 @@
             <version>7.0.7</version>
             <scope>provided</scope>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/com.sk89q.worldedit/worldedit-bukkit -->
     </dependencies>
 </project>
