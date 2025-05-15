@@ -21,6 +21,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -45,7 +46,9 @@ public class PlayerListener implements Listener {
         Player player = event.getPlayer();
         YamlConfiguration config = Manager.getIslandConfig(player);
 
-        if (!config.contains("created") || !config.contains("WorldBorderSize") || !config.contains("TotalBlocks") || !config.contains("owner") || !config.contains("owner-uuid") || !config.contains("EigeneInsel") || !config.contains("z-position") || !config.contains("x-position") || !config.contains("IslandSpawn-x") || !config.contains("IslandSpawn-z")) {
+
+        if (!config.contains("created") || !config.contains("WorldBorderSize") || !config.contains("TotalBlocks") || !config.contains("owner") || !config.contains("owner-uuid") || !config.contains("EigeneInsel") || !config.contains("z-position") || !config.contains("x-position") || !config.contains("IslandSpawn-x") || !config.contains("IslandSpawn-z") || !config.contains("trusted") || !config.contains("added") || !config.contains("invited") || !config.contains("invitedtrust")) {
+
             config.set("created", System.nanoTime());
             config.set("owner", player.getName());
             config.set("owner-uuid", player.getUniqueId().toString());
@@ -58,9 +61,17 @@ public class PlayerListener implements Listener {
             config.set("IslandLevel", 1);
             config.set("OneBlock-x", 0);
             config.set("OneBlock-z", 0);
+
+            config.set("trusted", new ArrayList<String>());
+            config.set("added", new ArrayList<String>());
+            config.set("invited", new ArrayList<String>());
+            config.set("invitedtrust", new ArrayList<String>());
+
             Manager.saveIslandConfig(player, config);
         }
 
+
+        // WorldBorder und Teleport
         World world = Bukkit.getWorld(WORLD_NAME);
         if (world != null && player.getWorld().getName().equals(WORLD_NAME)) {
             int x = config.getInt("OneBlock-x", 0);
@@ -80,7 +91,33 @@ public class PlayerListener implements Listener {
             Location spawn = new Location(world, config.getInt("x-position"), 100, config.getInt("z-position"));
             player.teleport(spawn);
         }
+
+        // *** Hier prüfen, ob der Spieler in trusted/added Listen von anderen Inseln steht ***
+        File islandFolder = Main.islandDataFolder;
+        if (islandFolder.exists() && islandFolder.isDirectory()) {
+            File[] files = islandFolder.listFiles((dir, name) -> name.endsWith(".yml"));
+            if (files != null) {
+                for (File file : files) {
+                    YamlConfiguration otherConfig = YamlConfiguration.loadConfiguration(file);
+
+                    List<String> addedList = otherConfig.getStringList("added");
+                    List<String> trustedList = otherConfig.getStringList("trusted");
+                    String ownerName = file.getName().replace(".yml", "");
+
+                    if (addedList.contains(player.getName())) {
+                        player.sendMessage("§aDu bist als Mitglied auf der Insel von §e" + ownerName + " §aeingetragen.");
+                        // Hier kannst du noch mehr Aktionen machen (Permissions etc.)
+                    }
+
+                    if (trustedList.contains(player.getName())) {
+                        player.sendMessage("§aDu bist als Vertrauensspieler auf der Insel von §e" + ownerName + " §aeingetragen.");
+                        // Hier kannst du noch mehr Aktionen machen (Permissions etc.)
+                    }
+                }
+            }
+        }
     }
+
 
     @EventHandler
     public void onPlayerRespawn(PlayerRespawnEvent event) {
