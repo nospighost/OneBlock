@@ -33,14 +33,15 @@ public class OneBlockCommands implements Listener, CommandExecutor {
                 Manager.visitIsland(player, targetName);
         } else if (args.length == 1 && args[0].equalsIgnoreCase("rebirth")) {
 
-            if (config.getInt("IslandLevel")== 4 && (player.getInventory().firstEmpty() == -1)){  //a
-
-
+            if (config.getInt("IslandLevel") != 4) {  //a
 
                 player.sendMessage("§cDein Inventar ist voll!");
 
-            }else{
+            }else if (config.getInt("IslandLevel") == 4 || (player.getInventory().firstEmpty() == -1)){
                 Manager.rebirthIsland(player);
+
+
+
             }
 
             }

@@ -83,7 +83,8 @@
             <version>1.7.1</version>
             <scope>provided</scope>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/com.ssk89q.worldguard/worldguard-bukkit a-->
+        <!-- https://mvnrepository.com/artifact/com.sk89q.worldguard/worldguard-bukkit a-->
+        <!-- fa-->
         <dependency>
             <groupId>com.sk89q.worldguard</groupId>
             <artifactId>worldguard-bukkit</artifactId>
