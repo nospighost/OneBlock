@@ -71,7 +71,7 @@ public class PlayerListener implements Listener {
         }
 
 
-        // WorldBorder und Teleport
+//Hier wird die Worldborder erstelelte 
         World world = Bukkit.getWorld(WORLD_NAME);
         if (world != null && player.getWorld().getName().equals(WORLD_NAME)) {
             int x = config.getInt("OneBlock-x", 0);
@@ -92,7 +92,7 @@ public class PlayerListener implements Listener {
             player.teleport(spawn);
         }
 
-        // *** Hier prüfen, ob der Spieler in trusted/added Listen von anderen Inseln steht ***
+       //Hier wird überprüft ob der Spieler halt getrustdetd oder geadded wurde
         File islandFolder = Main.islandDataFolder;
         if (islandFolder.exists() && islandFolder.isDirectory()) {
             File[] files = islandFolder.listFiles((dir, name) -> name.endsWith(".yml"));
@@ -106,12 +106,12 @@ public class PlayerListener implements Listener {
 
                     if (addedList.contains(player.getName())) {
                         player.sendMessage("§aDu bist als Mitglied auf der Insel von §e" + ownerName + " §aeingetragen.");
-                        // Hier kannst du noch mehr Aktionen machen (Permissions etc.)
+                       
                     }
 
                     if (trustedList.contains(player.getName())) {
                         player.sendMessage("§aDu bist als Vertrauensspieler auf der Insel von §e" + ownerName + " §aeingetragen.");
-                        // Hier kannst du noch mehr Aktionen machen (Permissions etc.)
+                       
                     }
                 }
             }
@@ -236,7 +236,7 @@ public class PlayerListener implements Listener {
     }
 
     @EventHandler
-    public void onEntityExplode(EntityExplodeEvent event) {
+    public void onEntityExplode(EntityExplodeEvent event) { // Das der ONeblock bei einer Explosion nicht zerstört wird
         event.blockList().removeIf(this::isOneBlock);
         List<String> nextBlocks = Main.config.getStringList("oneblockblocks.block");
         if (nextBlocks.isEmpty()) return;
