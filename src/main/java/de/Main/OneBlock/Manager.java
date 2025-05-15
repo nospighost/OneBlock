@@ -4,6 +4,7 @@ import org.bukkit.*;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
+import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
 import java.io.IOException;
@@ -210,4 +211,5 @@ public class Manager implements Listener {
         player.sendMessage("§aDeine Insel wurde erfolgreich Rebirthed");
         saveIslandConfig(player, config);
     }
+
 }
