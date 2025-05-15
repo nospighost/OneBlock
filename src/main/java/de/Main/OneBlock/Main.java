@@ -46,6 +46,8 @@ public class Main extends JavaPlugin implements Listener {
         // Listener registrieren
         Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
         getCommand("ob").setTabCompleter(new TabCompleter());
+
+
         getLogger().info("OneBlockPlugin aktiviert!");
 
         // Ordner Erstellen//
@@ -83,7 +85,6 @@ public class Main extends JavaPlugin implements Listener {
             getLogger().warning("Fehler beim Erstellen der OneBlock-Welt");
         }
 
-        // Hol alle Inselbesitzer und setze deren Border
         for (String playerName : Manager.getAllIslandOwners()) {
             File file = new File(islandDataFolder, playerName + ".yml");
             if (file.exists()) {
@@ -92,7 +93,7 @@ public class Main extends JavaPlugin implements Listener {
                 int z = config.getInt("OneBlock-z");
                 int size = config.getInt("WorldBorderSize", 50);
 
-                // Border für den Spieler setzen
+
                 Player player = Bukkit.getPlayerExact(playerName);
                 if (player != null && player.isOnline()) {
                     WorldBorder border = Bukkit.createWorldBorder();

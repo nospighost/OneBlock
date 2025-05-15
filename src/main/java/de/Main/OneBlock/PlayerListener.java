@@ -53,8 +53,8 @@ public class PlayerListener implements Listener {
             config.set("z-position", 0);
             config.set("x-position", 0);
             config.set("WorldBorderSize", 50);
-            config.set("MissingBlocksToLevelUp", 10);
-            config.set("TotalBlocks", 100);
+            config.set("MissingBlocksToLevelUp", 200);
+            config.set("TotalBlocks", 200);
             config.set("IslandLevel", 1);
             config.set("OneBlock-x", 0);
             config.set("OneBlock-z", 0);
@@ -111,12 +111,12 @@ public class PlayerListener implements Listener {
                 blockLocation.getBlockY() == 100 &&
                 blockLocation.getBlockZ() == config.getInt("OneBlock-z")) {
 
-            // Counter NUR verringern, wenn es der OneBlock ist
+
             blockstolevelup -= 1;
             config.set("MissingBlocksToLevelUp", blockstolevelup);
 
-            // Actionbar anzeigen
-            sendActionbarProgress(player, IslandLevel, blockstolevelup);
+
+            sendActionbarProgress(player, IslandLevel, blockstolevelup);  // Actionbar anzeigen
 
             if (blockstolevelup == 0) {
                 IslandLevel += 1;
@@ -147,6 +147,7 @@ public class PlayerListener implements Listener {
 
             // Block Drop
 
+
             Material originalType = block.getType();
             event.setDropItems(false);
             ItemStack droppedItem = new ItemStack(originalType);
@@ -170,30 +171,29 @@ public class PlayerListener implements Listener {
         StringBuilder bar = new StringBuilder("§7[");
         for (int i = 0; i < 10; i++) {
             if (i < progressLength) {
-                bar.append("§a█"); // Grüner Teil des Balkens (Fortschritt)
+                bar.append("§a█"); // Grüner Teil des Balkens
             } else {
-                bar.append("§7█"); // Grauer Teil des Balkens (Rest)
+                bar.append("§7█"); // Grauer Teil des Balkens
             }
         }
         bar.append("§7]");
 
-        // Actionbar-Nachricht zusammenbauen
         String message = "§bLevel: §e" + currentLevel + " §8| §7" + bar.toString() + " §7Noch §c" + missingBlocks + " §7Blöcke bis zum nächsten Level";
 
-        // Sende die Nachricht an den Spieler
+
         player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(message));
     }
 
-    public class OneBlockListener implements Listener {
 
-        private static final String USER_DATA_FOLDER = "plugins/YourPluginName/islanddata"; // Den Pfad zu deinen Userdaten
+
+        private static final String USER_DATA_FOLDER = "plugins/OneBlockPlugin/IslandData"; // Den Pfad zu deinen Userdaten
 
         @EventHandler
         public void onBlockPiston(BlockPistonExtendEvent event) {
+            System.out.println("Piston event ");
             for (Block block : event.getBlocks()) {
                 if (block.getY() != 100) continue;
 
-                // Durchlaufe alle User-Dateien
                 File folder = new File(USER_DATA_FOLDER);
                 for (File file : folder.listFiles()) {
                     if (!file.getName().endsWith(".yml")) continue; // Nur .yml-Dateien
@@ -207,6 +207,7 @@ public class PlayerListener implements Listener {
                         Location oneBlockLocation = new Location(world, x, 100, z);
 
                         if (block.getLocation().equals(oneBlockLocation)) {
+                            System.out.println("Piston stop eig");
                             event.setCancelled(true);
                             return;
                         }
@@ -214,7 +215,7 @@ public class PlayerListener implements Listener {
                 }
             }
         }
-    }
+
 
     @EventHandler
     public void onEntityExplode(EntityExplodeEvent event) {

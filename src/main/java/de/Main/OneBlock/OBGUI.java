@@ -161,29 +161,32 @@ public class OBGUI implements CommandExecutor, Listener {
         if (title.equalsIgnoreCase("Upgrade-Shop")) {
             event.setCancelled(true);
 
+
+
             if (type == Material.NETHER_STAR) {
                 YamlConfiguration config = Manager.getIslandConfig(player);
                 int currentSize = config.getInt("WorldBorderSize", 50);
 
+                if(!(currentSize >= 200)){
 
-                String kaufCommand = "msg " + player.getName() + " test";  //pig oder nachher wenn wir eco system haben  String kaufCommand = "eco take " + player.getName() + " 100";
-                                                                            //oder wenn wir ein eigenes machen z.B.  String kaufCommand = "tokens remove " + player.getName() + " 10";
 
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), kaufCommand);
+                    currentSize += 10;
+                    config.set("WorldBorderSize", currentSize);
+                    Manager.saveIslandConfig(player, config);
 
-                currentSize += 10;
-                config.set("WorldBorderSize", currentSize);
-                Manager.saveIslandConfig(player, config);
+                    WorldBorder border = player.getWorld().getWorldBorder();
+                    border.setCenter(player.getLocation());
+                    border.setSize(currentSize);
+                    Main.setWorldBorder(player);
 
-                WorldBorder border = player.getWorld().getWorldBorder();
-                border.setCenter(player.getLocation());
-                border.setSize(currentSize);
-                player.setWorldBorder(border);
+                    player.sendMessage("§aDeine WorldBorder wurde auf §e" + currentSize + " §avergrößert!");
+                    player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
+                    player.closeInventory();
+                }else {
+                    player.sendMessage("§cDu hast das Limit erreicht");
+                }
+                }
 
-                player.sendMessage("§aDeine WorldBorder wurde auf §e" + currentSize + " §avergrößert!");
-                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
-                player.closeInventory();
-            }
         }
     }
 }
