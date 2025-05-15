@@ -2,7 +2,6 @@ package de.Main.OneBlock;
 
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
-
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
@@ -14,13 +13,13 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
-import java.awt.*;
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -32,6 +31,7 @@ public class PlayerListener implements Listener {
 
     private static final String WORLD_NAME = "OneBlock";
     private static final Location ONEBLOCK_LOCATION = new Location(Bukkit.getWorld(WORLD_NAME), 0, 100, 0);
+    private static final String USER_DATA_FOLDER = "plugins/OneBlockPlugin/IslandData";
 
     private boolean isOneBlock(Block block) {
         World world = block.getWorld();
@@ -95,7 +95,13 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
-        YamlConfiguration config = Manager.getIslandConfig(player); // Island Config
+        YamlConfiguration config = Manager.getIslandConfig(player);
+
+        if (!isPlayerAllowed(event.getBlock().getLocation(), player)) {
+            player.sendMessage("§cDu darfst hier nichts abbauen!");
+            event.setCancelled(true);
+            return;
+        }
 
         int blockstolevelup = config.getInt("MissingBlocksToLevelUp");
         int IslandLevel = config.getInt("IslandLevel");
@@ -111,29 +117,23 @@ public class PlayerListener implements Listener {
                 blockLocation.getBlockY() == 100 &&
                 blockLocation.getBlockZ() == config.getInt("OneBlock-z")) {
 
-
             blockstolevelup -= 1;
             config.set("MissingBlocksToLevelUp", blockstolevelup);
 
-
-            sendActionbarProgress(player, IslandLevel, blockstolevelup);  // Actionbar anzeigen
+            sendActionbarProgress(player, IslandLevel, blockstolevelup);
 
             if (blockstolevelup == 0) {
                 IslandLevel += 1;
                 config.set("IslandLevel", IslandLevel);
-                Integer v = totalblocks * 2;
+                int v = totalblocks * 2;
                 config.set("TotalBlocks", v);
                 config.set("MissingBlocksToLevelUp", v);
-
-
             }
 
             Manager.saveIslandConfig(player, config);
 
             List<String> nextBlocks = Main.config.getStringList("oneblockblocks." + IslandLevel);
-            if (nextBlocks.isEmpty()) {
-                return;
-            }
+            if (nextBlocks.isEmpty()) return;
 
             int randomIndex = ThreadLocalRandom.current().nextInt(nextBlocks.size());
             String nextBlock = nextBlocks.get(randomIndex);
@@ -145,12 +145,8 @@ public class PlayerListener implements Listener {
                 blockMaterial = Material.STONE;
             }
 
-            // Block Drop
-
-
-            Material originalType = block.getType();
             event.setDropItems(false);
-            ItemStack droppedItem = new ItemStack(originalType);
+            ItemStack droppedItem = new ItemStack(block.getType());
             Item item = block.getWorld().dropItem(blockLocation.clone().add(0.5, 1.0, 0.5), droppedItem);
             item.setVelocity(new Vector(0, 0, 0));
             item.setPickupDelay(10);
@@ -162,52 +158,38 @@ public class PlayerListener implements Listener {
     }
 
     private void sendActionbarProgress(Player player, int currentLevel, int missingBlocks) {
-        YamlConfiguration config = Manager.getIslandConfig(player); // Island Con
-        int totalBlocks = config.getInt("TotalBlocks"); // Anzahl der Blöcke bis zum nächsten Level-Up
-        double progress = (double) (totalBlocks - missingBlocks) / totalBlocks; // Berechne den Fortschritt (zwischen 0 und 1)
+        YamlConfiguration config = Manager.getIslandConfig(player);
+        int totalBlocks = config.getInt("TotalBlocks");
+        double progress = (double) (totalBlocks - missingBlocks) / totalBlocks;
 
-        // Erstelle den Balken (10 Schritte, für jedes 10% des Fortschritts)w
         int progressLength = (int) (progress * 10);
         StringBuilder bar = new StringBuilder("§7[");
         for (int i = 0; i < 10; i++) {
-            if (i < progressLength) {
-                bar.append("§a█"); // Grüner Teil des Balkens
-            } else {
-                bar.append("§7█"); // Grauer Teil des Balkens
-            }
+            bar.append(i < progressLength ? "§a█" : "§7█");
         }
         bar.append("§7]");
 
-        String message = "§bLevel: §e" + currentLevel + " §8| §7" + bar.toString() + " §7Noch §c" + missingBlocks + " §7Blöcke bis zum nächsten Level";
-
-
+        String message = "§bLevel: §e" + currentLevel + " §8| §7" + bar + " §7Noch §c" + missingBlocks + " §7Blöcke bis zum nächsten Level";
         player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(message));
     }
 
-
-
-    private static final String USER_DATA_FOLDER = "plugins/OneBlockPlugin/IslandData"; // Den Pfad zu deinen Userdaten
-
     @EventHandler
     public void onBlockPiston(BlockPistonExtendEvent event) {
-        System.out.println("Piston event ");
         for (Block block : event.getBlocks()) {
             if (block.getY() != 100) continue;
 
             File folder = new File(USER_DATA_FOLDER);
             for (File file : folder.listFiles()) {
-                if (!file.getName().endsWith(".yml")) continue; // Nur .yml-Dateien
+                if (!file.getName().endsWith(".yml")) continue;
 
                 YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
                 int x = config.getInt("OneBlock-x");
                 int z = config.getInt("OneBlock-z");
-                System.out.println("x:" + x + " z:" + z);
                 World world = Bukkit.getWorld("OneBlock");
+
                 if (world != null) {
                     Location oneBlockLocation = new Location(world, x, 100, z);
-
                     if (block.getLocation().equals(oneBlockLocation)) {
-                        System.out.println("Piston stop eig");
                         event.setCancelled(true);
                         return;
                     }
@@ -215,7 +197,6 @@ public class PlayerListener implements Listener {
             }
         }
     }
-
 
     @EventHandler
     public void onEntityExplode(EntityExplodeEvent event) {
@@ -238,15 +219,81 @@ public class PlayerListener implements Listener {
         });
     }
 
+
     private void regenerateOneBlock(Location blockLocation, Material blockMaterial) {
-        Material finalBlockMaterial = blockMaterial;
         Bukkit.getScheduler().runTaskLater(JavaPlugin.getPlugin(Main.class), () -> {
             Block newBlock = Bukkit.getWorld(WORLD_NAME).getBlockAt(blockLocation);
-            newBlock.setType(finalBlockMaterial);
+            newBlock.setType(blockMaterial);
             BlockData blockData = newBlock.getBlockData();
             if (blockData instanceof Piston) {
                 newBlock.setBlockData(blockData);
             }
         }, 1L);
+    }
+
+    private boolean isPlayerAllowed(Location loc, Player player) {
+        String islandOwner = getIslandOwnerByLocation(loc);
+        if (islandOwner == null) return false;
+        return isPlayerAllowedOnIsland(player, islandOwner);
+    }
+
+    public static boolean isPlayerAllowedOnIsland(Player player, String islandOwner) {
+        File file = new File(Main.islandDataFolder, islandOwner + ".yml");
+        if (!file.exists()) return false;
+
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+        List<String> added = config.getStringList("added");
+        List<String> trusted = config.getStringList("trusted");
+        List<String> invited = config.getStringList("invited");
+
+        return player.getName().equalsIgnoreCase(islandOwner)
+                || added.contains(player.getName())
+                || trusted.contains(player.getName())
+                || invited.contains(player.getName());
+    }
+
+
+    private String getIslandOwnerByLocation(Location loc) {
+        File folder = new File(USER_DATA_FOLDER);
+        if (!folder.exists()) return null;
+
+        for (File file : folder.listFiles()) {
+            if (!file.getName().endsWith(".yml")) continue;
+            YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+
+            int x = config.getInt("OneBlock-x");
+            int z = config.getInt("OneBlock-z");
+            int size = config.getInt("WorldBorderSize", 50);
+            int half = size / 2;
+
+            if (loc.getWorld().getName().equals(WORLD_NAME) &&
+                    loc.getBlockX() >= x - half && loc.getBlockX() <= x + half &&
+                    loc.getBlockZ() >= z - half && loc.getBlockZ() <= z + half) {
+                return file.getName().replace(".yml", "");
+            }
+        }
+        return null;
+    }
+
+    @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        if (event.getClickedBlock() == null) return;
+        Material type = event.getClickedBlock().getType();
+        if (!(type == Material.CHEST || type == Material.TRAPPED_CHEST || type == Material.HOPPER)) return;
+
+        Player player = event.getPlayer();
+        if (!isPlayerAllowed(event.getClickedBlock().getLocation(), player)) {
+            player.sendMessage("§cDu darfst hier nichts öffnen!");
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onBlockPlace(BlockPlaceEvent event) {
+        Player player = event.getPlayer();
+        if (!isPlayerAllowed(event.getBlock().getLocation(), player)) {
+            player.sendMessage("§cDu darfst hier nichts platzieren!");
+            event.setCancelled(true);
+        }
     }
 }
