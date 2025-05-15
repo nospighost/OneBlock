@@ -155,7 +155,8 @@ public class Manager implements Listener {
 
         config.set("EigeneInsel", false);
         config.set("IslandLevel", 1);
-        config.set("MissingBlocksToLevelUp", 10);
+        config.set("MissingBlocksToLevelUp", 200);
+        config.set("TotalBlocks", 200);
         config.set("IslandSpawn-x", null);
         config.set("IslandSpawn-z", null);
         config.set("x-position", null);
@@ -163,7 +164,7 @@ public class Manager implements Listener {
         config.set("OneBlock-x", null);
         config.set("OneBlock-z", null);
         config.set("WorldBorderSize", 50);
-
+//
         saveIslandConfig(player, config);
 
         player.sendMessage("§aDeine Insel wurde vollständig gelöscht.");
