@@ -71,7 +71,7 @@ public class PlayerListener implements Listener {
         }
 
 
-//Hier wird die Worldborder erstelelte 
+        // WorldBorder und Teleport
         World world = Bukkit.getWorld(WORLD_NAME);
         if (world != null && player.getWorld().getName().equals(WORLD_NAME)) {
             int x = config.getInt("OneBlock-x", 0);
@@ -92,7 +92,7 @@ public class PlayerListener implements Listener {
             player.teleport(spawn);
         }
 
-       //Hier wird überprüft ob der Spieler halt getrustdetd oder geadded wurde
+        // *** Hier prüfen, ob der Spieler in trusted/added Listen von anderen Inseln steht ***
         File islandFolder = Main.islandDataFolder;
         if (islandFolder.exists() && islandFolder.isDirectory()) {
             File[] files = islandFolder.listFiles((dir, name) -> name.endsWith(".yml"));
@@ -106,12 +106,12 @@ public class PlayerListener implements Listener {
 
                     if (addedList.contains(player.getName())) {
                         player.sendMessage("§aDu bist als Mitglied auf der Insel von §e" + ownerName + " §aeingetragen.");
-                       
+                        // Hier kannst du noch mehr Aktionen machen (Permissions etc.)
                     }
 
                     if (trustedList.contains(player.getName())) {
                         player.sendMessage("§aDu bist als Vertrauensspieler auf der Insel von §e" + ownerName + " §aeingetragen.");
-                       
+                        // Hier kannst du noch mehr Aktionen machen (Permissions etc.)
                     }
                 }
             }
@@ -132,20 +132,35 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
-        YamlConfiguration config = Manager.getIslandConfig(player);
+        Block block = event.getBlock();
+        Location blockLocation = block.getLocation();
 
-        if (!isPlayerAllowed(event.getBlock().getLocation(), player)) {
+        String ownerName = getIslandOwnerByLocation(blockLocation);
+        if (ownerName == null) {
             player.sendMessage("§cDu darfst hier nichts abbauen!");
             event.setCancelled(true);
             return;
         }
 
+        File islandFile = new File(Main.islandDataFolder, ownerName + ".yml");
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(islandFile);
+
+        List<String> added = config.getStringList("added");
+        List<String> trusted = config.getStringList("trusted");
+
+        if (!ownerName.equals(player.getName()) &&
+                !added.contains(player.getName()) &&
+                !trusted.contains(player.getName())) {
+
+            player.sendMessage("§cDu darfst hier nichts abbauen!");
+            event.setCancelled(true);
+            return;
+        }//t
+
         int blockstolevelup = config.getInt("MissingBlocksToLevelUp");
         int IslandLevel = config.getInt("IslandLevel");
         int totalblocks = config.getInt("TotalBlocks");
 
-        Block block = event.getBlock();
-        Location blockLocation = block.getLocation();
         World world = Bukkit.getWorld("OneBlock");
 
         if (world != null &&
@@ -167,7 +182,7 @@ public class PlayerListener implements Listener {
                 config.set("MissingBlocksToLevelUp", v);
             }
 
-            Manager.saveIslandConfig(player, config);
+            Manager.saveIslandConfig(Bukkit.getPlayer(ownerName), config); // speichert für Besitzer
 
             List<String> nextBlocks = Main.config.getStringList("oneblockblocks." + IslandLevel);
             if (nextBlocks.isEmpty()) return;
@@ -190,9 +205,10 @@ public class PlayerListener implements Listener {
 
             block.setType(Material.AIR);
             regenerateOneBlock(blockLocation, blockMaterial);
-            Manager.saveIslandConfig(player, config);
+            Manager.saveIslandConfig(Bukkit.getPlayer(ownerName), config);
         }
     }
+
 
     private void sendActionbarProgress(Player player, int currentLevel, int missingBlocks) {
         YamlConfiguration config = Manager.getIslandConfig(player);
@@ -236,7 +252,7 @@ public class PlayerListener implements Listener {
     }
 
     @EventHandler
-    public void onEntityExplode(EntityExplodeEvent event) { // Das der ONeblock bei einer Explosion nicht zerstört wird
+    public void onEntityExplode(EntityExplodeEvent event) {
         event.blockList().removeIf(this::isOneBlock);
         List<String> nextBlocks = Main.config.getStringList("oneblockblocks.block");
         if (nextBlocks.isEmpty()) return;
@@ -281,16 +297,14 @@ public class PlayerListener implements Listener {
         YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
         List<String> added = config.getStringList("added");
         List<String> trusted = config.getStringList("trusted");
-        List<String> invited = config.getStringList("invited");
 
         return player.getName().equalsIgnoreCase(islandOwner)
                 || added.contains(player.getName())
-                || trusted.contains(player.getName())
-                || invited.contains(player.getName());
+                || trusted.contains(player.getName());
     }
 
 
-    private String getIslandOwnerByLocation(Location loc) {
+    public String getIslandOwnerByLocation(Location loc) {
         File folder = new File(USER_DATA_FOLDER);
         if (!folder.exists()) return null;
 
@@ -316,7 +330,7 @@ public class PlayerListener implements Listener {
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (event.getClickedBlock() == null) return;
         Material type = event.getClickedBlock().getType();
-        if (!(type == Material.CHEST || type == Material.TRAPPED_CHEST || type == Material.HOPPER)) return;
+        if (!(type == Material.CHEST || type == Material.TRAPPED_CHEST || type == Material.HOPPER || type == Material.SHULKER_BOX)) return;
 
         Player player = event.getPlayer();
         if (!isPlayerAllowed(event.getClickedBlock().getLocation(), player)) {
