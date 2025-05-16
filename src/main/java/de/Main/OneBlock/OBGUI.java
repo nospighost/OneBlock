@@ -115,7 +115,7 @@ public class OBGUI implements CommandExecutor, Listener {
     private void openUpgradeShop(Player player) {
         upgradeShop = Bukkit.createInventory(null, 6 * 9, "Upgrade-Shop");
 
-        YamlConfiguration config = Manager.getIslandConfig(player);
+        YamlConfiguration config = Manager.getIslandConfig(player.getUniqueId());
         int currentSize = config.getInt("WorldBorderSize", 50);
         int costLevel = ((currentSize - 40) / 10) + 1;
         int neededLevel = costLevel * 2;
@@ -186,13 +186,13 @@ public class OBGUI implements CommandExecutor, Listener {
             event.setCancelled(true);
 
             if (type == STRUCTURE_VOID) {
-                YamlConfiguration config = Manager.getIslandConfig(player);
+                YamlConfiguration config = Manager.getIslandConfig(player.getUniqueId());
                 int currentSize = config.getInt("WorldBorderSize", 50);
 
                 if (currentSize < 200) {
                     currentSize += 10;
                     config.set("WorldBorderSize", currentSize);
-                    Manager.saveIslandConfig(player, config);
+                    Manager.saveIslandConfig(player.getUniqueId(), config);
 
                     WorldBorder border = player.getWorld().getWorldBorder();
                     border.setCenter(player.getLocation());
