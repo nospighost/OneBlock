@@ -321,5 +321,9 @@ public class Manager implements Listener {
         player.sendMessage("§cDu hast keine offenen Einladungen.");
     }
 
+public static denyfromisland(){
+    YamlConfiguration config = getIslandConfig(owner)
+   config.set("denied", nospighost);
 
+}
 }
