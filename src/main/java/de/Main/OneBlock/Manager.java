@@ -21,7 +21,7 @@ import static de.Main.OneBlock.Main.*;
 public class Manager implements Listener {
     public static Economy economy;
     private final JavaPlugin plugin;
-    static String prefix = Main.config.getString("Server");
+    static String prefix = Main.config.getString("Server"); //server nachricht bzw prefix
 
 
     public Manager(Economy eco, JavaPlugin plugin) {
