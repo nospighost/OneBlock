@@ -25,7 +25,7 @@ public class TabCompleter implements org.bukkit.command.TabCompleter {
                         result.add(sub);
                     }
                 }
-
+//t
                 return result;
             }
 

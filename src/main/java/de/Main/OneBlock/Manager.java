@@ -270,7 +270,7 @@ public class Manager implements Listener {
         }
     }
 
-    // Einladung annehmen
+    // Einladung annehmens
     public static void acceptInvite(Player player) {
         File folder = Main.islandDataFolder;
         File[] islandFiles = folder.listFiles();

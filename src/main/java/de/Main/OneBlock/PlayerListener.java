@@ -155,7 +155,7 @@ public class PlayerListener implements Listener {
             player.sendMessage("§cDu darfst hier nichts abbauen!");
             event.setCancelled(true);
             return;
-        }
+        }//t
 
         int blockstolevelup = config.getInt("MissingBlocksToLevelUp");
         int IslandLevel = config.getInt("IslandLevel");
