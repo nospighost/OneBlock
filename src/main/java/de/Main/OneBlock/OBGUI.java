@@ -28,8 +28,13 @@ public class OBGUI implements CommandExecutor, Listener {
 
     int[] grayglasmaingui = {0, 1, 7, 8};
 
-    public Inventory upgradeShop;
-    public Inventory mainGUI;
+    public static Inventory upgradeShop;
+    public static Inventory mainGUI;
+    public static Inventory Einstellungen;
+    public static Inventory Rebirth;
+    public static Inventory Befehle;
+    public static Inventory Auswahl;
+    public static Inventory Verwaltung;
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -39,13 +44,21 @@ public class OBGUI implements CommandExecutor, Listener {
         }
 
         Player player = (Player) sender;
-        createguis(player);
+        if (mainGUI == null || Auswahl == null || Einstellungen == null || Rebirth == null || Befehle == null || Verwaltung == null) {
+            createguis(player);
+        }
         player.openInventory(mainGUI);
         return true;
     }
 
     private void createguis(Player player) {
-        mainGUI = Bukkit.createInventory(null, 9, "§8OneBlock Menü");
+
+        Einstellungen = Bukkit.createInventory(null, 9, "§cInsel-Einstellungen");
+        Rebirth = Bukkit.createInventory(null, 9, "§eRebirth");
+        Befehle = Bukkit.createInventory(null, 9, "§8Spielerbefehle");
+        Auswahl = Bukkit.createInventory(null, 9, "§aPhasen-Auswahl");
+        Verwaltung = Bukkit.createInventory(null, 9, "§cInsel-Verwaltung");
+        mainGUI = Bukkit.createInventory(null, 9, "§8OneBlock-Menü");
 
         for (int pos : grayglasmaingui) {
             mainGUI.setItem(pos, new ItemStack(GRAY_STAINED_GLASS_PANE));
@@ -58,7 +71,7 @@ public class OBGUI implements CommandExecutor, Listener {
             meta0.setDisplayName("§cInsel-Einstellungen");
             repeaterLeft.setItemMeta(meta0);
         }
-        mainGUI.setItem(3, repeaterLeft);
+        mainGUI.setItem(2, repeaterLeft);
 
         // Slot 2 - Totem
         ItemStack totem = new ItemStack(TOTEM_OF_UNDYING);
@@ -67,7 +80,7 @@ public class OBGUI implements CommandExecutor, Listener {
             meta2.setDisplayName("§6Insel-Rebirth");
             totem.setItemMeta(meta2);
         }
-        mainGUI.setItem(4, totem);
+        mainGUI.setItem(3, totem);
 
         // Slot 4 - Spielerkopf
         ItemStack skull = new ItemStack(PLAYER_HEAD);
@@ -77,7 +90,7 @@ public class OBGUI implements CommandExecutor, Listener {
             skullMeta.setDisplayName("§eBefehle");
             skull.setItemMeta(skullMeta);
         }
-        mainGUI.setItem(5, skull);
+        mainGUI.setItem(4, skull);
 
         // Slot 6 - XP-Flasche
         ItemStack xpBottle = new ItemStack(EXPERIENCE_BOTTLE);
@@ -86,7 +99,7 @@ public class OBGUI implements CommandExecutor, Listener {
             meta6.setDisplayName("§aPhasen-Auswahl");
             xpBottle.setItemMeta(meta6);
         }
-        mainGUI.setItem(6, xpBottle);
+        mainGUI.setItem(5, xpBottle);
 
         // Slot 8 - Repeater
         ItemStack repeaterRight = new ItemStack(COMPARATOR);
@@ -95,7 +108,7 @@ public class OBGUI implements CommandExecutor, Listener {
             meta8.setDisplayName("§cInsel-Verwaltung");
             repeaterRight.setItemMeta(meta8);
         }
-        mainGUI.setItem(7, repeaterRight);
+        mainGUI.setItem(6, repeaterRight);
 
     }
 
@@ -137,7 +150,7 @@ public class OBGUI implements CommandExecutor, Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) return;
         if (event.getClickedInventory() == null || event.getCurrentItem() == null) return;
@@ -152,16 +165,19 @@ public class OBGUI implements CommandExecutor, Listener {
 
             switch (type) {
                 case EXPERIENCE_BOTTLE:
-                    player.sendMessage("§eRebirth kommt bald!");
+                    player.openInventory(Auswahl);
                     break;
                 case REPEATER:
-                    player.sendMessage("§7Navigation wird noch eingebaut...");
+                    player.openInventory(Einstellungen);
                     break;
                 case TOTEM_OF_UNDYING:
-                    player.sendMessage("§6Totem-Funktion in Arbeit...");
+                    player.openInventory(Rebirth);
                     break;
                 case PLAYER_HEAD:
-                    player.sendMessage("§eProfil geöffnet!");
+                    player.openInventory(Befehle);
+                    break;
+                case COMPARATOR:
+                    player.openInventory(Verwaltung);
                     break;
             }
         }

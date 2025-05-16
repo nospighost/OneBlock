@@ -1,8 +1,7 @@
 package de.Main.OneBlock;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.World;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -53,28 +52,15 @@ public class OneBlockCommands implements Listener, CommandExecutor {
                 Manager.rebirthIsland(player);
             }
 
-        } else if (args.length == 2 && args[0].equalsIgnoreCase("add")) {
-            YamlConfiguration config = Manager.getIslandConfig(player);
-            if (!isOwnerOfIsland(player, config)) {
-                player.sendMessage(prefix + "§cNur der Inselbesitzer kann Spieler hinzufügen.");
-                return true;
-            }
-            Player toAdd = Bukkit.getPlayerExact(args[1]);
-            if (toAdd != null) {
-                Manager.addPlayerToIsland(player, toAdd);
-            } else {
-                player.sendMessage(prefix + "§cSpieler nicht gefunden.");
-            }
-
         } else if (args.length == 2 && args[0].equalsIgnoreCase("trust")) {
             YamlConfiguration config = Manager.getIslandConfig(player);
             if (!isOwnerOfIsland(player, config)) {
                 player.sendMessage(prefix + "§cNur der Inselbesitzer kann Spielern vertrauen.");
                 return true;
             }
-            Player toTrust = Bukkit.getPlayerExact(args[1]);
-            if (toTrust != null) {
-                Manager.trustPlayer(player, toTrust);
+            OfflinePlayer toTrust = Bukkit.getOfflinePlayer(args[1]);
+            if (toTrust != null && (toTrust.isOnline() || toTrust.hasPlayedBefore())) {
+                Manager.trustPlayer(player, toTrust.getPlayer() != null ? toTrust.getPlayer() : player); // fallback
             } else {
                 player.sendMessage(prefix + "§cSpieler nicht gefunden.");
             }
@@ -83,14 +69,14 @@ public class OneBlockCommands implements Listener, CommandExecutor {
             Manager.acceptInvite(player);
 
         } else if (args.length == 2 && args[0].equalsIgnoreCase("deny")) {
-            YamlConfiguration config = Manager.getIslandConfig(player);
-            if (!isOwnerOfIsland(player, config)) {
-                player.sendMessage(prefix + "§cNur der Inselbesitzer kann Spieler bannen.");
-                return true;
-            }
-            Player toDeny = Bukkit.getPlayerExact(args[1]);
-            if (toDeny != null) {
-                Manager.denyfromisland(player, toDeny);
+                YamlConfiguration config = Manager.getIslandConfig(player);
+                if (!isOwnerOfIsland(player, config)) {
+                    player.sendMessage(prefix + "§cNur der Inselbesitzer kann Spieler bannen.");
+                    return true;
+                }
+            OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
+            if (target != null && target.getName() != null && (target.hasPlayedBefore() || target.isOnline())) {
+                Manager.denyfromisland(player, target);
             } else {
                 player.sendMessage(prefix + "§cSpieler nicht gefunden.");
             }
@@ -101,9 +87,9 @@ public class OneBlockCommands implements Listener, CommandExecutor {
                 player.sendMessage(prefix + "§cNur der Inselbesitzer kann Spieler entbannen.");
                 return true;
             }
-            Player toUnban = Bukkit.getPlayerExact(args[1]);
-            if (toUnban != null) {
-                Manager.unban(player, toUnban);
+            OfflinePlayer toUnban = Bukkit.getOfflinePlayer(args[1]);
+            if (toUnban != null && (toUnban.isOnline() || toUnban.hasPlayedBefore())) {
+                Manager.unban(player, toUnban.getPlayer() != null ? toUnban.getPlayer() : player);
             } else {
                 player.sendMessage(prefix + "§cSpieler nicht gefunden.");
             }
@@ -114,15 +100,19 @@ public class OneBlockCommands implements Listener, CommandExecutor {
                 player.sendMessage(prefix + "§cNur der Inselbesitzer kann Spieler entfernen.");
                 return true;
             }
-            Player toRemove = Bukkit.getPlayerExact(args[1]);
-            if (toRemove != null) {
-                Manager.remove(player, toRemove);
+            OfflinePlayer toRemove = Bukkit.getOfflinePlayer(args[1]);
+            if (toRemove != null && (toRemove.isOnline() || toRemove.hasPlayedBefore())) {
+                Manager.remove(player, toRemove.getPlayer() != null ? toRemove.getPlayer() : player);
             } else {
                 player.sendMessage(prefix + "§cSpieler nicht gefunden.");
             }
 
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("leave")) {
+            String ownerName = args[1];
+            Manager.leaveIsland(player, ownerName);
+
         } else {
-            player.sendMessage(prefix + "§aNutze: /ob join | /ob delete | /ob visit <Spieler> | /ob rebirth | /ob add <Spieler> | /ob trust <Spieler> | /ob accept");
+            player.sendMessage(prefix + "§aNutze: /ob join | /ob delete | /ob visit <Spieler> | /ob rebirth | /ob add <Spieler> | /ob trust <Spieler> | /ob accept | /ob deny <Spieler> | /ob unban <Spieler> | /ob remove <Spieler> | /ob leave <Inselbesitzer>");
         }
 
         return true;
@@ -133,5 +123,4 @@ public class OneBlockCommands implements Listener, CommandExecutor {
         String ownerName = islandConfig.getString("owner");
         return ownerName != null && ownerName.equalsIgnoreCase(player.getName());
     }
-
 }

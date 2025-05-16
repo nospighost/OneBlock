@@ -65,8 +65,6 @@ public class PlayerListener implements Listener {
             config.set("OneBlock-z", 0);
 
             config.set("trusted", new ArrayList<String>());
-            config.set("added", new ArrayList<String>());
-            config.set("invited", new ArrayList<String>());
             config.set("invitedtrust", new ArrayList<String>());
             config.set("denied", new ArrayList<String>());
 
