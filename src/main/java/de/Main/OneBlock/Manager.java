@@ -238,40 +238,40 @@ public class Manager implements Listener {
     }
 
     // Spieler zur Insel hinzufügen (added)
-    public void addPlayerToIsland(Player owner, Player toAdd) {
+    public static void addPlayerToIsland(Player owner, Player toAdd) {
         YamlConfiguration config = getIslandConfig(owner);
         List<String> addedList = config.getStringList("added");
 
         if (!addedList.contains(toAdd.getName())) {
             addedList.add(toAdd.getName());
-            config.set("added", addedList);
+            config.set("invited", addedList);
             saveIslandConfig(owner, config);
             owner.sendMessage("§a" + toAdd.getName() + " wurde zur Insel hinzugefügt.");
-            toAdd.sendMessage("§aDu wurdest zur Insel von " + owner.getName() + " hinzugefügt.");
+            toAdd.sendMessage("§e" + owner.getName() + " hat dich auf seine Insel eingeladen. Nutze §a/ob accept§e um anzunehmen.");
         } else {
             owner.sendMessage("§cDer Spieler ist bereits auf deiner Insel.");
         }
     }
 
     // Spieler vertrauen (trusted)
-    public void trustPlayer(Player owner, Player target) {
+    public static void trustPlayer(Player owner, Player target) {
         YamlConfiguration config = getIslandConfig(owner);
         List<String> trustedList = config.getStringList("trusted");
 
         if (!trustedList.contains(target.getName())) {
             trustedList.add(target.getName());
-            config.set("trusted", trustedList);
+            config.set("invitedtrust", trustedList);
             saveIslandConfig(owner, config);
 
             owner.sendMessage("§aDu hast " + target.getName() + " auf deine Insel eingeladen.");
-            target.sendMessage("§e" + owner.getName() + " hat dich auf seine Insel eingeladen. Nutze §a/is accept§e um anzunehmen.");
+            target.sendMessage("§e" + owner.getName() + " hat dich auf seine Insel eingeladen. Nutze §a/ob accept§e um anzunehmen.");
         } else {
             owner.sendMessage("§c" + target.getName() + " wurde bereits eingeladen.");
         }
     }
 
-    // Einladung annehmen
-    public void acceptInvite(Player player) {
+    // Einladung annehmens
+    public static void acceptInvite(Player player) {
         File folder = Main.islandDataFolder;
         File[] islandFiles = folder.listFiles();
 
@@ -319,17 +319,6 @@ public class Manager implements Listener {
         }
 
         player.sendMessage("§cDu hast keine offenen Einladungen.");
-    }
-
-    public static boolean isPlayerAllowedOnIsland(Player player, String islandOwner) {
-        File ownerFile = new File(Main.islandDataFolder, islandOwner + ".yml");
-        if (!ownerFile.exists()) return false;
-
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(ownerFile);
-        List<String> added = config.getStringList("added");
-        List<String> trusted = config.getStringList("trusted");
-
-        return added.contains(player.getName()) || trusted.contains(player.getName()) || islandOwner.equalsIgnoreCase(player.getName());
     }
 
 
