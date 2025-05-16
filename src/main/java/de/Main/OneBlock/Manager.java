@@ -35,7 +35,7 @@ public class Manager implements Listener {
         this.plugin = plugin;
     }
 
-    // Insel erstellen oder joinen
+    // Insel erstellen oder joinen wenn halt keine da ist
     public static boolean createOrJoinIsland(Player player, String[] args) {
         if (args.length == 1 && args[0].equalsIgnoreCase("join")) {
 
@@ -80,12 +80,12 @@ public class Manager implements Listener {
         return true;
     }
 
-    // Island Datei holen
-    public static File getIslandFile(Player player) {
+    // Island Datei bekommen wo die userdaten gespeichert werden
+   public static File getIslandFile(Player player) {
         return new File(Main.islandDataFolder, player.getName() + ".yml");
     }
 
-    // Island Config laden (create if not exist)
+    // Island Config laden (wird halt auch erstellt wenn es sie nd gibt) 
     public static YamlConfiguration getIslandConfig(Player player) {
         File file = getIslandFile(player);
         if (!file.exists()) {
@@ -98,7 +98,7 @@ public class Manager implements Listener {
         return YamlConfiguration.loadConfiguration(file);
     }
 
-    // Island Config speichern
+    // Island Config speichern//
     public static void saveIslandConfig(Player player, YamlConfiguration config) {
         try {
             config.save(getIslandFile(player));
@@ -133,7 +133,7 @@ public class Manager implements Listener {
         return owners;
     }
 
-    // Inselposition berechnen und speichern
+    // Inselposition neu berechnen
     public static int getIslandCords(int x) {
         x = config.getInt("InselPadding.value") + 400;
         config.set("InselPadding.value", x);
@@ -141,7 +141,7 @@ public class Manager implements Listener {
         return x;
     }
 
-    // Insel löschen
+    // Insel löschen die sachen in der config auch 
     public static void deleteIsland(Player player) {
         YamlConfiguration config = getIslandConfig(player);
         World world = Bukkit.getWorld("OneBlock");
@@ -188,7 +188,7 @@ public class Manager implements Listener {
         player.sendMessage("§aDeine Insel wurde vollständig gelöscht.");
     }
 
-    // Insel besuchen
+    // Insel besuchen mit /ob visit
     public static void visitIsland(Player visitor, String ownerName) {
         File file = new File(Main.islandDataFolder, ownerName + ".yml");
         if (!file.exists()) {
@@ -209,7 +209,7 @@ public class Manager implements Listener {
         visitor.sendMessage("§aDu wurdest zur Insel von §e" + ownerName + " §ateleportiert.");
     }
 
-    // Insel "rebirth" (reset Level + neue Spitzhacke)
+//nsel rebirth
     public static void rebirthIsland(Player player) {
         YamlConfiguration config = getIslandConfig(player);
 
@@ -291,15 +291,15 @@ public class Manager implements Listener {
 
             boolean accepted = false;
 
-            if (invited.contains(playerName)) {
+            if (invited.contains(playerName)) { //das wird bei /ob add ausgeführt
                 invited.remove(playerName);
                 if (!added.contains(playerName)) added.add(playerName);
                 config.set("invited", invited);
                 config.set("added", added);
                 player.sendMessage("§aDu bist jetzt Mitglied auf der Insel von §e" + ownerName + "§a.");
                 accepted = true;
-            } else if (invitedTrust.contains(playerName)) {
-                invitedTrust.remove(playerName);
+            } else if (invitedTrust.contains(playerName)) { //das bei ob trust habs nd besser hinbekommen
+                invitedTrust.remove(playerName); 
                 if (!trusted.contains(playerName)) trusted.add(playerName);
                 config.set("invitedtrust", invitedTrust);
                 config.set("trusted", trusted);
@@ -321,5 +321,9 @@ public class Manager implements Listener {
         player.sendMessage("§cDu hast keine offenen Einladungen.");
     }
 
+public static denyfromisland(){
+    YamlConfiguration config = getIslandConfig(owner)
+   config.set("denied", nospighost);
 
+}
 }
