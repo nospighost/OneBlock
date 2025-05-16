@@ -132,9 +132,26 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
-        YamlConfiguration config = Manager.getIslandConfig(player);
+        Block block = event.getBlock();
+        Location blockLocation = block.getLocation();
 
-        if (!isPlayerAllowed(event.getBlock().getLocation(), player)) {
+        String ownerName = getIslandOwnerByLocation(blockLocation);
+        if (ownerName == null) {
+            player.sendMessage("§cDu darfst hier nichts abbauen!");
+            event.setCancelled(true);
+            return;
+        }
+
+        File islandFile = new File(Main.islandDataFolder, ownerName + ".yml");
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(islandFile);
+
+        List<String> added = config.getStringList("added");
+        List<String> trusted = config.getStringList("trusted");
+
+        if (!ownerName.equals(player.getName()) &&
+                !added.contains(player.getName()) &&
+                !trusted.contains(player.getName())) {
+
             player.sendMessage("§cDu darfst hier nichts abbauen!");
             event.setCancelled(true);
             return;
@@ -144,8 +161,6 @@ public class PlayerListener implements Listener {
         int IslandLevel = config.getInt("IslandLevel");
         int totalblocks = config.getInt("TotalBlocks");
 
-        Block block = event.getBlock();
-        Location blockLocation = block.getLocation();
         World world = Bukkit.getWorld("OneBlock");
 
         if (world != null &&
@@ -167,7 +182,7 @@ public class PlayerListener implements Listener {
                 config.set("MissingBlocksToLevelUp", v);
             }
 
-            Manager.saveIslandConfig(player, config);
+            Manager.saveIslandConfig(Bukkit.getPlayer(ownerName), config); // speichert für Besitzer
 
             List<String> nextBlocks = Main.config.getStringList("oneblockblocks." + IslandLevel);
             if (nextBlocks.isEmpty()) return;
@@ -190,9 +205,10 @@ public class PlayerListener implements Listener {
 
             block.setType(Material.AIR);
             regenerateOneBlock(blockLocation, blockMaterial);
-            Manager.saveIslandConfig(player, config);
+            Manager.saveIslandConfig(Bukkit.getPlayer(ownerName), config);
         }
     }
+
 
     private void sendActionbarProgress(Player player, int currentLevel, int missingBlocks) {
         YamlConfiguration config = Manager.getIslandConfig(player);
@@ -281,16 +297,14 @@ public class PlayerListener implements Listener {
         YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
         List<String> added = config.getStringList("added");
         List<String> trusted = config.getStringList("trusted");
-        List<String> invited = config.getStringList("invited");
 
         return player.getName().equalsIgnoreCase(islandOwner)
                 || added.contains(player.getName())
-                || trusted.contains(player.getName())
-                || invited.contains(player.getName());
+                || trusted.contains(player.getName());
     }
 
 
-    private String getIslandOwnerByLocation(Location loc) {
+    public String getIslandOwnerByLocation(Location loc) {
         File folder = new File(USER_DATA_FOLDER);
         if (!folder.exists()) return null;
 
@@ -316,7 +330,7 @@ public class PlayerListener implements Listener {
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (event.getClickedBlock() == null) return;
         Material type = event.getClickedBlock().getType();
-        if (!(type == Material.CHEST || type == Material.TRAPPED_CHEST || type == Material.HOPPER)) return;
+        if (!(type == Material.CHEST || type == Material.TRAPPED_CHEST || type == Material.HOPPER || type == Material.SHULKER_BOX)) return;
 
         Player player = event.getPlayer();
         if (!isPlayerAllowed(event.getClickedBlock().getLocation(), player)) {
