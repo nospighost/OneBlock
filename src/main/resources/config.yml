@@ -1,17 +1,24 @@
-# Nachricht, die angezeigt wird, wenn der Spieler zu seiner Insel teleportiert wird
 islandjoinmessage:
   join: "§a Du wurdest zu deiner Insel teleportiert"
-  notowned: "§aDeine Insel Wurde Erstellt"
-
-# Standardgröße der Weltgrenze
+  notowned: "§aDeine Insel wurde Erstellt"
+  create: "§a Insel wird erstellt bitte habe Geduld"
 defaultworldbordersize:
   size: 200
-
-# Der Pufferabstand für Inseln
 InselPadding:
   value: 400
-
-# Definiert die Blöcke, die bei einem OneBlock nach bestimmten Insel-Leveln erscheinen
+DeniedMessage: "§aDu wurdest von dieser Insel gebannt! Bitte den Besitzer dich zu entbannen wenn du die Insel besuchen möchtest."
+denymessagealreadydenied: "§a Dieser Spieler ist bereits gebannt."
+addmessagealreadyadded: "§cDieser Spieler wurde bereits eingeladen"
+trustmessage: "§aDu hast %player% auf deine Insel eingeladen"
+unbanmessage: "§a Du hast %player% von deiner Insel entbannt"
+banmessage: "§a Du hast %player% von deiner Insel gebannt"
+notbannedmessage: "§aDer Spieler ist nicht gebannt!"
+removemessage: "§a Du hast %player% von deiner Insel entfernt"
+removeplayernotinlist: "§Der Spieler ist nicht auf deiner Insel hinzugefügt"
+rebirthinventoryfull: "§cDein Inventar ist voll bitte leere es um zu den Rebirth durchzuführen"
+rebirthhigherlevel: "§cDein Level ist nicht hoch genug um den rebirth durchzuführen. Du brauchst das level %level% um zu rebirthen "
+RebirthLevel: 12
+Server: "§6§lBlockhive >> "
 oneblockblocks:
   '1': # Natur & Erde
     - DIRT

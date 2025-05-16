@@ -20,14 +20,19 @@ public class OneBlockCommands implements Listener, CommandExecutor {
             return true;
         }
 
+        String prefix = Main.config.getString("Server");
         Player player = (Player) sender;
-        YamlConfiguration config = Manager.getIslandConfig(player);
 
         if (args.length == 1 && args[0].equalsIgnoreCase("join")) {
-            player.sendMessage("§a Insel wird erstellt bitte habe Geduld");
+            player.sendMessage(prefix + Main.config.getString("islandjoinmessage.create"));
             Manager.createOrJoinIsland(player, args);
 
         } else if (args.length == 1 && args[0].equalsIgnoreCase("delete")) {
+            YamlConfiguration config = Manager.getIslandConfig(player);
+            if (!isOwnerOfIsland(player, config)) {
+                player.sendMessage(prefix + "§cNur der Inselbesitzer kann die Insel löschen.");
+                return true;
+            }
             Manager.deleteIsland(player);
 
         } else if (args.length == 2 && args[0].equalsIgnoreCase("visit")) {
@@ -35,37 +40,98 @@ public class OneBlockCommands implements Listener, CommandExecutor {
             Manager.visitIsland(player, targetName);
 
         } else if (args.length == 1 && args[0].equalsIgnoreCase("rebirth")) {
-
-            if (config.getInt("IslandLevel") != 4) {
-                player.sendMessage("§cDein Inventar ist voll!");
-            } else if (config.getInt("IslandLevel") == 4 || (player.getInventory().firstEmpty() == -1)) {
+            YamlConfiguration config = Manager.getIslandConfig(player);
+            if (!isOwnerOfIsland(player, config)) {
+                player.sendMessage(prefix + "§cNur der Inselbesitzer kann rebirth ausführen.");
+                return true;
+            }
+            if (config.getInt("IslandLevel") != Main.config.getInt("RebirthLevel")) {
+                player.sendMessage(prefix + Main.config.getString("rebirthhigherlevel").replace("%level%", Main.config.getInt("RebirthLevel") + ""));
+            } else if ((player.getInventory().firstEmpty() == -1)) {
+                player.sendMessage(prefix + Main.config.getString("rebirthinventoryfull"));
+            } else {
                 Manager.rebirthIsland(player);
             }
 
         } else if (args.length == 2 && args[0].equalsIgnoreCase("add")) {
+            YamlConfiguration config = Manager.getIslandConfig(player);
+            if (!isOwnerOfIsland(player, config)) {
+                player.sendMessage(prefix + "§cNur der Inselbesitzer kann Spieler hinzufügen.");
+                return true;
+            }
             Player toAdd = Bukkit.getPlayerExact(args[1]);
             if (toAdd != null) {
                 Manager.addPlayerToIsland(player, toAdd);
             } else {
-                player.sendMessage("§cSpieler nicht gefunden.");
+                player.sendMessage(prefix + "§cSpieler nicht gefunden.");
             }
 
         } else if (args.length == 2 && args[0].equalsIgnoreCase("trust")) {
+            YamlConfiguration config = Manager.getIslandConfig(player);
+            if (!isOwnerOfIsland(player, config)) {
+                player.sendMessage(prefix + "§cNur der Inselbesitzer kann Spielern vertrauen.");
+                return true;
+            }
             Player toTrust = Bukkit.getPlayerExact(args[1]);
             if (toTrust != null) {
                 Manager.trustPlayer(player, toTrust);
             } else {
-                player.sendMessage("§cSpieler nicht gefunden.");
+                player.sendMessage(prefix + "§cSpieler nicht gefunden.");
             }
 
         } else if (args.length == 1 && args[0].equalsIgnoreCase("accept")) {
             Manager.acceptInvite(player);
 
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("deny")) {
+            YamlConfiguration config = Manager.getIslandConfig(player);
+            if (!isOwnerOfIsland(player, config)) {
+                player.sendMessage(prefix + "§cNur der Inselbesitzer kann Spieler bannen.");
+                return true;
+            }
+            Player toDeny = Bukkit.getPlayerExact(args[1]);
+            if (toDeny != null) {
+                Manager.denyfromisland(player, toDeny);
+            } else {
+                player.sendMessage(prefix + "§cSpieler nicht gefunden.");
+            }
+
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("unban")) {
+            YamlConfiguration config = Manager.getIslandConfig(player);
+            if (!isOwnerOfIsland(player, config)) {
+                player.sendMessage(prefix + "§cNur der Inselbesitzer kann Spieler entbannen.");
+                return true;
+            }
+            Player toUnban = Bukkit.getPlayerExact(args[1]);
+            if (toUnban != null) {
+                Manager.unban(player, toUnban);
+            } else {
+                player.sendMessage(prefix + "§cSpieler nicht gefunden.");
+            }
+
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("remove")) {
+            YamlConfiguration config = Manager.getIslandConfig(player);
+            if (!isOwnerOfIsland(player, config)) {
+                player.sendMessage(prefix + "§cNur der Inselbesitzer kann Spieler entfernen.");
+                return true;
+            }
+            Player toRemove = Bukkit.getPlayerExact(args[1]);
+            if (toRemove != null) {
+                Manager.remove(player, toRemove);
+            } else {
+                player.sendMessage(prefix + "§cSpieler nicht gefunden.");
+            }
+
         } else {
-            player.sendMessage("Nutze: /ob join | /ob delete | /ob visit <Spieler> | /ob rebirth | /ob add <Spieler> | /ob trust <Spieler> | /ob accept");
+            player.sendMessage(prefix + "§aNutze: /ob join | /ob delete | /ob visit <Spieler> | /ob rebirth | /ob add <Spieler> | /ob trust <Spieler> | /ob accept");
         }
 
         return true;
+    }
+
+    private boolean isOwnerOfIsland(Player player, YamlConfiguration islandConfig) {
+        if (islandConfig == null) return false;
+        String ownerName = islandConfig.getString("owner");
+        return ownerName != null && ownerName.equalsIgnoreCase(player.getName());
     }
 
 }
