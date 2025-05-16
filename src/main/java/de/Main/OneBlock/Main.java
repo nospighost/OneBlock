@@ -57,11 +57,10 @@ public class Main extends JavaPlugin implements Listener {
         // Listener registrieren
         Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
         if (economy != null) {
-            Bukkit.getPluginManager().registerEvents(new Manager(economy), this);
+            Bukkit.getPluginManager().registerEvents(new Manager(economy, this), this);
             getLogger().info("Vault Economy erfolgreich erkannt.");
         } else {
             getLogger().warning("Vault wurde nicht gefunden – Economy wird deaktiviert.");
-            Bukkit.getPluginManager().registerEvents(new Manager(null), this); // Optional: wenn Manager auch ohne economy funktioniert
         }
 
         getCommand("ob").setTabCompleter(new TabCompleter());
