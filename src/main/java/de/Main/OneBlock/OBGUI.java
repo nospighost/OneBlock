@@ -17,13 +17,17 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.bukkit.Material.*;
+
 public class OBGUI implements CommandExecutor, Listener {
 
-    public static Inventory mainGUI;
+    int[] grayglasmaingui = {0, 1, 7, 8};
+
     public static Inventory upgradeShop;
 
     @Override
@@ -34,61 +38,63 @@ public class OBGUI implements CommandExecutor, Listener {
         }
 
         Player player = (Player) sender;
-
-        createMainGUI();
-        player.openInventory(mainGUI);
+        openMainGUI(player);
         return true;
     }
 
-    private void createMainGUI() {
-        if (mainGUI != null) return;
+    private void openMainGUI(Player player) {
+        Inventory mainGUI = Bukkit.createInventory(null, 9, "§8OneBlock Menü");
 
-        mainGUI = Bukkit.createInventory(null, 6 * 9, "OneBlock");
-
-        ItemStack blackGlass = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
-        ItemMeta glassMeta = blackGlass.getItemMeta();
-        if (glassMeta != null) {
-            glassMeta.setDisplayName(" ");
-            blackGlass.setItemMeta(glassMeta);
+        for (int pos : grayglasmaingui) {
+            mainGUI.setItem(pos, new ItemStack(GRAY_STAINED_GLASS_PANE));
         }
 
-        for (int i = 0; i < 54; i++) {
-            if (i <= 8 || i >= 45 || i % 9 == 0 || i % 9 == 8) {
-                mainGUI.setItem(i, blackGlass);
-            }
+        // Slot 0 - Repeater
+        ItemStack repeaterLeft = new ItemStack(REPEATER);
+        ItemMeta meta0 = repeaterLeft.getItemMeta();
+        if (meta0 != null) {
+            meta0.setDisplayName("§cInsel-Einstellungen");
+            repeaterLeft.setItemMeta(meta0);
         }
+        mainGUI.setItem(3, repeaterLeft);
 
-        ItemStack grass = new ItemStack(Material.GRASS_BLOCK);
-        ItemMeta grassMeta = grass.getItemMeta();
-        if (grassMeta != null) {
-            grassMeta.setDisplayName("§aZu deinem OneBlock teleportieren");
-            grass.setItemMeta(grassMeta);
+        // Slot 2 - Totem
+        ItemStack totem = new ItemStack(TOTEM_OF_UNDYING);
+        ItemMeta meta2 = totem.getItemMeta();
+        if (meta2 != null) {
+            meta2.setDisplayName("§6Insel-Rebirth");
+            totem.setItemMeta(meta2);
         }
-        mainGUI.setItem(20, grass);
+        mainGUI.setItem(4, totem);
 
-        ItemStack barrier = new ItemStack(Material.BARRIER);
-        ItemMeta barrierMeta = barrier.getItemMeta();
-        if (barrierMeta != null) {
-            barrierMeta.setDisplayName("§cDeinen OneBlock löschen");
-            barrier.setItemMeta(barrierMeta);
+        // Slot 4 - Spielerkopf
+        ItemStack skull = new ItemStack(PLAYER_HEAD);
+        SkullMeta skullMeta = (SkullMeta) skull.getItemMeta();
+        if (skullMeta != null) {
+            skullMeta.setOwningPlayer(player);
+            skullMeta.setDisplayName("§eBefehle");
+            skull.setItemMeta(skullMeta);
         }
-        mainGUI.setItem(22, barrier);
+        mainGUI.setItem(6, skull);
 
-        ItemStack visit = new ItemStack(Material.ENDER_PEARL);
-        ItemMeta visitMeta = visit.getItemMeta();
-        if (visitMeta != null) {
-            visitMeta.setDisplayName("§bAndere Insel besuchen");
-            visit.setItemMeta(visitMeta);
+        // Slot 6 - XP-Flasche
+        ItemStack xpBottle = new ItemStack(EXPERIENCE_BOTTLE);
+        ItemMeta meta6 = xpBottle.getItemMeta();
+        if (meta6 != null) {
+            meta6.setDisplayName("§aPhasen-Auswahl");
+            xpBottle.setItemMeta(meta6);
         }
-        mainGUI.setItem(24, visit);
+        mainGUI.setItem(6, xpBottle);
 
-        ItemStack shop = new ItemStack(Material.BEACON);
-        ItemMeta shopMeta = shop.getItemMeta();
-        if (shopMeta != null) {
-            shopMeta.setDisplayName("§aZum OneBlock Shop");
-            shop.setItemMeta(shopMeta);
+        // Slot 8 - Repeater
+        ItemStack repeaterRight = new ItemStack(COMPARATOR);
+        ItemMeta meta8 = repeaterRight.getItemMeta();
+        if (meta8 != null) {
+            meta8.setDisplayName("§cInsel-Verwaltung");
+            repeaterRight.setItemMeta(meta8);
         }
-        mainGUI.setItem(28, shop);
+        mainGUI.setItem(3, repeaterRight);
+
     }
 
     private void openUpgradeShop(Player player) {
@@ -100,7 +106,7 @@ public class OBGUI implements CommandExecutor, Listener {
         int neededLevel = costLevel * 2;
         int playerLevel = config.getInt("IslandLevel", 1);
 
-        ItemStack upgradeItem = new ItemStack(Material.STRUCTURE_VOID);
+        ItemStack upgradeItem = new ItemStack(STRUCTURE_VOID);
         ItemMeta meta = upgradeItem.getItemMeta();
         if (meta != null) {
             meta.setDisplayName("§aWorldBorder vergrößern!");
@@ -120,10 +126,10 @@ public class OBGUI implements CommandExecutor, Listener {
         upgradeShop.setItem(20, upgradeItem);
         player.openInventory(upgradeShop);
 
-        ItemStack rebirth = new ItemStack(Material.TOTEM_OF_UNDYING);
+        ItemStack rebirth = new ItemStack(TOTEM_OF_UNDYING);
         ItemMeta rebirthMeta = rebirth.getItemMeta();
         if (rebirthMeta != null) {
-            rebirthMeta.setDisplayName(" ");
+            rebirthMeta.setDisplayName("§6Rebirth kommt bald...");
             rebirth.setItemMeta(rebirthMeta);
             upgradeShop.setItem(22, rebirth);
         }
@@ -138,30 +144,22 @@ public class OBGUI implements CommandExecutor, Listener {
         ItemStack clicked = event.getCurrentItem();
         Material type = clicked.getType();
 
-        if (title.equalsIgnoreCase("OneBlock")) {
+        if (title.equalsIgnoreCase("OneBlock Menü")) {
             event.setCancelled(true);
+            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
 
             switch (type) {
-                case GRASS_BLOCK:
-                    player.closeInventory();
-                    player.performCommand("ob join");
+                case EXPERIENCE_BOTTLE:
+                    player.sendMessage("§eRebirth kommt bald!");
                     break;
-                case BARRIER:
-                    player.closeInventory();
-                    player.performCommand("ob delete");
+                case REPEATER:
+                    player.sendMessage("§7Navigation wird noch eingebaut...");
                     break;
-                case BEACON:
-                    player.closeInventory();
-                    openUpgradeShop(player);
+                case TOTEM_OF_UNDYING:
+                    player.sendMessage("§6Totem-Funktion in Arbeit...");
                     break;
-                case ENDER_PEARL:
-                    player.closeInventory();
-                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
-                    TextComponent msg = new TextComponent("§aKlicke hier, um den Besuchsbefehl einzugeben: ");
-                    TextComponent commandPart = new TextComponent("§e/ob visit ");
-                    commandPart.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/ob visit "));
-                    msg.addExtra(commandPart);
-                    player.spigot().sendMessage(msg);
+                case PLAYER_HEAD:
+                    player.sendMessage("§eProfil geöffnet!");
                     break;
             }
         }
@@ -169,15 +167,11 @@ public class OBGUI implements CommandExecutor, Listener {
         if (title.equalsIgnoreCase("Upgrade-Shop")) {
             event.setCancelled(true);
 
-
-
-            if (type == Material.STRUCTURE_VOID) {
+            if (type == STRUCTURE_VOID) {
                 YamlConfiguration config = Manager.getIslandConfig(player);
                 int currentSize = config.getInt("WorldBorderSize", 50);
 
-                if(!(currentSize >= 200)){
-
-
+                if (currentSize < 200) {
                     currentSize += 10;
                     config.set("WorldBorderSize", currentSize);
                     Manager.saveIslandConfig(player, config);
@@ -190,13 +184,10 @@ public class OBGUI implements CommandExecutor, Listener {
                     player.sendMessage("§aDeine WorldBorder wurde auf §e" + currentSize + " §avergrößert!");
                     player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                     player.closeInventory();
-                }else {
+                } else {
                     player.sendMessage("§cDu hast das Limit erreicht");
                 }
-
-
-                }
-
+            }
         }
     }
 }
