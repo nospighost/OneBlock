@@ -14,7 +14,7 @@ unbanmessage: "§a Du hast %player% von deiner Insel entbannt"
 banmessage: "§a Du hast %player% von deiner Insel gebannt"
 notbannedmessage: "§aDer Spieler ist nicht gebannt!"
 removemessage: "§a Du hast %player% von deiner Insel entfernt"
-removeplayernotinlist: "§Der Spieler ist nicht auf deiner Insel hinzugefügt"
+removeplayernotinlist: "§cDer Spieler ist nicht auf deiner Insel hinzugefügt"
 rebirthinventoryfull: "§cDein Inventar ist voll bitte leere es um zu den Rebirth durchzuführen"
 rebirthhigherlevel: "§cDein Level ist nicht hoch genug um den rebirth durchzuführen. Du brauchst das level %level% um zu rebirthen "
 RebirthLevel: 12
