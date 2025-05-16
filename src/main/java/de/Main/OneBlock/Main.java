@@ -21,6 +21,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.UUID;
 
 public class Main extends JavaPlugin implements Listener {
     private static Main instance; // <- Hier
@@ -105,7 +106,7 @@ public class Main extends JavaPlugin implements Listener {
             getLogger().warning("Fehler beim Erstellen der OneBlock-Welt");
         }
 
-        for (String playerName : Manager.getAllIslandOwners()) {
+        for (UUID playerName : Manager.getAllIslandOwners()) {
             File file = new File(islandDataFolder, playerName + ".yml");
             if (file.exists()) {
                 YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
@@ -114,7 +115,7 @@ public class Main extends JavaPlugin implements Listener {
                 int size = config.getInt("WorldBorderSize", 50);
 
 
-                Player player = Bukkit.getPlayerExact(playerName);
+                Player player = Bukkit.getPlayerExact(playerName.toString());
                 if (player != null && player.isOnline()) {
                     WorldBorder border = Bukkit.createWorldBorder();
                     border.setCenter(x, z);
@@ -143,7 +144,7 @@ public class Main extends JavaPlugin implements Listener {
 
 
     public static void setWorldBorder(Player player) {
-        YamlConfiguration config = Manager.getIslandConfig(player);
+        YamlConfiguration config = Manager.getIslandConfig(player.getUniqueId());
         int x = config.getInt("OneBlock-x");
         int z = config.getInt("OneBlock-z");
         int size = config.getInt("WorldBorderSize");

@@ -9,6 +9,8 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 
+import java.util.UUID;
+
 public class OneBlockCommands implements Listener, CommandExecutor {
 
     @Override
@@ -27,7 +29,7 @@ public class OneBlockCommands implements Listener, CommandExecutor {
             Manager.createOrJoinIsland(player, args);
 
         } else if (args.length == 1 && args[0].equalsIgnoreCase("delete")) {
-            YamlConfiguration config = Manager.getIslandConfig(player);
+            YamlConfiguration config = Manager.getIslandConfig(player.getUniqueId());
             if (!isOwnerOfIsland(player, config)) {
                 player.sendMessage(prefix + "§cNur der Inselbesitzer kann die Insel löschen.");
                 return true;
@@ -39,7 +41,7 @@ public class OneBlockCommands implements Listener, CommandExecutor {
             Manager.visitIsland(player, targetName);
 
         } else if (args.length == 1 && args[0].equalsIgnoreCase("rebirth")) {
-            YamlConfiguration config = Manager.getIslandConfig(player);
+            YamlConfiguration config = Manager.getIslandConfig(player.getUniqueId());
             if (!isOwnerOfIsland(player, config)) {
                 player.sendMessage(prefix + "§cNur der Inselbesitzer kann rebirth ausführen.");
                 return true;
@@ -53,7 +55,7 @@ public class OneBlockCommands implements Listener, CommandExecutor {
             }
 
         } else if (args.length == 2 && args[0].equalsIgnoreCase("trust")) {
-            YamlConfiguration config = Manager.getIslandConfig(player);
+            YamlConfiguration config = Manager.getIslandConfig(player.getUniqueId());
             if (!isOwnerOfIsland(player, config)) {
                 player.sendMessage(prefix + "§cNur der Inselbesitzer kann Spielern vertrauen.");
                 return true;
@@ -69,7 +71,7 @@ public class OneBlockCommands implements Listener, CommandExecutor {
             Manager.acceptInvite(player);
 
         } else if (args.length == 2 && args[0].equalsIgnoreCase("deny")) {
-                YamlConfiguration config = Manager.getIslandConfig(player);
+            YamlConfiguration config = Manager.getIslandConfig(player.getUniqueId());
                 if (!isOwnerOfIsland(player, config)) {
                     player.sendMessage(prefix + "§cNur der Inselbesitzer kann Spieler bannen.");
                     return true;
@@ -82,7 +84,7 @@ public class OneBlockCommands implements Listener, CommandExecutor {
             }
 
         } else if (args.length == 2 && args[0].equalsIgnoreCase("unban")) {
-            YamlConfiguration config = Manager.getIslandConfig(player);
+            YamlConfiguration config = Manager.getIslandConfig(player.getUniqueId());
             if (!isOwnerOfIsland(player, config)) {
                 player.sendMessage(prefix + "§cNur der Inselbesitzer kann Spieler entbannen.");
                 return true;
@@ -95,7 +97,7 @@ public class OneBlockCommands implements Listener, CommandExecutor {
             }
 
         } else if (args.length == 2 && args[0].equalsIgnoreCase("remove")) {
-            YamlConfiguration config = Manager.getIslandConfig(player);
+            YamlConfiguration config = Manager.getIslandConfig(player.getUniqueId());
             if (!isOwnerOfIsland(player, config)) {
                 player.sendMessage(prefix + "§cNur der Inselbesitzer kann Spieler entfernen.");
                 return true;
@@ -120,7 +122,16 @@ public class OneBlockCommands implements Listener, CommandExecutor {
 
     private boolean isOwnerOfIsland(Player player, YamlConfiguration islandConfig) {
         if (islandConfig == null) return false;
-        String ownerName = islandConfig.getString("owner");
-        return ownerName != null && ownerName.equalsIgnoreCase(player.getName());
+        String ownerUUIDString = islandConfig.getString("owner-uuid");
+        if (ownerUUIDString == null) return false;
+
+        try {
+            UUID ownerUUID = UUID.fromString(ownerUUIDString);
+            return ownerUUID.equals(player.getUniqueId());
+        } catch (IllegalArgumentException e) {
+            // Falls doch mal ein Name statt UUID drin steht, als Fallback:
+            return ownerUUIDString.equalsIgnoreCase(player.getName());
+        }
     }
+
 }
