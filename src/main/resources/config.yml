@@ -17,8 +17,15 @@ removemessage: "§a Du hast %player% von deiner Insel entfernt"
 removeplayernotinlist: "§cDer Spieler ist nicht auf deiner Insel hinzugefügt"
 rebirthinventoryfull: "§cDein Inventar ist voll bitte leere es um zu den Rebirth durchzuführen"
 rebirthhigherlevel: "§cDein Level ist nicht hoch genug um den rebirth durchzuführen. Du brauchst das level %level% um zu rebirthen "
+trustmessagealready: "§cDieser Spieler ist bereits getrustet"
 RebirthLevel: 12
 Server: "§6§lBlockhive >> "
+oneblockchest:
+  name: "&6Spezieller OneBlock Chest"
+  contents:
+    - "DIAMOND_SWORD:1"
+    - "APPLE:5"
+    - "TORCH:10"
 oneblockblocks:
   '1': # Natur & Erde
     - DIRT

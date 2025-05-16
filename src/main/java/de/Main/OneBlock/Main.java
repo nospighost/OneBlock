@@ -9,6 +9,7 @@ import org.bukkit.World;
 import org.bukkit.WorldBorder;
 import org.bukkit.WorldCreator;
 import org.bukkit.WorldType;
+import org.bukkit.command.CommandExecutor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -57,7 +58,7 @@ public class Main extends JavaPlugin implements Listener {
 
 
         // Listener registrieren
-        Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
+       Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
         if (economy != null) {
             Bukkit.getPluginManager().registerEvents(new Manager(economy, this), this);
             getLogger().info("Vault Economy erfolgreich erkannt.");
@@ -80,6 +81,9 @@ public class Main extends JavaPlugin implements Listener {
         // Befehle
         getCommand("ob").setExecutor(new de.Main.OneBlock.OneBlockCommands());
         getCommand("obgui").setExecutor(new OBGUI());
+
+
+
         getServer().getPluginManager().registerEvents(new OBGUI(), this);
 
         // Void Gen für OneBlock-Welt

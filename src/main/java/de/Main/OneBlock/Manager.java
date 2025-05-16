@@ -2,10 +2,15 @@ package de.Main.OneBlock;
 
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
+import org.bukkit.block.Block;
+import org.bukkit.block.Chest;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryOpenEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -260,7 +265,7 @@ public class Manager implements Listener {
                 target.getPlayer().sendMessage(prefix + "§e" + owner.getName() + " hat dich auf seine Insel eingeladen. Nutze §a/ob accept§e um anzunehmen.");
             }
         } else {
-            owner.sendMessage(prefix + "§cDer Spieler ist bereits vertrauenswürdig.");
+            owner.sendMessage(prefix + Main.config.getString("trustmessagealready"));
         }
     }
 
@@ -429,5 +434,65 @@ public class Manager implements Listener {
             player.sendMessage(prefix + "§cFehler beim Verlassen der Insel.");
         }
     }
+    // 1. Kiste setzen + Location merken
+    public static Set<Location> specialChests = new HashSet<>();
 
+    public void spawnOneBlockChest(Location loc) {
+        Block block = loc.getBlock();
+        block.setType(Material.CHEST);
+
+        Chest chest = (Chest) block.getState();
+
+        // Items aus Config hinzufügen (wie gehabt)
+        YamlConfiguration config = (YamlConfiguration) Main.config;
+
+        List<String> items = config.getStringList("oneblockchest.contents");
+        Inventory inv = chest.getBlockInventory();
+
+        for (String itemStr : items) {
+            String[] parts = itemStr.split(":");
+            if (parts.length != 2) continue;
+
+            Material mat;
+            int amount;
+            try {
+                mat = Material.valueOf(parts[0].toUpperCase());
+                amount = Integer.parseInt(parts[1]);
+            } catch (IllegalArgumentException e) {
+                continue;
+            }
+
+            ItemStack itemStack = new ItemStack(mat, amount);
+            inv.addItem(itemStack);
+        }
+
+        chest.update();
+
+        specialChests.add(loc);
+    }
+
+    @EventHandler
+    public void onInventoryOpen(InventoryOpenEvent event) {
+        Inventory inv = event.getInventory();
+
+        if (inv.getHolder() instanceof Chest) {
+            Chest chest = (Chest) inv.getHolder();
+            Location loc = chest.getLocation();
+
+            if (specialChests.contains(loc)) {
+                Player player = (Player) event.getPlayer();
+
+                // Kiste mit neuem Titel erstellen
+                Inventory customInv = Bukkit.createInventory(null, inv.getSize(),
+                        ChatColor.RED + "Mein spezieller Chest-Name");
+
+                // Inhalte übernehmen
+                customInv.setContents(inv.getContents());
+
+                // Original event abbrechen und neues Inventar öffnen
+                event.setCancelled(true);
+                player.openInventory(customInv);
+            }
+        }
+    }
 }
