@@ -169,8 +169,8 @@ public class Main extends JavaPlugin implements Listener {
         }
         return economy != null;
     }
-public static Economy getEconomy() {
+    public static Economy getEconomy() {
         return economy;
-}
+    }
 
 }
