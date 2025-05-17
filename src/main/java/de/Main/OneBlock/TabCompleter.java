@@ -13,12 +13,12 @@ import java.util.List;
 public class TabCompleter implements org.bukkit.command.TabCompleter {
 
     private final List<String> subCommands = Arrays.asList(
-            "join", "delete", "visit", "rebirth", "trust", "accept", "deny", "unban", "remove", "leave"
+            "join", "delete", "visit", "rebirth", "trust", "accept", "deny", "unban", "remove", "leave", "decline"
     );
 
 
     private final List<String> commandsWithPlayerArgument = Arrays.asList(
-            "visit", "add", "trust", "deny", "unban", "remove", "leave"
+            "visit", "add", "trust", "deny", "unban", "remove", "leave", "decline"
     );
 
     @Override

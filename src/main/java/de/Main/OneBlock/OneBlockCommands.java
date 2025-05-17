@@ -113,6 +113,10 @@ public class OneBlockCommands implements Listener, CommandExecutor {
             String ownerName = args[1];
             Manager.leaveIsland(player, ownerName);
 
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("decline")) {
+            String target = args[1];
+            Manager.declineinvite(player, target);
+
         } else {
             player.sendMessage(prefix + "§aNutze: /ob join | /ob delete | /ob visit <Spieler> | /ob rebirth | /ob trust <Spieler> | /ob accept | /ob deny <Spieler> | /ob unban <Spieler> | /ob remove <Spieler> | /ob leave <Inselbesitzer>");
         }

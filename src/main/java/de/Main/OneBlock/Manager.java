@@ -2,7 +2,6 @@ package de.Main.OneBlock;
 
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
-import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
@@ -258,14 +257,14 @@ public class Manager implements Listener {
             config.set("invitedtrust", trustedList);
             saveIslandConfig(owner.getUniqueId(), config);
 
-            String msg = config.getString("trustmessage", "Du hast %player% als vertrauenswürdigen Spieler hinzugefügt.");
+            String msg = config.getString("trust.trustmessage", "Du hast %player% als vertrauenswürdigen Spieler hinzugefügt.");
             owner.sendMessage(prefix + msg.replace("%player%", target.getName()));
 
             if (target.isOnline()) {
                 target.getPlayer().sendMessage(prefix + "§e" + owner.getName() + " hat dich auf seine Insel eingeladen. Nutze §a/ob accept§e um anzunehmen.");
             }
         } else {
-            owner.sendMessage(prefix + Main.config.getString("trustmessagealready"));
+            owner.sendMessage(prefix + Main.config.getString("trust.trustmessagealready"));
         }
     }
 
@@ -392,11 +391,10 @@ public class Manager implements Listener {
     public static void leaveIsland(Player player, String ownerNameOrUUID) {
         UUID ownerUUID = null;
 
-        // Versuch, ownerNameOrUUID als UUID zu parsen
         try {
             ownerUUID = UUID.fromString(ownerNameOrUUID);
         } catch (IllegalArgumentException e) {
-            // Falls kein UUID-String, versuche Spielername zu ermitteln
+
             OfflinePlayer ownerOffline = Bukkit.getOfflinePlayer(ownerNameOrUUID);
             if (ownerOffline != null && ownerOffline.hasPlayedBefore()) {
                 ownerUUID = ownerOffline.getUniqueId();
@@ -434,65 +432,49 @@ public class Manager implements Listener {
             player.sendMessage(prefix + "§cFehler beim Verlassen der Insel.");
         }
     }
-    // 1. Kiste setzen + Location merken
-    public static Set<Location> specialChests = new HashSet<>();
 
-    public void spawnOneBlockChest(Location loc) {
-        Block block = loc.getBlock();
-        block.setType(Material.CHEST);
 
-        Chest chest = (Chest) block.getState();
 
-        // Items aus Config hinzufügen (wie gehabt)
-        YamlConfiguration config = (YamlConfiguration) Main.config;
+    public static void declineinvite(Player player, String targetName) {
+        // UUID vom Zielspieler holen
+        OfflinePlayer targetPlayer = Bukkit.getOfflinePlayer(targetName);
+        UUID targetUUID = targetPlayer.getUniqueId();
+        String uuidStr = targetUUID.toString();
 
-        List<String> items = config.getStringList("oneblockchest.contents");
-        Inventory inv = chest.getBlockInventory();
+        YamlConfiguration config = getIslandConfig(player.getUniqueId());
+        List<String> invited = config.getStringList("invited");
+        List<String> invitedTrust = config.getStringList("invitedtrust");
 
-        for (String itemStr : items) {
-            String[] parts = itemStr.split(":");
-            if (parts.length != 2) continue;
+        boolean removed = false;
 
-            Material mat;
-            int amount;
-            try {
-                mat = Material.valueOf(parts[0].toUpperCase());
-                amount = Integer.parseInt(parts[1]);
-            } catch (IllegalArgumentException e) {
-                continue;
-            }
-
-            ItemStack itemStack = new ItemStack(mat, amount);
-            inv.addItem(itemStack);
+        if (invited.contains(uuidStr)) {
+            invited.remove(uuidStr);
+            removed = true;
+            config.set("invited", invited);
         }
 
-        chest.update();
+        if (invitedTrust.contains(uuidStr)) {
+            invitedTrust.remove(uuidStr);
+            removed = true;
+            config.set("invitedtrust", invitedTrust);
+        }
 
-        specialChests.add(loc);
-    }
+        if (removed) {
+            saveIslandConfig(player.getUniqueId(), config);
 
-    @EventHandler
-    public void onInventoryOpen(InventoryOpenEvent event) {
-        Inventory inv = event.getInventory();
 
-        if (inv.getHolder() instanceof Chest) {
-            Chest chest = (Chest) inv.getHolder();
-            Location loc = chest.getLocation();
+            player.sendMessage(Main.config.getString("trust.declinetrustself").replace("%player%", targetName));
 
-            if (specialChests.contains(loc)) {
-                Player player = (Player) event.getPlayer();
 
-                // Kiste mit neuem Titel erstellen
-                Inventory customInv = Bukkit.createInventory(null, inv.getSize(),
-                        ChatColor.RED + "Mein spezieller Chest-Name");
-
-                // Inhalte übernehmen
-                customInv.setContents(inv.getContents());
-
-                // Original event abbrechen und neues Inventar öffnen
-                event.setCancelled(true);
-                player.openInventory(customInv);
+            Player inviter = Bukkit.getPlayer(targetUUID);
+            if (inviter != null) {
+                inviter.sendMessage(Main.config.getString("trust.declinetrust").replace("%player%", player.getName()));
             }
+        } else {
+            player.sendMessage(Main.config.getString("trust.declinetrustnotrust").replace("%player%", targetName));
         }
     }
+
+
+
 }

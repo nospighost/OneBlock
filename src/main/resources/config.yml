@@ -9,7 +9,6 @@ InselPadding:
 DeniedMessage: "§aDu wurdest von dieser Insel gebannt! Bitte den Besitzer dich zu entbannen wenn du die Insel besuchen möchtest."
 denymessagealreadydenied: "§a Dieser Spieler ist bereits gebannt."
 addmessagealreadyadded: "§cDieser Spieler wurde bereits eingeladen"
-trustmessage: "§aDu hast %player% auf deine Insel eingeladen"
 unbanmessage: "§a Du hast %player% von deiner Insel entbannt"
 banmessage: "§a Du hast %player% von deiner Insel gebannt"
 notbannedmessage: "§aDer Spieler ist nicht gebannt!"
@@ -17,7 +16,12 @@ removemessage: "§a Du hast %player% von deiner Insel entfernt"
 removeplayernotinlist: "§cDer Spieler ist nicht auf deiner Insel hinzugefügt"
 rebirthinventoryfull: "§cDein Inventar ist voll bitte leere es um zu den Rebirth durchzuführen"
 rebirthhigherlevel: "§cDein Level ist nicht hoch genug um den rebirth durchzuführen. Du brauchst das level %level% um zu rebirthen "
-trustmessagealready: "§cDieser Spieler ist bereits getrustet"
+trust:
+  trustmessagealready: "§cDieser Spieler ist bereits getrustet"
+  trustmessage: "§aDu hast %player% auf deine Insel eingeladen"
+  declinetrust: "§6%player% §ahat deine Einladung abgelehnt"
+  declinetrustself: "§aDu hast die Einladung von §6%player% §a abgelehnt"
+  declinetrustnotrust: "§cDu hast keine Einladung von %player% erhalten"
 RebirthLevel: 12
 Server: "§6§lBlockhive >> "
 oneblockblocks:
