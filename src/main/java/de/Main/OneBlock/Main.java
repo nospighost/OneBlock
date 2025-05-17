@@ -8,6 +8,7 @@ import org.bukkit.World;
 import org.bukkit.WorldBorder;
 import org.bukkit.WorldCreator;
 import org.bukkit.WorldType;
+import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -36,18 +37,15 @@ public class Main extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
 
-
-        //config
+        // Config laden
         saveDefaultConfig();
         config = getConfig();
         instance = this;
 
-
         setupEconomy();
 
-
         // Listener registrieren
-       Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
         if (economy != null) {
             Bukkit.getPluginManager().registerEvents(new Manager(economy, this), this);
             getLogger().info("Vault Economy erfolgreich erkannt.");
@@ -55,13 +53,12 @@ public class Main extends JavaPlugin implements Listener {
             getLogger().warning("Vault wurde nicht gefunden – Economy wird deaktiviert.");
         }
 
+        // Tab-Completion
         getCommand("ob").setTabCompleter(new TabCompleter());
-
-
 
         getLogger().info("OneBlockPlugin aktiviert!");
 
-        // Ordner Erstellen//
+        // Insel-Daten-Ordner erstellen
         islandDataFolder = new File(getDataFolder(), "IslandData");
         if (!islandDataFolder.exists()) {
             islandDataFolder.mkdirs();
@@ -70,12 +67,10 @@ public class Main extends JavaPlugin implements Listener {
         // Befehle
         getCommand("ob").setExecutor(new de.Main.OneBlock.OneBlockCommands());
         getCommand("obgui").setExecutor(new OBGUI());
-
-
-
         getServer().getPluginManager().registerEvents(new OBGUI(), this);
+       getServer().getPluginManager().registerEvents(new JoinListener(islandDataFolder), this);
 
-        // Void Gen für OneBlock-Welt
+        // OneBlock-Welt erzeugen (Void-Gen)
         WorldCreator worldCreator = new WorldCreator(WORLD_NAME);
         worldCreator.environment(World.Environment.NORMAL);
         worldCreator.type(WorldType.FLAT);
@@ -87,7 +82,7 @@ public class Main extends JavaPlugin implements Listener {
             getLogger().info("OneBlock-Welt wurde erfolgreich erstellt!");
             oneBlockWorld.setSpawnLocation(0, 100, 0);
 
-            // Setze die Border für die gesamte Welt
+            // Setze eine globale WorldBorder für die Welt
             WorldBorder worldBorder = oneBlockWorld.getWorldBorder();
             worldBorder.setCenter(0, 0);
             worldBorder.setSize(50);
@@ -99,31 +94,34 @@ public class Main extends JavaPlugin implements Listener {
             getLogger().warning("Fehler beim Erstellen der OneBlock-Welt");
         }
 
-        for (UUID playerName : Manager.getAllIslandOwners()) {
-            File file = new File(islandDataFolder, playerName + ".yml");
+        // WorldBorders für alle existierenden Inseln setzen
+        for (UUID uuid : Manager.getAllIslandOwners()) {
+            File file = new File(islandDataFolder, uuid + ".yml");
             if (file.exists()) {
                 YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
                 int x = config.getInt("OneBlock-x");
                 int z = config.getInt("OneBlock-z");
                 int size = config.getInt("WorldBorderSize", 50);
 
+                WorldBorder border = Bukkit.createWorldBorder();
+                border.setCenter(x, z);
+                border.setSize(size);
+                border.setDamageBuffer(0);
+                border.setDamageAmount(0.5);
+                border.setWarningDistance(5);
+                border.setWarningTime(15);
 
-                Player player = Bukkit.getPlayerExact(playerName.toString());
+                // Wenn Spieler online ist, direkt anwenden
+                Player player = Bukkit.getPlayer(uuid);
                 if (player != null && player.isOnline()) {
-                    WorldBorder border = Bukkit.createWorldBorder();
-                    border.setCenter(x, z);
-                    border.setSize(size);
-                    border.setDamageBuffer(0);
-                    border.setDamageAmount(0.5);
-                    border.setWarningDistance(5);
-                    border.setWarningTime(15);
-
                     player.setWorldBorder(border);
                 }
+
+                // Optional: WorldBorder irgendwo speichern oder zuordnen, z. B. in einer Map<UUID, WorldBorder>
             }
         }
-
     }
+
 
 
     @Override
@@ -138,10 +136,14 @@ public class Main extends JavaPlugin implements Listener {
 
     public static void setWorldBorder(Player player) {
         YamlConfiguration config = Manager.getIslandConfig(player.getUniqueId());
+
         int x = config.getInt("OneBlock-x");
         int z = config.getInt("OneBlock-z");
         int size = config.getInt("WorldBorderSize");
-        WorldBorder border = player.getWorld().getWorldBorder();
+        if (size <= 0) size = 50;
+
+        // Individuelle WorldBorder erstellen
+        WorldBorder border = Bukkit.createWorldBorder();
         border.setCenter(x, z);
         border.setSize(size);
         border.setDamageBuffer(0);
@@ -149,18 +151,21 @@ public class Main extends JavaPlugin implements Listener {
         border.setWarningDistance(5);
         border.setWarningTime(15);
 
+        // Spieler bekommt seine eigene WorldBorder
         player.setWorldBorder(border);
 
-        if (oneBlockWorld != null) {
-            Location blockLocation = new Location(oneBlockWorld, x, 100, z);
-            if (blockLocation.getBlock().getType() == Material.AIR) {
-                oneBlockWorld.setType(blockLocation, Material.OAK_LOG);
-            } else {
-                oneBlockWorld.getBlockAt(blockLocation).setType(blockLocation.getBlock().getType());
-            }
+        // OneBlock-Log an der richtigen Stelle setzen
+        World playerWorld = player.getWorld();
+        Location blockLocation = new Location(playerWorld, x, 100, z);
+        Block block = blockLocation.getBlock();
 
+        if (block.getType() == Material.AIR) {
+            block.setType(Material.OAK_LOG);
         }
     }
+
+
+
 
     private boolean setupEconomy() {
         RegisteredServiceProvider<Economy> rsp = Bukkit.getServicesManager().getRegistration(Economy.class);

@@ -38,7 +38,6 @@ public class Manager implements Listener {
 
                 int padding = Main.config.getInt("value");
                 int pos = getIslandCords(padding);
-
                 config.set("OneBlock-x", pos);
                 config.set("OneBlock-z", pos);
                 config.set("x-position", pos);
@@ -48,7 +47,6 @@ public class Manager implements Listener {
                 config.set("WorldBorderSize", 50);
                 config.set("EigeneInsel", true);
                 config.set("owner", player.getName());
-
                 saveIslandConfig(player.getUniqueId(), config);
                 Main.setWorldBorder(player);
 
@@ -112,7 +110,8 @@ public class Manager implements Listener {
                 for (File file : files) {
                     try {
                         owners.add(UUID.fromString(file.getName().replace(".yml", "")));
-                    } catch (IllegalArgumentException ignored) {}
+                    } catch (IllegalArgumentException ignored) {
+                    }
                 }
             }
         }
@@ -434,7 +433,6 @@ public class Manager implements Listener {
     }
 
 
-
     public static void declineinvite(Player player, String targetName) {
         // UUID vom Zielspieler holen
         OfflinePlayer targetPlayer = Bukkit.getOfflinePlayer(targetName);
@@ -474,7 +472,6 @@ public class Manager implements Listener {
             player.sendMessage(Main.config.getString("trust.declinetrustnotrust").replace("%player%", targetName));
         }
     }
-
 
 
 }

@@ -47,28 +47,83 @@ public class PlayerListener implements Listener {
         Player player = event.getPlayer();
         YamlConfiguration config = getIslandConfig(player.getUniqueId());
 
-        if (!config.contains("created") || !config.contains("WorldBorderSize") || !config.contains("TotalBlocks") || !config.contains("owner") || !config.contains("owner-uuid") || !config.contains("EigeneInsel") || !config.contains("z-position") || !config.contains("x-position") || !config.contains("IslandSpawn-x") || !config.contains("IslandSpawn-z") || !config.contains("trusted") || !config.contains("added") || !config.contains("invited") || !config.contains("invitedtrust")) {
-
-            config.set("created", System.nanoTime());
-            config.set("owner", player.getName());
-            config.set("owner-uuid", player.getUniqueId().toString());
-            config.set("EigeneInsel", false);
-            config.set("z-position", 0);
-            config.set("x-position", 0);
-            config.set("WorldBorderSize", 50);
-            config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.1.blockcount", 200));
-            config.set("TotalBlocks", Main.config.getInt("oneblockblocks.1.blockcount", 200));
-            config.set("IslandLevel", 1);
-            config.set("OneBlock-x", 0);
-            config.set("OneBlock-z", 0);
-            config.set("trusted", new ArrayList<String>());
-            config.set("invitedtrust", new ArrayList<String>());
-            config.set("denied", new ArrayList<String>());
-
-            Manager.saveIslandConfig(player.getUniqueId(), config);
+        if (!config.contains("created") || !config.contains("WorldBorderSize") || !config.contains("TotalBlocks")) {
+            if (!config.contains("created")) {
+                config.set("created", System.nanoTime());
+            }
+            if (!config.contains("WorldBorderSize")) {
+                config.set("WorldBorderSize", 50);
+            }
+            if (!config.contains("TotalBlocks")) {
+                config.set("TotalBlocks", Main.config.getInt("oneblockblocks.1.blockcount", 200));
+            }
         }
 
-        World world = Bukkit.getWorld(WORLD_NAME);
+        if (!config.contains("owner") || !config.contains("owner-uuid") || !config.contains("EigeneInsel")) {
+            if (!config.contains("owner")) {
+                config.set("owner", player.getName());
+            }
+            if (!config.contains("owner-uuid")) {
+                config.set("owner-uuid", player.getUniqueId().toString());
+            }
+            if (!config.contains("EigeneInsel")) {
+                config.set("EigeneInsel", false);
+            }
+        }
+
+        if (!config.contains("z-position") || !config.contains("x-position")) {
+            if (!config.contains("z-position")) {
+                config.set("z-position", 0);
+            }
+            if (!config.contains("x-position")) {
+                config.set("x-position", 0);
+            }
+        }
+
+        if (!config.contains("IslandSpawn-x") || !config.contains("IslandSpawn-z")) {
+            if (!config.contains("IslandSpawn-x")) {
+                config.set("IslandSpawn-x", 0);
+            }
+            if (!config.contains("IslandSpawn-z")) {
+                config.set("IslandSpawn-z", 0);
+            }
+        }
+
+        if (!config.contains("trusted") || !config.contains("invited") || !config.contains("invitedtrust") || !config.contains("denied")) {
+            if (!config.contains("trusted")) {
+                config.set("trusted", new ArrayList<String>());
+            }
+            if (!config.contains("invited")) {
+                config.set("invited", new ArrayList<String>());
+            }
+            if (!config.contains("invitedtrust")) {
+                config.set("invitedtrust", new ArrayList<String>());
+            }
+            if (!config.contains("denied")) {
+                config.set("denied", new ArrayList<String>());
+            }
+        }
+
+        if (!config.contains("MissingBlocksToLevelUp")) {
+            config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.1.blockcount", 200));
+        }
+
+        if (!config.contains("IslandLevel")) {
+            config.set("IslandLevel", 1);
+        }
+
+        if (!config.contains("OneBlock-x") || !config.contains("OneBlock-z")) {
+            if (!config.contains("OneBlock-x")) {
+                config.set("OneBlock-x", 0);
+            }
+            if (!config.contains("OneBlock-z")) {
+                config.set("OneBlock-z", 0);
+            }
+        }
+
+        Manager.saveIslandConfig(player.getUniqueId(), config);
+
+    World world = Bukkit.getWorld(WORLD_NAME);
         if (world != null && player.getWorld().getName().equals(WORLD_NAME)) {
             int x = config.getInt("OneBlock-x", 0);
             int z = config.getInt("OneBlock-z", 0);
