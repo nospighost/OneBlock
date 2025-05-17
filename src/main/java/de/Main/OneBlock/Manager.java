@@ -1,13 +1,5 @@
 package de.Main.OneBlock;
 
-import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import com.sk89q.worldedit.math.BlockVector3;
-import com.sk89q.worldguard.WorldGuard;
-import com.sk89q.worldguard.protection.flags.Flags;
-import com.sk89q.worldguard.protection.flags.StateFlag;
-import com.sk89q.worldguard.protection.managers.RegionManager;
-import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
-import com.sk89q.worldguard.protection.regions.RegionContainer;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -22,13 +14,15 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+import java.util.Objects;
 
 import static de.Main.OneBlock.Main.*;
 
 public class Manager implements Listener {
     public static Economy economy;
     private final JavaPlugin plugin;
+    static String prefix = Main.config.getString("Server");
+
 
     public Manager(Economy eco, JavaPlugin plugin) {
         economy = eco;
@@ -63,13 +57,13 @@ public class Manager implements Listener {
                 if (world != null) {
                     player.teleport(new Location(world, pos, 101, pos));
                 }
-                player.sendMessage(Main.config.getString("islandjoinmessage.notowned"));
+                player.sendMessage(prefix + Objects.requireNonNull(Main.config.getString("islandjoinmessage.notowned")));
             } else {
                 World world = Bukkit.getWorld("OneBlock");
                 if (world != null) {
                     player.teleport(new Location(world, config.getInt("IslandSpawn-x"), 101, config.getInt("IslandSpawn-z")));
                     Main.setWorldBorder(player);
-                    player.sendMessage(Main.config.getString("islandjoinmessage.join"));
+                    player.sendMessage(prefix + Objects.requireNonNull(Main.config.getString("islandjoinmessage.join")));
                 } else {
                     player.sendMessage("§cOneBlock-Welt nicht gefunden!");
                 }
@@ -81,11 +75,11 @@ public class Manager implements Listener {
     }
 
     // Island Datei bekommen wo die userdaten gespeichert werden
-   public static File getIslandFile(Player player) {
+    public static File getIslandFile(Player player) {
         return new File(Main.islandDataFolder, player.getName() + ".yml");
     }
 
-    // Island Config laden (wird halt auch erstellt wenn es sie nd gibt) 
+    // Island Config laden (wird halt auch erstellt wenn es sie nd gibt)
     public static YamlConfiguration getIslandConfig(Player player) {
         File file = getIslandFile(player);
         if (!file.exists()) {
@@ -107,16 +101,6 @@ public class Manager implements Listener {
         }
     }
 
-    public static String getIslandName(Player player) {
-        YamlConfiguration config = getIslandConfig(player);
-        return config.getString("name", "UnbenannteInsel");
-    }
-
-    public static void setIslandName(Player player, String name) {
-        YamlConfiguration config = getIslandConfig(player);
-        config.set("name", name);
-        saveIslandConfig(player, config);
-    }
 
     public static List<String> getAllIslandOwners() {
         List<String> owners = new ArrayList<>();
@@ -141,18 +125,18 @@ public class Manager implements Listener {
         return x;
     }
 
-    // Insel löschen die sachen in der config auch 
+    // Insel löschen die sachen in der config auch
     public static void deleteIsland(Player player) {
         YamlConfiguration config = getIslandConfig(player);
         World world = Bukkit.getWorld("OneBlock");
 
         if (world == null) {
-            player.sendMessage("§4OneBlock-Welt nicht gefunden.");
+            player.sendMessage(prefix + "§4OneBlock-Welt nicht gefunden.");
             return;
         }
 
         if (!config.getBoolean("EigeneInsel", false)) {
-            player.sendMessage("§aDu besitzt keine Insel.");
+            player.sendMessage(prefix + "§aDu besitzt keine Insel.");
             return;
         }
 
@@ -185,18 +169,29 @@ public class Manager implements Listener {
         config.set("WorldBorderSize", 50);
 
         saveIslandConfig(player, config);
-        player.sendMessage("§aDeine Insel wurde vollständig gelöscht.");
+        player.sendMessage(prefix + "§aDeine Insel wurde vollständig gelöscht.");
     }
 
-    // Insel besuchen mit /ob visit
+
     public static void visitIsland(Player visitor, String ownerName) {
         File file = new File(Main.islandDataFolder, ownerName + ".yml");
+
         if (!file.exists()) {
             visitor.sendMessage("§cDie Insel von §e" + ownerName + " §cwurde nicht gefunden.");
             return;
         }
 
         YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+
+
+        List<String> deniedUser = config.getStringList("denied");
+
+        if (deniedUser.contains(visitor.getName())) {
+            String deniedMessage = config.getString("DeniedMessage", "§cDu darfst diese Insel nicht betreten.");
+            visitor.sendMessage(deniedMessage);
+            return;
+        }
+
         World world = Bukkit.getWorld("OneBlock");
         if (world == null) {
             visitor.sendMessage("§cDie Welt 'OneBlock' konnte nicht gefunden werden.");
@@ -209,7 +204,8 @@ public class Manager implements Listener {
         visitor.sendMessage("§aDu wurdest zur Insel von §e" + ownerName + " §ateleportiert.");
     }
 
-//nsel rebirth
+
+    //nsel rebirth
     public static void rebirthIsland(Player player) {
         YamlConfiguration config = getIslandConfig(player);
 
@@ -238,37 +234,58 @@ public class Manager implements Listener {
     }
 
     // Spieler zur Insel hinzufügen (added)
-    public static void addPlayerToIsland(Player owner, Player toAdd) {
+    public static void addPlayerToIsland(Player owner, OfflinePlayer toAdd) {
         YamlConfiguration config = getIslandConfig(owner);
         List<String> addedList = config.getStringList("added");
 
-        if (!addedList.contains(toAdd.getName())) {
-            addedList.add(toAdd.getName());
+        String name = toAdd.getName();
+        if (name == null) return;
+
+        if (!addedList.contains(name)) {
+            addedList.add(name);
             config.set("invited", addedList);
             saveIslandConfig(owner, config);
-            owner.sendMessage("§a" + toAdd.getName() + " wurde zur Insel hinzugefügt.");
-            toAdd.sendMessage("§e" + owner.getName() + " hat dich auf seine Insel eingeladen. Nutze §a/ob accept§e um anzunehmen.");
+            owner.sendMessage(prefix + "§a" + name + " wurde zur Insel hinzugefügt.");
+
+            if (toAdd.isOnline()) {
+                toAdd.getPlayer().sendMessage(prefix + "§e" + owner.getName() + " hat dich auf seine Insel eingeladen. Nutze §a/ob accept§e um anzunehmen.");
+            }
         } else {
-            owner.sendMessage("§cDer Spieler ist bereits auf deiner Insel.");
+            owner.sendMessage(prefix + Objects.requireNonNull(Main.config.getString("addmessagealreadyadded")));
         }
     }
 
-    // Spieler vertrauen (trusted)
-    public static void trustPlayer(Player owner, Player target) {
+
+    public static void trustPlayer(Player owner, OfflinePlayer target) {
         YamlConfiguration config = getIslandConfig(owner);
         List<String> trustedList = config.getStringList("trusted");
 
-        if (!trustedList.contains(target.getName())) {
-            trustedList.add(target.getName());
+        String targetName = target.getName();
+        if (targetName == null) {
+            owner.sendMessage(prefix + "§cFehler: Spielername konnte nicht ermittelt werden.");
+            return;
+        }
+
+        if (!trustedList.contains(targetName)) {
+            trustedList.add(targetName);
             config.set("invitedtrust", trustedList);
             saveIslandConfig(owner, config);
 
-            owner.sendMessage("§aDu hast " + target.getName() + " auf deine Insel eingeladen.");
-            target.sendMessage("§e" + owner.getName() + " hat dich auf seine Insel eingeladen. Nutze §a/ob accept§e um anzunehmen.");
+            String trustMsg = config.getString("trustmessage");
+            if (trustMsg == null) trustMsg = "Du hast %player% als vertrauenswürdigen Spieler hinzugefügt.";
+            owner.sendMessage(prefix + trustMsg.replace("%player%", targetName));
+
+            if (target.isOnline() && target.getPlayer() != null) {
+                target.getPlayer().sendMessage(prefix + "§e" + owner.getName() + " hat dich auf seine Insel eingeladen. Nutze §a/ob accept§e um anzunehmen.");
+            }
         } else {
-            owner.sendMessage("§c" + target.getName() + " wurde bereits eingeladen.");
+            String alreadyAddedMsg = config.getString("addmessagealreadyadded");
+            if (alreadyAddedMsg == null) alreadyAddedMsg = "Der Spieler ist bereits vertrauenswürdig.";
+            owner.sendMessage(prefix + alreadyAddedMsg);
         }
     }
+
+
 
     // Einladung annehmens
     public static void acceptInvite(Player player) {
@@ -296,14 +313,14 @@ public class Manager implements Listener {
                 if (!added.contains(playerName)) added.add(playerName);
                 config.set("invited", invited);
                 config.set("added", added);
-                player.sendMessage("§aDu bist jetzt Mitglied auf der Insel von §e" + ownerName + "§a.");
+                player.sendMessage(prefix + " §aDu bist jetzt Mitglied auf der Insel von §e" + ownerName + "§a.");
                 accepted = true;
             } else if (invitedTrust.contains(playerName)) { //das bei ob trust habs nd besser hinbekommen
-                invitedTrust.remove(playerName); 
+                invitedTrust.remove(playerName);
                 if (!trusted.contains(playerName)) trusted.add(playerName);
                 config.set("invitedtrust", invitedTrust);
                 config.set("trusted", trusted);
-                player.sendMessage("§aDu wurdest als vertrauenswürdiger Spieler auf der Insel von §e" + ownerName + "§a hinzugefügt.");
+                player.sendMessage(prefix + " §aDu wurdest als vertrauenswürdiger Spieler auf der Insel von §e" + ownerName + "§a hinzugefügt.");
                 accepted = true;
             }
 
@@ -312,18 +329,115 @@ public class Manager implements Listener {
                     config.save(file);
                 } catch (IOException e) {
                     e.printStackTrace();
-                    player.sendMessage("§cFehler beim Speichern der Insel-Daten.");
+                    player.sendMessage(" §cFehler beim Speichern der Insel-Daten.");
                 }
                 return;
             }
         }
 
-        player.sendMessage("§cDu hast keine offenen Einladungen.");
+        player.sendMessage(prefix + " §cDu hast keine offenen Einladungen.");
     }
 
-public static denyfromisland(){
-    YamlConfiguration config = getIslandConfig(owner)
-   config.set("denied", nospighost);
+    public static void denyfromisland(Player owner, OfflinePlayer target) {
+        YamlConfiguration config = getIslandConfig(owner);
+        List<String> denied = config.getStringList("denied");
 
-}
+        if (!denied.contains(target.getName())) {
+            denied.add(target.getName());
+            config.set("denied", denied);
+            saveIslandConfig(owner, config);
+            owner.sendMessage(prefix + Main.config.getString("banmessage").replace("%player%", target.getName()));
+
+            if (target.isOnline() && target.getPlayer() != null) {
+                target.getPlayer().sendMessage(prefix + "§cDu wurdest auf der Insel von " + owner.getName() + " gebannt.");
+            }
+        } else {
+            owner.sendMessage(prefix + "§cDieser Spieler ist bereits gebannt.");
+        }
+    }
+
+
+    public static void unban(Player owner, Player target) {
+        YamlConfiguration config = getIslandConfig(owner);
+        List<String> denied = config.getStringList("denied");
+
+        if (denied.contains(target.getName())) {
+            denied.remove(target.getName());
+            config.set("denied", denied);
+            saveIslandConfig(owner, config);
+            owner.sendMessage(prefix + "§a" + target.getName() + " wurde von der Bannliste entfernt.");
+        } else {
+            owner.sendMessage(prefix + "§c" + target.getName() + " war nicht gebannt.");
+        }
+    }
+
+    public static void remove(Player owner, Player target) {
+        YamlConfiguration config = getIslandConfig(owner);
+        List<String> added = config.getStringList("added");
+        List<String> trusted = config.getStringList("trusted");
+
+        boolean wasMember = false;
+
+        if (added.contains(target.getName())) {
+            added.remove(target.getName());
+            config.set("added", added);
+            wasMember = true;
+        }
+
+        if (trusted.contains(target.getName())) {
+            trusted.remove(target.getName());
+            config.set("trusted", trusted);
+            wasMember = true;
+        }
+
+        if (wasMember) {
+            saveIslandConfig(owner, config);
+            owner.sendMessage(prefix + "§a" + target.getName() + " wurde von deiner Insel entfernt.");
+            if (target.isOnline()) {
+                target.getPlayer().sendMessage(prefix + "§cDu wurdest von der Insel von " + owner.getName() + " entfernt.");
+            }
+        } else {
+            owner.sendMessage(prefix + "§c" + target.getName() + " ist kein Mitglied deiner Insel.");
+        }
+    }
+
+    public static void leaveIsland(Player player, String ownerName) {
+        String prefix = Main.config.getString("Server");
+        File islandFile = new File(Main.islandDataFolder, ownerName + ".yml");
+        if (!islandFile.exists()) {
+            player.sendMessage(prefix + "§cDie Insel von " + ownerName + " wurde nicht gefunden.");
+            return;
+        }
+
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(islandFile);
+
+        List<String> added = config.getStringList("added");
+        List<String> trusted = config.getStringList("trusted");
+
+        boolean changed = false;
+
+        if (added.contains(player.getName())) {
+            added.remove(player.getName());
+            config.set("added", added);
+            changed = true;
+        }
+        if (trusted.contains(player.getName())) {
+            trusted.remove(player.getName());
+            config.set("trusted", trusted);
+            changed = true;
+        }
+
+        if (changed) {
+            try {
+                config.save(islandFile);
+                player.sendMessage(prefix + "§aDu hast die Insel von §e" + ownerName + "§a verlassen.");
+            } catch (IOException e) {
+                e.printStackTrace();
+                player.sendMessage(prefix + "§cFehler beim Verlassen der Insel.");
+            }
+        } else {
+            player.sendMessage(prefix + "§cDu bist auf der Insel von §e" + ownerName + " §nichts eingetragen.");
+        }
+    }
+
 }

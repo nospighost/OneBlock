@@ -27,12 +27,14 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import static de.Main.OneBlock.Main.config;
 import static de.Main.OneBlock.Main.oneBlockWorld;
+import static de.Main.OneBlock.Manager.getIslandConfig;
 
 public class PlayerListener implements Listener {
 
     private static final String WORLD_NAME = "OneBlock";
     private static final Location ONEBLOCK_LOCATION = new Location(Bukkit.getWorld(WORLD_NAME), 0, 100, 0);
     private static final String USER_DATA_FOLDER = "plugins/OneBlockPlugin/IslandData";
+    String prefix = Main.config.getString("Server");
 
     private boolean isOneBlock(Block block) {
         World world = block.getWorld();
@@ -44,7 +46,7 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        YamlConfiguration config = Manager.getIslandConfig(player);
+        YamlConfiguration config = getIslandConfig(player);
 
 
         if (!config.contains("created") || !config.contains("WorldBorderSize") || !config.contains("TotalBlocks") || !config.contains("owner") || !config.contains("owner-uuid") || !config.contains("EigeneInsel") || !config.contains("z-position") || !config.contains("x-position") || !config.contains("IslandSpawn-x") || !config.contains("IslandSpawn-z") || !config.contains("trusted") || !config.contains("added") || !config.contains("invited") || !config.contains("invitedtrust")) {
@@ -66,6 +68,7 @@ public class PlayerListener implements Listener {
             config.set("added", new ArrayList<String>());
             config.set("invited", new ArrayList<String>());
             config.set("invitedtrust", new ArrayList<String>());
+            config.set("denied", new ArrayList<String>());
 
             Manager.saveIslandConfig(player, config);
         }
@@ -92,7 +95,6 @@ public class PlayerListener implements Listener {
             player.teleport(spawn);
         }
 
-        // *** Hier prüfen, ob der Spieler in trusted/added Listen von anderen Inseln steht ***
         File islandFolder = Main.islandDataFolder;
         if (islandFolder.exists() && islandFolder.isDirectory()) {
             File[] files = islandFolder.listFiles((dir, name) -> name.endsWith(".yml"));
@@ -104,15 +106,7 @@ public class PlayerListener implements Listener {
                     List<String> trustedList = otherConfig.getStringList("trusted");
                     String ownerName = file.getName().replace(".yml", "");
 
-                    if (addedList.contains(player.getName())) {
-                        player.sendMessage("§aDu bist als Mitglied auf der Insel von §e" + ownerName + " §aeingetragen.");
-                        // Hier kannst du noch mehr Aktionen machen (Permissions etc.)
-                    }
 
-                    if (trustedList.contains(player.getName())) {
-                        player.sendMessage("§aDu bist als Vertrauensspieler auf der Insel von §e" + ownerName + " §aeingetragen.");
-                        // Hier kannst du noch mehr Aktionen machen (Permissions etc.)
-                    }
                 }
             }
         }
@@ -123,7 +117,7 @@ public class PlayerListener implements Listener {
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         Player player = event.getPlayer();
         World world = Bukkit.getWorld(WORLD_NAME);
-        YamlConfiguration config = Manager.getIslandConfig(player);
+        YamlConfiguration config = getIslandConfig(player);
         if (world != null) {
             event.setRespawnLocation(new Location(world, config.getInt("IslandSpawn-x"), 101, config.getInt("IslandSpawn-z")));
         }
@@ -137,7 +131,7 @@ public class PlayerListener implements Listener {
 
         String ownerName = getIslandOwnerByLocation(blockLocation);
         if (ownerName == null) {
-            player.sendMessage("§cDu darfst hier nichts abbauen!");
+            player.sendMessage(prefix + "§cDu darfst hier nichts abbauen!");
             event.setCancelled(true);
             return;
         }
@@ -152,10 +146,10 @@ public class PlayerListener implements Listener {
                 !added.contains(player.getName()) &&
                 !trusted.contains(player.getName())) {
 
-            player.sendMessage("§cDu darfst hier nichts abbauen!");
+            player.sendMessage(prefix + "§cDu darfst hier nichts abbauen!");
             event.setCancelled(true);
             return;
-        }//t
+        }
 
         int blockstolevelup = config.getInt("MissingBlocksToLevelUp");
         int IslandLevel = config.getInt("IslandLevel");
@@ -211,7 +205,7 @@ public class PlayerListener implements Listener {
 
 
     private void sendActionbarProgress(Player player, int currentLevel, int missingBlocks) {
-        YamlConfiguration config = Manager.getIslandConfig(player);
+        YamlConfiguration config = getIslandConfig(player);
         int totalBlocks = config.getInt("TotalBlocks");
         double progress = (double) (totalBlocks - missingBlocks) / totalBlocks;
 
@@ -334,7 +328,7 @@ public class PlayerListener implements Listener {
 
         Player player = event.getPlayer();
         if (!isPlayerAllowed(event.getClickedBlock().getLocation(), player)) {
-            player.sendMessage("§cDu darfst hier nichts öffnen!");
+            player.sendMessage(prefix + " §cDu darfst hier nichts öffnen!");
             event.setCancelled(true);
         }
     }
@@ -343,8 +337,10 @@ public class PlayerListener implements Listener {
     public void onBlockPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
         if (!isPlayerAllowed(event.getBlock().getLocation(), player)) {
-            player.sendMessage("§cDu darfst hier nichts platzieren!");
+            player.sendMessage(prefix + " §cDu darfst hier nichts platzieren!");
             event.setCancelled(true);
         }
     }
+
+
 }

@@ -1,9 +1,7 @@
 package de.Main.OneBlock;
 
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.World;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -21,36 +19,120 @@ public class OneBlockCommands implements Listener, CommandExecutor {
             return true;
         }
 
+        String prefix = Main.config.getString("Server");
         Player player = (Player) sender;
-        YamlConfiguration config = Manager.getIslandConfig(player);
 
         if (args.length == 1 && args[0].equalsIgnoreCase("join")) {
-            player.sendMessage("§a Insel wird erstellt bitte habe Geduld");
+            player.sendMessage(prefix + Main.config.getString("islandjoinmessage.create"));
             Manager.createOrJoinIsland(player, args);
+
         } else if (args.length == 1 && args[0].equalsIgnoreCase("delete")) {
+            YamlConfiguration config = Manager.getIslandConfig(player);
+            if (!isOwnerOfIsland(player, config)) {
+                player.sendMessage(prefix + "§cNur der Inselbesitzer kann die Insel löschen.");
+                return true;
+            }
             Manager.deleteIsland(player);
-        }else if (args.length == 2 && args[0].equalsIgnoreCase("visit")) {
+
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("visit")) {
             String targetName = args[1];
             Manager.visitIsland(player, targetName);
+
         } else if (args.length == 1 && args[0].equalsIgnoreCase("rebirth")) {
-
-            if (player.getInventory().firstEmpty() == -1){  //a
-
-                player.sendMessage("§cDein Inventar ist voll!");
-
-            }else if (config.getInt("IslandLevel") == 4){
+            YamlConfiguration config = Manager.getIslandConfig(player);
+            if (!isOwnerOfIsland(player, config)) {
+                player.sendMessage(prefix + "§cNur der Inselbesitzer kann rebirth ausführen.");
+                return true;
+            }
+            if (config.getInt("IslandLevel") != Main.config.getInt("RebirthLevel")) {
+                player.sendMessage(prefix + Main.config.getString("rebirthhigherlevel").replace("%level%", Main.config.getInt("RebirthLevel") + ""));
+            } else if ((player.getInventory().firstEmpty() == -1)) {
+                player.sendMessage(prefix + Main.config.getString("rebirthinventoryfull"));
+            } else {
                 Manager.rebirthIsland(player);
-
-
-
             }
 
-        }
-        else {
-            player.sendMessage("Nutze: /ob join | /ob delete");
-        }
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("add")) {
+            YamlConfiguration config = Manager.getIslandConfig(player);
+            if (!isOwnerOfIsland(player, config)) {
+                player.sendMessage(prefix + "§cNur der Inselbesitzer kann Spieler hinzufügen.");
+                return true;
+            }
+            OfflinePlayer toAdd = Bukkit.getOfflinePlayer(args[1]);
+            if (toAdd != null && (toAdd.isOnline() || toAdd.hasPlayedBefore())) {
+                Manager.addPlayerToIsland(player, toAdd.getPlayer() != null ? toAdd.getPlayer() : player); // fallback für Offline
+            } else {
+                player.sendMessage(prefix + "§cSpieler nicht gefunden.");
+            }
 
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("trust")) {
+            YamlConfiguration config = Manager.getIslandConfig(player);
+            if (!isOwnerOfIsland(player, config)) {
+                player.sendMessage(prefix + "§cNur der Inselbesitzer kann Spielern vertrauen.");
+                return true;
+            }
+            OfflinePlayer toTrust = Bukkit.getOfflinePlayer(args[1]);
+            if (toTrust != null && (toTrust.isOnline() || toTrust.hasPlayedBefore())) {
+                Manager.trustPlayer(player, toTrust.getPlayer() != null ? toTrust.getPlayer() : player); // fallback
+            } else {
+                player.sendMessage(prefix + "§cSpieler nicht gefunden.");
+            }
+
+        } else if (args.length == 1 && args[0].equalsIgnoreCase("accept")) {
+            Manager.acceptInvite(player);
+
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("deny")) {
+            YamlConfiguration config = Manager.getIslandConfig(player);
+            if (!isOwnerOfIsland(player, config)) {
+                player.sendMessage(prefix + "§cNur der Inselbesitzer kann Spieler bannen.");
+                return true;
+            }
+            OfflinePlayer toDeny = Bukkit.getOfflinePlayer(args[1]);
+            if (toDeny != null && (toDeny.hasPlayedBefore() || toDeny.isOnline())) {
+                Manager.denyfromisland(player, (Player) toDeny); // direkt OfflinePlayer übergeben
+            } else {
+                player.sendMessage(prefix + "§cSpieler nicht gefunden.");
+            }
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("unban")) {
+            YamlConfiguration config = Manager.getIslandConfig(player);
+            if (!isOwnerOfIsland(player, config)) {
+                player.sendMessage(prefix + "§cNur der Inselbesitzer kann Spieler entbannen.");
+                return true;
+            }
+            OfflinePlayer toUnban = Bukkit.getOfflinePlayer(args[1]);
+            if (toUnban != null && (toUnban.isOnline() || toUnban.hasPlayedBefore())) {
+                Manager.unban(player, toUnban.getPlayer() != null ? toUnban.getPlayer() : player);
+            } else {
+                player.sendMessage(prefix + "§cSpieler nicht gefunden.");
+            }
+
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("remove")) {
+            YamlConfiguration config = Manager.getIslandConfig(player);
+            if (!isOwnerOfIsland(player, config)) {
+                player.sendMessage(prefix + "§cNur der Inselbesitzer kann Spieler entfernen.");
+                return true;
+            }
+            OfflinePlayer toRemove = Bukkit.getOfflinePlayer(args[1]);
+            if (toRemove != null && (toRemove.isOnline() || toRemove.hasPlayedBefore())) {
+                Manager.remove(player, toRemove.getPlayer() != null ? toRemove.getPlayer() : player);
+            } else {
+                player.sendMessage(prefix + "§cSpieler nicht gefunden.");
+            }
+
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("leave")) {
+            String ownerName = args[1];
+            Manager.leaveIsland(player, ownerName);
+
+        } else {
+            player.sendMessage(prefix + "§aNutze: /ob join | /ob delete | /ob visit <Spieler> | /ob rebirth | /ob add <Spieler> | /ob trust <Spieler> | /ob accept | /ob deny <Spieler> | /ob unban <Spieler> | /ob remove <Spieler> | /ob leave <Inselbesitzer>");
+        }
 
         return true;
+    }
+
+    private boolean isOwnerOfIsland(Player player, YamlConfiguration islandConfig) {
+        if (islandConfig == null) return false;
+        String ownerName = islandConfig.getString("owner");
+        return ownerName != null && ownerName.equalsIgnoreCase(player.getName());
     }
 }
