@@ -73,7 +73,6 @@ public class Manager implements Listener {
         return true;
     }
 
-
     public static File getIslandFile(Player player) {
         return new File(Main.islandDataFolder, player.getUniqueId().toString() + ".yml");
     }
@@ -165,6 +164,7 @@ public class Manager implements Listener {
         config.set("OneBlock-x", null);
         config.set("OneBlock-z", null);
         config.set("WorldBorderSize", 50);
+        config.set("Durchgespielt", false);
 
         saveIslandConfig(player.getUniqueId(), config);
         player.sendMessage(prefix + "§aDeine Insel wurde vollständig gelöscht.");

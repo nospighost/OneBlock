@@ -47,7 +47,7 @@ public class PlayerListener implements Listener {
         Player player = event.getPlayer();
         YamlConfiguration config = getIslandConfig(player.getUniqueId());
 
-        if (!config.contains("created") || !config.contains("WorldBorderSize") || !config.contains("TotalBlocks") || !config.contains("owner") || !config.contains("owner-uuid") || !config.contains("EigeneInsel") || !config.contains("z-position") || !config.contains("x-position") || !config.contains("IslandSpawn-x") || !config.contains("IslandSpawn-z") || !config.contains("trusted") || !config.contains("added") || !config.contains("invited") || !config.contains("invitedtrust")) {
+        if   (!config.contains("Durchgespielt") || (!config.contains("created") || !config.contains("WorldBorderSize") || !config.contains("TotalBlocks") || !config.contains("owner") || !config.contains("owner-uuid") || !config.contains("EigeneInsel") || !config.contains("z-position") || !config.contains("x-position") || !config.contains("IslandSpawn-x") || !config.contains("IslandSpawn-z") || !config.contains("trusted") || !config.contains("added") || !config.contains("invited") || !config.contains("invitedtrust"))) {
 
             config.set("created", System.nanoTime());
             config.set("owner", player.getName());
@@ -64,6 +64,8 @@ public class PlayerListener implements Listener {
             config.set("trusted", new ArrayList<String>());
             config.set("invitedtrust", new ArrayList<String>());
             config.set("denied", new ArrayList<String>());
+            config.set("Durchgespielt", false);
+
 
             Manager.saveIslandConfig(player.getUniqueId(), config);
         }
@@ -102,6 +104,10 @@ public class PlayerListener implements Listener {
             }
         }
     }
+
+
+
+
 
     @EventHandler
     public void onPlayerRespawn(PlayerRespawnEvent event) {
@@ -146,6 +152,7 @@ public class PlayerListener implements Listener {
         int blocksToLevelUp = config.getInt("MissingBlocksToLevelUp");
         int islandLevel = config.getInt("IslandLevel");
         int totalBlocks = config.getInt("TotalBlocks");
+        boolean durchgespielt = config.getBoolean("Durchgespielt");
 
         World world = Bukkit.getWorld("OneBlock");
 
@@ -166,7 +173,13 @@ public class PlayerListener implements Listener {
                 int newTotal = Main.config.getInt("oneblockblocks." + islandLevel + ".blockcount");
                 config.set("TotalBlocks", newTotal);
                 config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks." + islandLevel + ".blockcount"));
+
             }
+
+            if (islandLevel == 10 && durchgespielt !=true ){
+                config.set("Durchgespielt", true);
+            }
+
 
             Manager.saveIslandConfig(ownerUUID, config);
 

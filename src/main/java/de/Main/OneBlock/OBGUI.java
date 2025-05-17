@@ -14,19 +14,25 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
+import javax.naming.Name;
 import java.util.*;
 
+import static de.Main.OneBlock.Manager.getIslandConfig;
+import static de.Main.OneBlock.Manager.saveIslandConfig;
 import static org.bukkit.Material.*;
 
 public class OBGUI implements CommandExecutor, Listener {
 
-    int[] grayglasmaingui = {0, 1, 2, 6, 7, 8};
+    private final int[] grayglasmaingui = {0, 1, 2, 6, 7, 8};
+    private final int[] grayglasmaingui2 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26};
+    private final int MAX_CLICKS = 3;
 
     public static Inventory upgradeShop;
     public static Inventory mainGUI;
@@ -36,26 +42,20 @@ public class OBGUI implements CommandExecutor, Listener {
     public static Inventory Auswahl;
     public static Inventory Verwaltung;
 
-    // Getrennte Maps für Klicks
     private final HashMap<UUID, Integer> deleteClicks = new HashMap<>();
     private final HashMap<UUID, Integer> rebirthClicks = new HashMap<>();
 
-    private final int MAX_CLICKS = 3;
-
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player)) {
+        if (!(sender instanceof Player player)) {
             sender.sendMessage("§cDieser Befehl kann nur von einem Spieler ausgeführt werden.");
             return true;
         }
-
-        Player player = (Player) sender;
 
         if (mainGUI == null || Auswahl == null || Einstellungen == null || Rebirth == null || Befehle == null || Verwaltung == null) {
             createguis(player);
         }
 
-        // Klick-Zähler beim Öffnen zurücksetzen
         deleteClicks.put(player.getUniqueId(), MAX_CLICKS);
         rebirthClicks.put(player.getUniqueId(), MAX_CLICKS);
 
@@ -65,11 +65,12 @@ public class OBGUI implements CommandExecutor, Listener {
     }
 
     private void createguis(Player player) {
+        YamlConfiguration config = getIslandConfig(player.getUniqueId());
 
         Einstellungen = Bukkit.createInventory(null, 3 * 9, "§cInsel-Einstellungen");
         Rebirth = Bukkit.createInventory(null, 3 * 9, "§eRebirth");
         Befehle = Bukkit.createInventory(null, 3 * 9, "§8Spielerbefehle");
-        Auswahl = Bukkit.createInventory(null, 3 * 9, "§aPhasen-Auswahl");
+        Auswahl = Bukkit.createInventory(null, 4 * 9, "§aPhasen-Auswahl");
         Verwaltung = Bukkit.createInventory(null, 3 * 9, "§cInsel-Verwaltung");
         mainGUI = Bukkit.createInventory(null, 9, "§8OneBlock-Menü");
 
@@ -77,15 +78,13 @@ public class OBGUI implements CommandExecutor, Listener {
             mainGUI.setItem(pos, new ItemStack(GRAY_STAINED_GLASS_PANE));
         }
 
-        ItemStack skull = new ItemStack(PLAYER_HEAD);
-        SkullMeta skullMeta = (SkullMeta) skull.getItemMeta();
-        if (skullMeta != null) {
-            skullMeta.setOwningPlayer(player);
-            skullMeta.setDisplayName("§eBefehle");
-            skull.setItemMeta(skullMeta);
+        for (int pos : grayglasmaingui2) {
+            Verwaltung.setItem(pos, new ItemStack(GRAY_STAINED_GLASS_PANE));
         }
-        mainGUI.setItem(4, skull);
 
+        setPlayerHeadInMainGUI(player);
+
+        // Phasen-Auswahl
         ItemStack xpBottle = new ItemStack(EXPERIENCE_BOTTLE);
         ItemMeta meta6 = xpBottle.getItemMeta();
         if (meta6 != null) {
@@ -94,72 +93,218 @@ public class OBGUI implements CommandExecutor, Listener {
         }
         mainGUI.setItem(3, xpBottle);
 
-        ItemStack repeaterRight = new ItemStack(COMPARATOR);
-        ItemMeta meta8 = repeaterRight.getItemMeta();
+        // Insel-Verwaltung (Comparator)
+        ItemStack comparator = new ItemStack(COMPARATOR);
+        ItemMeta meta8 = comparator.getItemMeta();
         if (meta8 != null) {
             meta8.setDisplayName("§cInsel-Verwaltung");
-            repeaterRight.setItemMeta(meta8);
+            comparator.setItemMeta(meta8);
         }
-        mainGUI.setItem(5, repeaterRight);
+        mainGUI.setItem(5, comparator);
 
-        // Rebirth Item in Verwaltung initial setzen
-        ItemStack rebirth = new ItemStack(TOTEM_OF_UNDYING);
-        ItemMeta rebirthmeta = rebirth.getItemMeta();
-        if (rebirthmeta != null) {
-            rebirthmeta.setDisplayName("§cRebirth");
-            List<String> lore = new ArrayList<>();
-            lore.add("§bDeine OneBlock wird wieder auf §4Level 1 §bgesetzt!");
-            lore.add("§bDu bekommst aber Belohnungen für den §cRebirth");
-            rebirthmeta.setLore(lore);
-            rebirth.setItemMeta(rebirthmeta);
+
+
+        ItemStack auswahl = new ItemStack(GRASS_BLOCK);
+        ItemMeta auswahlmeta = auswahl.getItemMeta();
+        if (auswahlmeta != null) {
+            String name = Main.config.getString("oneblockblocks." + 1 + ".name", "Unbekannt");
+            auswahl.setItemMeta(auswahlmeta);
         }
-        Verwaltung.setItem(13, rebirth);
+        Auswahl.setItem(10, auswahl);
 
-        updateVerwaltungGUI(player);
+        ItemStack auswahl1 = new ItemStack(OAK_LOG);
+        ItemMeta auswahlmeta1 = auswahl1.getItemMeta();
+        if (auswahlmeta1 != null) {
+            String name = Main.config.getString("oneblockblocks." + 2 + ".name", "Unbekannt");
+            auswahl1.setItemMeta(auswahlmeta1);
+        }
+        Auswahl.setItem(11, auswahl1);
+
+        ItemStack auswahl2 = new ItemStack(STONE);
+        ItemMeta auswahlmeta2 = auswahl2.getItemMeta();
+        if (auswahlmeta2 != null) {
+            String name = Main.config.getString("oneblockblocks." + 3 + ".name", "Unbekannt");
+            auswahl2.setItemMeta(auswahlmeta2);
+        }
+        Auswahl.setItem(12, auswahl2);
+
+        ItemStack auswahl3 = new ItemStack(IRON_ORE);
+        ItemMeta auswahlmeta3 = auswahl3.getItemMeta();
+        if (auswahlmeta3 != null) {
+            String name = Main.config.getString("oneblockblocks." + 4 + ".name", "Unbekannt");
+            auswahl3.setItemMeta(auswahlmeta3);
+        }
+        Auswahl.setItem(13, auswahl3);
+
+        ItemStack auswahl4 = new ItemStack(DIAMOND_BLOCK);
+        ItemMeta auswahlmeta4 = auswahl4.getItemMeta();
+        if (auswahlmeta4 != null) {
+            String name = Main.config.getString("oneblockblocks." + 5 + ".name", "Unbekannt");
+            auswahl4.setItemMeta(auswahlmeta4);
+        }
+        Auswahl.setItem(14, auswahl4);
+
+        ItemStack auswahl5 = new ItemStack(NETHERRACK);
+        ItemMeta auswahlmeta5 = auswahl5.getItemMeta();
+        if (auswahlmeta5 != null) {
+            String name = Main.config.getString("oneblockblocks." + 6 + ".name", "Unbekannt");
+            auswahlmeta5.setDisplayName("§bPhase: §a" + name);
+            auswahl5.setItemMeta(auswahlmeta5);
+        }
+        Auswahl.setItem(15, auswahl5);
+
+        ItemStack auswahl6 = new ItemStack(WARPED_STEM);
+        ItemMeta auswahlmeta6 = auswahl6.getItemMeta();
+        if (auswahlmeta6 != null) {
+            String name = Main.config.getString("oneblockblocks." + 7 + ".name", "Unbekannt");
+            auswahl.setItemMeta(auswahlmeta6);
+        }
+        Auswahl.setItem(16, auswahl6);
+
+        ItemStack auswahl7 = new ItemStack(END_STONE);
+        ItemMeta auswahlmeta7 = auswahl7.getItemMeta();
+        if (auswahlmeta7 != null) {
+            String name = Main.config.getString("oneblockblocks." + 8 + ".name", "Unbekannt");
+            auswahl7.setItemMeta(auswahlmeta7);
+        }
+        Auswahl.setItem(19, auswahl7);
+
+        ItemStack auswahl8 = new ItemStack(NETHERITE_BLOCK);
+        ItemMeta auswahlmeta8 = auswahl8.getItemMeta();
+        if (auswahlmeta8 != null) {
+            String name = Main.config.getString("oneblockblocks." + 9 + ".name", "Unbekannt");
+            auswahl8.setItemMeta(auswahlmeta8);
+        }
+        Auswahl.setItem(20, auswahl8);
+
+        ItemStack auswahl9 = new ItemStack(BEACON);
+        ItemMeta auswahlmeta9 = auswahl9.getItemMeta();
+        if (auswahlmeta9 != null) {
+            String name = Main.config.getString("oneblockblocks." + 10 + ".name", "Unbekannt");
+            auswahl9.setItemMeta(auswahlmeta9);
+        }
+        Auswahl.setItem(21, auswahl9);
+
+
     }
+
+    private void setPlayerHeadInMainGUI(Player player) {
+        YamlConfiguration config = getIslandConfig(player.getUniqueId());
+        ItemStack skull = new ItemStack(PLAYER_HEAD);
+        SkullMeta skullMeta = (SkullMeta) skull.getItemMeta();
+        if (skullMeta != null) {
+            skullMeta.setOwningPlayer(player);
+            skullMeta.setDisplayName("§eBefehle");
+            List<String> lore = new ArrayList<>();
+
+            lore.add(" ");
+            lore.add("§fDein Profil:");
+            lore.add(" ");
+
+            boolean hatInsel = config.getBoolean("EigeneInsel", false);
+
+            if (hatInsel) {
+
+                lore.add("§cDein OneBlock Level: " + "§b" + config.getInt("IslandLevel"));
+
+
+                int x = config.getInt("OneBlock-x");
+                int z = config.getInt("OneBlock-z");
+
+                int Missing =config.getInt("MissingBlocksToLevelUp");
+                int total =config.getInt("TotalBlocks");
+
+                lore.add("§cDein OneBlock Standort: " + "§b" + "X: " + x + ", Z: " + z);
+                lore.add("§cVerbleibende Blöcke und gesamte Blöcke: " + "§b"+ Missing +  " | " + total);
+                lore.add("§cDeine Worldborder größe: " + "§b" + + config.getInt("WorldBorderSize"));
+            } else {
+                lore.add("§bDu besitzt §ckeine Insel!");
+                lore.add("§bBitte §cerstelle §bdir eine Insel.");
+
+            }
+
+            skullMeta.setLore(lore);
+            skull.setItemMeta(skullMeta);
+
+            saveIslandConfig(player.getUniqueId(), config);
+        }
+        mainGUI.setItem(4, skull);
+    }
+
+
+
+
 
     private void updateVerwaltungGUI(Player player) {
         UUID uuid = player.getUniqueId();
-
         int deleteRemaining = deleteClicks.getOrDefault(uuid, MAX_CLICKS);
         int rebirthRemaining = rebirthClicks.getOrDefault(uuid, MAX_CLICKS);
 
-        // Delete Item
-        ItemStack deleteItem = new ItemStack(BARRIER);
-        ItemMeta metaDelete = deleteItem.getItemMeta();
-        if (metaDelete != null) {
-            metaDelete.setDisplayName("§cInsel-Löschen");
+        for (int slot : new int[]{11, 13, 15}) {
+            ItemStack item;
+            String displayName;
             List<String> lore = new ArrayList<>();
-            lore.add("§7Klicke §e" + deleteRemaining + " §7Mal zum §cLöschen§7!");
-            metaDelete.setLore(lore);
-            deleteItem.setItemMeta(metaDelete);
-        }
-        Verwaltung.setItem(11, deleteItem);
 
-        // Rebirth Item
-        ItemStack rebirthItem = new ItemStack(TOTEM_OF_UNDYING);
-        ItemMeta metaRebirth = rebirthItem.getItemMeta();
-        if (metaRebirth != null) {
-            metaRebirth.setDisplayName("§cRebirth");
-            List<String> lore = new ArrayList<>();
-            lore.add("§7Klicke §e" + rebirthRemaining + " §7Mal zum §cRebirth§7!");
-            metaRebirth.setLore(lore);
-            rebirthItem.setItemMeta(metaRebirth);
+            switch (slot) {
+                case 11 -> { // Löschen
+                    item = new ItemStack(BARRIER);
+                    displayName = "§cInsel-Löschen";
+                    lore.add(" ");
+                    lore.add("§cInsel Löschung nicht mehr rückgängig!");
+                    lore.add(" ");
+                    lore.add("§7Klicke §e" + deleteRemaining + " §7Mal zum §cLöschen§7!");
+                }
+                case 13 -> { // Rebirth
+                    item = new ItemStack(TOTEM_OF_UNDYING);
+                    displayName = "§cRebirth";
+                    lore.add(" ");
+                    lore.add("§bDeine OneBlock wird wieder auf §4Level 1 §bgesetzt!");
+                    lore.add("§bAber du bekommst Belohnungen für den §cRebirth");
+                    lore.add(" ");
+                    lore.add("§7Klicke §e" + rebirthRemaining + " §7Mal zum §cRebirth§7!");
+                }
+                case 15 -> { // WorldBorder
+                    item = new ItemStack(STRUCTURE_VOID);
+                    displayName = "§aWorldBorder Größe";
+                    YamlConfiguration config = getIslandConfig(player.getUniqueId());
+                    int currentSize = config.getInt("WorldBorderSize", 50);
+                    lore.add("§7Aktuelle Größe: §e" + currentSize);
+                    lore.add("§7Klicke, um die Größe zu erhöhen");
+                    lore.add("§7(Maximal 200)");
+                }
+                default -> {
+                    continue;
+                }
+            }
+
+            ItemMeta meta = item.getItemMeta();
+            if (meta != null) {
+                meta.setDisplayName(displayName);
+                meta.setLore(lore);
+                item.setItemMeta(meta);
+            }
+            Verwaltung.setItem(slot, item);
         }
-        Verwaltung.setItem(13, rebirthItem);
     }
 
     private void updateDeleteItemLore(Player player, int remainingClicks) {
+        UUID uuid = player.getUniqueId();
+        int deleteRemaining = deleteClicks.getOrDefault(uuid, MAX_CLICKS);
+        int rebirthRemaining = rebirthClicks.getOrDefault(uuid, MAX_CLICKS);
+
         Inventory inv = player.getOpenInventory().getTopInventory();
         ItemStack item = inv.getItem(11);
-        if (item == null || item.getType() != Material.BARRIER) return;
+        if (item == null || item.getType() != BARRIER) return;
 
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return;
 
         List<String> lore = new ArrayList<>();
         if (remainingClicks > 0) {
-            lore.add("§7Klicke §e" + remainingClicks + " §7weitere Male zum §cLöschen§7!");
+            lore.add(" ");
+            lore.add("§cInsel Löschung nicht mehr rückgängig!");
+            lore.add(" ");
+            lore.add("§7Klicke §e" + deleteRemaining + " §7Mal zum §cLöschen§7!");
         } else {
             lore.add("§cLösche wird ausgeführt...");
         }
@@ -171,13 +316,17 @@ public class OBGUI implements CommandExecutor, Listener {
     private void updateRebirthItemLore(Player player, int remainingClicks) {
         Inventory inv = player.getOpenInventory().getTopInventory();
         ItemStack item = inv.getItem(13);
-        if (item == null || item.getType() != Material.TOTEM_OF_UNDYING) return;
+        if (item == null || item.getType() != TOTEM_OF_UNDYING) return;
 
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return;
 
         List<String> lore = new ArrayList<>();
         if (remainingClicks > 0) {
+            lore.add(" ");
+            lore.add("§bDeine OneBlock wird wieder auf §4Level 1 §bgesetzt!");
+            lore.add("§bAber du bekommst Belohnungen für den §cRebirth");
+            lore.add(" ");
             lore.add("§7Klicke §e" + remainingClicks + " §7weitere Male zum §cRebirth§7!");
         } else {
             lore.add("§cRebirth wird ausgeführt...");
@@ -192,64 +341,71 @@ public class OBGUI implements CommandExecutor, Listener {
         if (!(event.getWhoClicked() instanceof Player player)) return;
         if (event.getClickedInventory() == null || event.getCurrentItem() == null) return;
 
+        UUID uuid = player.getUniqueId();
+        YamlConfiguration config = getIslandConfig(uuid);
+
         String title = event.getView().getTitle();
         ItemStack clicked = event.getCurrentItem();
         Material type = clicked.getType();
 
+
+
+
         if (title.equalsIgnoreCase("§cInsel-Verwaltung")) {
             event.setCancelled(true);
 
-            if (type == STRUCTURE_VOID) {
-                YamlConfiguration config = Manager.getIslandConfig(player.getUniqueId());
-                int currentSize = config.getInt("WorldBorderSize", 50);
+            switch (type) {
+                case STRUCTURE_VOID -> {
+                    int currentSize = config.getInt("WorldBorderSize", 50);
 
-                if (currentSize < 200) {
-                    currentSize += 10;
-                    config.set("WorldBorderSize", currentSize);
-                    Manager.saveIslandConfig(player.getUniqueId(), config);
+                    if (currentSize < 200) {
+                        currentSize += 10;
+                        config.set("WorldBorderSize", currentSize);
+                        saveIslandConfig(uuid, config);
 
-                    WorldBorder border = player.getWorld().getWorldBorder();
-                    border.setCenter(player.getLocation());
-                    border.setSize(currentSize);
-                    Main.setWorldBorder(player);
+                        WorldBorder border = player.getWorld().getWorldBorder();
+                        border.setCenter(player.getLocation());
+                        border.setSize(currentSize);
+                        Main.setWorldBorder(player);
 
-                    player.sendMessage("§aDeine WorldBorder wurde auf §e" + currentSize + " §avergrößert!");
-                    player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
-                    player.closeInventory();
-                } else {
-                    player.sendMessage("§cDu hast das Limit erreicht");
+                        player.sendMessage("§aDeine WorldBorder wurde auf §e" + currentSize + " §avergrößert!");
+                        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
+                        player.closeInventory();
+                    } else {
+                        player.sendMessage("§cDu hast das Limit erreicht");
+                        player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
+                    }
                 }
-            }
+                case TOTEM_OF_UNDYING -> {
+                    int clicksLeft = rebirthClicks.getOrDefault(uuid, MAX_CLICKS) - 1;
 
-            if (type == TOTEM_OF_UNDYING) {
-                UUID uuid = player.getUniqueId();
-                int clicksLeft = rebirthClicks.getOrDefault(uuid, MAX_CLICKS) - 1;
-
-                if (clicksLeft > 0) {
-                    rebirthClicks.put(uuid, clicksLeft);
-                    updateRebirthItemLore(player, clicksLeft);
-                    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1, 1);
-                } else {
-                    rebirthClicks.remove(uuid);
-                    player.closeInventory();
-                    player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1, 1);
-                    player.performCommand("ob rebirth");
+                    if (clicksLeft > 0) {
+                        rebirthClicks.put(uuid, clicksLeft);
+                        updateRebirthItemLore(player, clicksLeft);
+                        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1, 1);
+                    } else {
+                        rebirthClicks.remove(uuid);
+                        player.closeInventory();
+                        player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1, 1);
+                        player.performCommand("ob rebirth");
+                    }
                 }
-            }
+                case BARRIER -> {
+                    int clicksLeft = deleteClicks.getOrDefault(uuid, MAX_CLICKS) - 1;
 
-            if (type == BARRIER) {
-                UUID uuid = player.getUniqueId();
-                int clicksLeft = deleteClicks.getOrDefault(uuid, MAX_CLICKS) - 1;
-
-                if (clicksLeft > 0) {
-                    deleteClicks.put(uuid, clicksLeft);
-                    updateDeleteItemLore(player, clicksLeft);
-                    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1, 1);
-                } else {
-                    deleteClicks.remove(uuid);
-                    player.closeInventory();
-                    player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1, 1);
-                    player.performCommand("ob delete");
+                    if (clicksLeft > 0) {
+                        deleteClicks.put(uuid, clicksLeft);
+                        updateDeleteItemLore(player, clicksLeft);
+                        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1, 1);
+                    } else {
+                        deleteClicks.remove(uuid);
+                        player.closeInventory();
+                        player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1, 1);
+                        player.performCommand("ob delete");
+                    }
+                }
+                default -> {
+                    // Nichts tun bei anderen Items
                 }
             }
         }
@@ -259,27 +415,214 @@ public class OBGUI implements CommandExecutor, Listener {
             player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
 
             switch (type) {
-                case EXPERIENCE_BOTTLE:
-                    player.openInventory(Auswahl);
-                    break;
-                case PLAYER_HEAD:
-                    player.openInventory(Befehle);
-                    break;
-                case COMPARATOR:
-                    // Verwaltung mit frisch zurückgesetzten Klicks öffnen
-                    UUID uuid = player.getUniqueId();
+                case EXPERIENCE_BOTTLE -> player.openInventory(Auswahl);
+                case PLAYER_HEAD -> player.openInventory(Befehle);
+                case COMPARATOR -> {
                     deleteClicks.put(uuid, MAX_CLICKS);
                     rebirthClicks.put(uuid, MAX_CLICKS);
                     updateVerwaltungGUI(player);
                     player.openInventory(Verwaltung);
-                    break;
+                }
+                default -> {
+                    // Kein Itemhandling sonst
+                }
             }
         }
-    }
+        if (title.equalsIgnoreCase("§aPhasen-Auswahl")) {
+            event.setCancelled(true);
 
-    // Klick-Zähler zurücksetzen, wenn Inventar geschlossen wird
+            switch (type) {
+                case GRASS_BLOCK:
+
+                    boolean durchgespielt = config.getBoolean("Durchgespielt");
+
+                    if (durchgespielt = true) {
+                        config.set("IslandLevel", 1);
+                        config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.1.blockcount"));
+                        config.set("TotalBlocks", Main.config.getInt("oneblockblocks.1.blockcount"));
+                        config.set("Durchgespielt", true);
+                        Manager.saveIslandConfig(player.getUniqueId(), config);
+
+                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf"  + "§c" + Main.config.getString("oneblockblocks." + 1 + ".name", "Unbekannt") + "§a" + "zurückgesetzt!");
+                        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
+                        player.closeInventory();
+                    } else {
+                        player.sendMessage("§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
+                        player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
+                    }
+                    break;
+
+                        case OAK_LOG:
+
+                            if (durchgespielt = true) {
+                                config.set("IslandLevel", 2);
+                                config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.2.blockcount"));
+                                config.set("TotalBlocks", Main.config.getInt("oneblockblocks.2.blockcount"));
+                                config.set("Durchgespielt", true);
+                                Manager.saveIslandConfig(player.getUniqueId(), config);
+
+                                player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf"  + "§c" + Main.config.getString("oneblockblocks." + 2 + ".name", "Unbekannt") + "§a" + "zurückgesetzt!");
+                                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
+                                player.closeInventory();
+                            } else {
+                                player.sendMessage("§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
+                                player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
+                            }
+                            break;
+
+                case STONE:
+
+                    if (durchgespielt = true) {
+                        config.set("IslandLevel", 3);
+                        config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.3.blockcount"));
+                        config.set("TotalBlocks", Main.config.getInt("oneblockblocks.3.blockcount"));
+                        config.set("Durchgespielt", true);
+                        Manager.saveIslandConfig(player.getUniqueId(), config);
+
+                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf"  + "§c" + Main.config.getString("oneblockblocks." + 3 + ".name", "Unbekannt") + "§a" + "zurückgesetzt!");
+                        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
+                        player.closeInventory();
+                    } else {
+                        player.sendMessage("§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
+                        player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
+                    }
+                    break;
+
+                case IRON_ORE:
+
+                    if (durchgespielt = true) {
+                        config.set("IslandLevel", 4);
+                        config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.4.blockcount"));
+                        config.set("TotalBlocks", Main.config.getInt("oneblockblocks.4.blockcount"));
+                        config.set("Durchgespielt", true);
+                        Manager.saveIslandConfig(player.getUniqueId(), config);
+
+                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf"  + "§c" + Main.config.getString("oneblockblocks." + 4 + ".name", "Unbekannt") + "§a" + "zurückgesetzt!");
+                        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
+                        player.closeInventory();
+                    } else {
+                        player.sendMessage("§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
+                        player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
+                    }
+                    break;
+
+                case DIAMOND_BLOCK:
+
+                    if (durchgespielt = true) {
+                        config.set("IslandLevel", 5);
+                        config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.5.blockcount"));
+                        config.set("TotalBlocks", Main.config.getInt("oneblockblocks.5.blockcount"));
+                        config.set("Durchgespielt", true);
+                        Manager.saveIslandConfig(player.getUniqueId(), config);
+
+                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf"  + "§c" + Main.config.getString("oneblockblocks." + 5 + ".name", "Unbekannt") + "§a" + "zurückgesetzt!");
+                        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
+                        player.closeInventory();
+                    } else {
+                        player.sendMessage("§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
+                        player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
+                    }
+                    break;
+
+                case NETHERRACK:
+
+                    if (durchgespielt = true) {
+                        config.set("IslandLevel", 6);
+                        config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.6.blockcount"));
+                        config.set("TotalBlocks", Main.config.getInt("oneblockblocks.6.blockcount"));
+                        config.set("Durchgespielt", true);
+                        Manager.saveIslandConfig(player.getUniqueId(), config);
+
+                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf"  + "§c" + Main.config.getString("oneblockblocks." + 6 + ".name", "Unbekannt") + "§a" + "zurückgesetzt!");
+                        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
+                        player.closeInventory();
+                    } else {
+                        player.sendMessage("§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
+                        player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
+                    }
+                    break;
+
+                case WARPED_STEM:
+
+                    if (durchgespielt = true) {
+                        config.set("IslandLevel", 7);
+                        config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.7.blockcount"));
+                        config.set("TotalBlocks", Main.config.getInt("oneblockblocks.7.blockcount"));
+                        config.set("Durchgespielt", true);
+                        Manager.saveIslandConfig(player.getUniqueId(), config);
+
+                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf"  + "§c" + Main.config.getString("oneblockblocks." + 7 + ".name", "Unbekannt") + "§a" + "zurückgesetzt!");
+                        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
+                        player.closeInventory();
+                    } else {
+                        player.sendMessage("§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
+                        player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
+                    }
+                    break;
+
+                case END_STONE:
+
+                    if (durchgespielt = true) {
+                        config.set("IslandLevel", 8);
+                        config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.8.blockcount"));
+                        config.set("TotalBlocks", Main.config.getInt("oneblockblocks.8.blockcount"));
+                        config.set("Durchgespielt", true);
+                        Manager.saveIslandConfig(player.getUniqueId(), config);
+
+                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf"  + "§c" + Main.config.getString("oneblockblocks." + 8 + ".name", "Unbekannt") + "§a" + "zurückgesetzt!");
+                        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
+                        player.closeInventory();
+                    } else {
+                        player.sendMessage("§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
+                        player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
+                    }
+                    break;
+
+                case NETHERITE_BLOCK:
+
+                    if (durchgespielt = true) {
+                        config.set("IslandLevel", 9);
+                        config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.9.blockcount"));
+                        config.set("TotalBlocks", Main.config.getInt("oneblockblocks.9.blockcount"));
+                        config.set("Durchgespielt", true);
+                        Manager.saveIslandConfig(player.getUniqueId(), config);
+
+                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf"  + "§c" + Main.config.getString("oneblockblocks." + 9 + ".name", "Unbekannt") + "§a" + "zurückgesetzt!");
+                        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
+                        player.closeInventory();
+                    } else {
+                        player.sendMessage("§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
+                        player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
+                    }
+                    break;
+
+                case BEACON:
+
+                    if (durchgespielt = true) {
+                        config.set("IslandLevel", 10);
+                        config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.10.blockcount"));
+                        config.set("TotalBlocks", Main.config.getInt("oneblockblocks.10.blockcount"));
+                        config.set("Durchgespielt", true);
+                        Manager.saveIslandConfig(player.getUniqueId(), config);
+
+                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf"  + "§c" + Main.config.getString("oneblockblocks." + 10 + ".name", "Unbekannt") + "§a" + "zurückgesetzt!");
+                        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
+                        player.closeInventory();
+                    } else {
+                        player.sendMessage("§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
+                        player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
+                    }
+                    break;
+
+                    }
+
+            }
+
+        }
+
+
     @EventHandler
-    public void onInventoryClose(org.bukkit.event.inventory.InventoryCloseEvent event) {
+    public void onInventoryClose(InventoryCloseEvent event) {
         if (!(event.getPlayer() instanceof Player player)) return;
 
         String title = event.getView().getTitle();
@@ -298,7 +641,6 @@ public class OBGUI implements CommandExecutor, Listener {
         String title = event.getView().getTitle();
 
         if (title.equalsIgnoreCase("§cInsel-Verwaltung")) {
-            // Klick-Zähler zurücksetzen, wenn das Verwaltung-GUI geöffnet wirda
             UUID uuid = player.getUniqueId();
             deleteClicks.put(uuid, MAX_CLICKS);
             rebirthClicks.put(uuid, MAX_CLICKS);
@@ -306,6 +648,8 @@ public class OBGUI implements CommandExecutor, Listener {
         }
 
         if (title.equalsIgnoreCase("§8OneBlock-Menü")) {
+            // WICHTIG: Kopf aktualisieren, damit Daten immer aktuell sind
+            setPlayerHeadInMainGUI(player);
             updateVerwaltungGUI(player);
         }
     }
