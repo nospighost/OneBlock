@@ -14,13 +14,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import static org.bukkit.Material.*;
 
@@ -36,6 +36,12 @@ public class OBGUI implements CommandExecutor, Listener {
     public static Inventory Auswahl;
     public static Inventory Verwaltung;
 
+    // Getrennte Maps für Klicks
+    private final HashMap<UUID, Integer> deleteClicks = new HashMap<>();
+    private final HashMap<UUID, Integer> rebirthClicks = new HashMap<>();
+
+    private final int MAX_CLICKS = 3;
+
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
@@ -44,9 +50,16 @@ public class OBGUI implements CommandExecutor, Listener {
         }
 
         Player player = (Player) sender;
+
         if (mainGUI == null || Auswahl == null || Einstellungen == null || Rebirth == null || Befehle == null || Verwaltung == null) {
             createguis(player);
         }
+
+        // Klick-Zähler beim Öffnen zurücksetzen
+        deleteClicks.put(player.getUniqueId(), MAX_CLICKS);
+        rebirthClicks.put(player.getUniqueId(), MAX_CLICKS);
+
+        updateVerwaltungGUI(player);
         player.openInventory(mainGUI);
         return true;
     }
@@ -64,7 +77,6 @@ public class OBGUI implements CommandExecutor, Listener {
             mainGUI.setItem(pos, new ItemStack(GRAY_STAINED_GLASS_PANE));
         }
 
-
         ItemStack skull = new ItemStack(PLAYER_HEAD);
         SkullMeta skullMeta = (SkullMeta) skull.getItemMeta();
         if (skullMeta != null) {
@@ -74,7 +86,6 @@ public class OBGUI implements CommandExecutor, Listener {
         }
         mainGUI.setItem(4, skull);
 
-        // Slot 6 - XP-Flasche
         ItemStack xpBottle = new ItemStack(EXPERIENCE_BOTTLE);
         ItemMeta meta6 = xpBottle.getItemMeta();
         if (meta6 != null) {
@@ -83,7 +94,6 @@ public class OBGUI implements CommandExecutor, Listener {
         }
         mainGUI.setItem(3, xpBottle);
 
-        // Slot 8 - Repeater
         ItemStack repeaterRight = new ItemStack(COMPARATOR);
         ItemMeta meta8 = repeaterRight.getItemMeta();
         if (meta8 != null) {
@@ -92,15 +102,7 @@ public class OBGUI implements CommandExecutor, Listener {
         }
         mainGUI.setItem(5, repeaterRight);
 
-
-        ItemStack trust = new ItemStack(BARRIER);
-        ItemMeta trustmeta = trust.getItemMeta();
-        if (trustmeta != null) {
-            trustmeta.setDisplayName("§cInsel-Löschen");
-            trust.setItemMeta(trustmeta);
-        }
-        Verwaltung.setItem(11, trust);
-
+        // Rebirth Item in Verwaltung initial setzen
         ItemStack rebirth = new ItemStack(TOTEM_OF_UNDYING);
         ItemMeta rebirthmeta = rebirth.getItemMeta();
         if (rebirthmeta != null) {
@@ -110,39 +112,80 @@ public class OBGUI implements CommandExecutor, Listener {
             lore.add("§bDu bekommst aber Belohnungen für den §cRebirth");
             rebirthmeta.setLore(lore);
             rebirth.setItemMeta(rebirthmeta);
-
         }
         Verwaltung.setItem(13, rebirth);
 
-
-        YamlConfiguration config = Manager.getIslandConfig(player);
-        int currentSize = config.getInt("WorldBorderSize", 50);
-        int costLevel = ((currentSize - 40) / 10) + 1;
-        int neededLevel = costLevel * 2;
-        int playerLevel = config.getInt("IslandLevel", 1);
-
-        ItemStack upgradeItem = new ItemStack(STRUCTURE_VOID);
-        ItemMeta meta = upgradeItem.getItemMeta();
-        if (meta != null) {
-            meta.setDisplayName("§aWorldBorder vergrößern!");
-            List<String> lore = new ArrayList<>();
-            lore.add("§7Aktuelle Größe: §e" + currentSize);
-            lore.add("§7Kosten: §e10 Tokens");
-            lore.add("§7Klicke, um deine Border zu erweitern!");
-            if (playerLevel >= neededLevel) {
-                lore.add("§aDu kannst upgraden!");
-            } else {
-                lore.add("§cDu benötigst ein höheres Level.");
-            }
-            meta.setLore(lore);
-            upgradeItem.setItemMeta(meta);
-        }
-
-        Verwaltung.setItem(15, upgradeItem);
-
-
+        updateVerwaltungGUI(player);
     }
 
+    private void updateVerwaltungGUI(Player player) {
+        UUID uuid = player.getUniqueId();
+
+        int deleteRemaining = deleteClicks.getOrDefault(uuid, MAX_CLICKS);
+        int rebirthRemaining = rebirthClicks.getOrDefault(uuid, MAX_CLICKS);
+
+        // Delete Item
+        ItemStack deleteItem = new ItemStack(BARRIER);
+        ItemMeta metaDelete = deleteItem.getItemMeta();
+        if (metaDelete != null) {
+            metaDelete.setDisplayName("§cInsel-Löschen");
+            List<String> lore = new ArrayList<>();
+            lore.add("§7Klicke §e" + deleteRemaining + " §7Mal zum §cLöschen§7!");
+            metaDelete.setLore(lore);
+            deleteItem.setItemMeta(metaDelete);
+        }
+        Verwaltung.setItem(11, deleteItem);
+
+        // Rebirth Item
+        ItemStack rebirthItem = new ItemStack(TOTEM_OF_UNDYING);
+        ItemMeta metaRebirth = rebirthItem.getItemMeta();
+        if (metaRebirth != null) {
+            metaRebirth.setDisplayName("§cRebirth");
+            List<String> lore = new ArrayList<>();
+            lore.add("§7Klicke §e" + rebirthRemaining + " §7Mal zum §cRebirth§7!");
+            metaRebirth.setLore(lore);
+            rebirthItem.setItemMeta(metaRebirth);
+        }
+        Verwaltung.setItem(13, rebirthItem);
+    }
+
+    private void updateDeleteItemLore(Player player, int remainingClicks) {
+        Inventory inv = player.getOpenInventory().getTopInventory();
+        ItemStack item = inv.getItem(11);
+        if (item == null || item.getType() != Material.BARRIER) return;
+
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+
+        List<String> lore = new ArrayList<>();
+        if (remainingClicks > 0) {
+            lore.add("§7Klicke §e" + remainingClicks + " §7weitere Male zum §cLöschen§7!");
+        } else {
+            lore.add("§cLösche wird ausgeführt...");
+        }
+        meta.setLore(lore);
+        item.setItemMeta(meta);
+        inv.setItem(11, item);
+    }
+
+    private void updateRebirthItemLore(Player player, int remainingClicks) {
+        Inventory inv = player.getOpenInventory().getTopInventory();
+        ItemStack item = inv.getItem(13);
+        if (item == null || item.getType() != Material.TOTEM_OF_UNDYING) return;
+
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+
+        List<String> lore = new ArrayList<>();
+        if (remainingClicks > 0) {
+            lore.add("§7Klicke §e" + remainingClicks + " §7weitere Male zum §cRebirth§7!");
+        } else {
+            lore.add("§cRebirth wird ausgeführt...");
+        }
+        meta.setLore(lore);
+        item.setItemMeta(meta);
+        inv.setItem(13, item);
+    }
 
     @EventHandler(ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent event) {
@@ -157,13 +200,13 @@ public class OBGUI implements CommandExecutor, Listener {
             event.setCancelled(true);
 
             if (type == STRUCTURE_VOID) {
-                YamlConfiguration config = Manager.getIslandConfig(player);
+                YamlConfiguration config = Manager.getIslandConfig(player.getUniqueId());
                 int currentSize = config.getInt("WorldBorderSize", 50);
 
                 if (currentSize < 200) {
                     currentSize += 10;
                     config.set("WorldBorderSize", currentSize);
-                    Manager.saveIslandConfig(player, config);
+                    Manager.saveIslandConfig(player.getUniqueId(), config);
 
                     WorldBorder border = player.getWorld().getWorldBorder();
                     border.setCenter(player.getLocation());
@@ -177,21 +220,39 @@ public class OBGUI implements CommandExecutor, Listener {
                     player.sendMessage("§cDu hast das Limit erreicht");
                 }
             }
-            switch (type) {
-                case TOTEM_OF_UNDYING:
-                    player.performCommand("ob rebirth");
-                    player.closeInventory();
-                    break;
 
-                case BARRIER:
-                    player.performCommand("ob delete");
+            if (type == TOTEM_OF_UNDYING) {
+                UUID uuid = player.getUniqueId();
+                int clicksLeft = rebirthClicks.getOrDefault(uuid, MAX_CLICKS) - 1;
+
+                if (clicksLeft > 0) {
+                    rebirthClicks.put(uuid, clicksLeft);
+                    updateRebirthItemLore(player, clicksLeft);
+                    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1, 1);
+                } else {
+                    rebirthClicks.remove(uuid);
                     player.closeInventory();
-                    break;
+                    player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1, 1);
+                    player.performCommand("ob rebirth");
+                }
+            }
+
+            if (type == BARRIER) {
+                UUID uuid = player.getUniqueId();
+                int clicksLeft = deleteClicks.getOrDefault(uuid, MAX_CLICKS) - 1;
+
+                if (clicksLeft > 0) {
+                    deleteClicks.put(uuid, clicksLeft);
+                    updateDeleteItemLore(player, clicksLeft);
+                    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1, 1);
+                } else {
+                    deleteClicks.remove(uuid);
+                    player.closeInventory();
+                    player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1, 1);
+                    player.performCommand("ob delete");
+                }
             }
         }
-
-
-
 
         if (title.equalsIgnoreCase("§8OneBlock-Menü")) {
             event.setCancelled(true);
@@ -205,9 +266,47 @@ public class OBGUI implements CommandExecutor, Listener {
                     player.openInventory(Befehle);
                     break;
                 case COMPARATOR:
+                    // Verwaltung mit frisch zurückgesetzten Klicks öffnen
+                    UUID uuid = player.getUniqueId();
+                    deleteClicks.put(uuid, MAX_CLICKS);
+                    rebirthClicks.put(uuid, MAX_CLICKS);
+                    updateVerwaltungGUI(player);
                     player.openInventory(Verwaltung);
                     break;
             }
         }
-     }
+    }
+
+    // Klick-Zähler zurücksetzen, wenn Inventar geschlossen wird
+    @EventHandler
+    public void onInventoryClose(org.bukkit.event.inventory.InventoryCloseEvent event) {
+        if (!(event.getPlayer() instanceof Player player)) return;
+
+        String title = event.getView().getTitle();
+
+        if (title.equalsIgnoreCase("§cInsel-Verwaltung")) {
+            UUID uuid = player.getUniqueId();
+            deleteClicks.remove(uuid);
+            rebirthClicks.remove(uuid);
+        }
+    }
+
+    @EventHandler
+    public void onInventoryOpen(InventoryOpenEvent event) {
+        if (!(event.getPlayer() instanceof Player player)) return;
+
+        String title = event.getView().getTitle();
+
+        if (title.equalsIgnoreCase("§cInsel-Verwaltung")) {
+            // Klick-Zähler zurücksetzen, wenn das Verwaltung-GUI geöffnet wird
+            UUID uuid = player.getUniqueId();
+            deleteClicks.put(uuid, MAX_CLICKS);
+            rebirthClicks.put(uuid, MAX_CLICKS);
+            updateVerwaltungGUI(player);
+        }
+
+        if (title.equalsIgnoreCase("§8OneBlock-Menü")) {
+            updateVerwaltungGUI(player);
+        }
+    }
 }
