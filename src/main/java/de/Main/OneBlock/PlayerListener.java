@@ -7,6 +7,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.type.Piston;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -22,9 +23,7 @@ import org.bukkit.util.Vector;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static de.Main.OneBlock.Manager.getIslandConfig;
@@ -57,8 +56,8 @@ public class PlayerListener implements Listener {
             config.set("z-position", 0);
             config.set("x-position", 0);
             config.set("WorldBorderSize", 50);
-            config.set("MissingBlocksToLevelUp", 200);
-            config.set("TotalBlocks", 200);
+            config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.1.blockcount", 200));
+            config.set("TotalBlocks", Main.config.getInt("oneblockblocks.1.blockcount", 200));
             config.set("IslandLevel", 1);
             config.set("OneBlock-x", 0);
             config.set("OneBlock-z", 0);
@@ -164,14 +163,14 @@ public class PlayerListener implements Listener {
             if (blocksToLevelUp <= 0) {
                 islandLevel += 1;
                 config.set("IslandLevel", islandLevel);
-                int newTotal = totalBlocks * 2;
+                int newTotal = Main.config.getInt("oneblockblocks." + islandLevel + ".blockcount");
                 config.set("TotalBlocks", newTotal);
-                config.set("MissingBlocksToLevelUp", newTotal);
+                config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks." + islandLevel + ".blockcount"));
             }
 
             Manager.saveIslandConfig(ownerUUID, config);
 
-            List<String> nextBlocks = Main.config.getStringList("oneblockblocks." + islandLevel);
+            List<String> nextBlocks = Main.config.getStringList("oneblockblocks." + islandLevel + ".blocks");
             if (!nextBlocks.isEmpty()) {
                 int randomIndex = ThreadLocalRandom.current().nextInt(nextBlocks.size());
                 String nextBlock = nextBlocks.get(randomIndex);
@@ -192,10 +191,53 @@ public class PlayerListener implements Listener {
 
                 block.setType(Material.AIR);
                 regenerateOneBlock(blockLocation, blockMaterial);
+                monster(ownerUUID, blockLocation.clone().add(0.5, 1.0, 0.5));
+
             }
         }
     }
+    public void monster(UUID ownerUUID, Location spawnLocation) {
+        YamlConfiguration config = Manager.getIslandConfig(ownerUUID);
+        int islandLevel = config.getInt("IslandLevel");
 
+        List<Map<?, ?>> monstersList = (List<Map<?, ?>>) Main.config.getList("oneblockblocks." + islandLevel + ".monsters");
+        if (monstersList == null || monstersList.isEmpty()) return;
+
+        Random random = new Random();
+
+       // hier wird die prozent chance berechntet
+        int totalChance = 0;
+        for (Map<?, ?> monsterData : monstersList) {
+            totalChance += (int) monsterData.get("chance");
+        }
+
+        int roll = random.nextInt(100) + 1;  // 1-100
+
+        if (roll > totalChance) {
+           //also wenn die % chance nd erreicht ist kein mobser gespawnt
+            return;
+        }
+
+        // Monster anhand roll auswählen
+        int cumulativeChance = 0;
+        for (Map<?, ?> monsterData : monstersList) {
+            int chance = (int) monsterData.get("chance");
+            cumulativeChance += chance;
+            if (roll <= cumulativeChance) {
+                String monsterName = (String) monsterData.get("monster");
+                EntityType entityType;
+                try {
+                    entityType = EntityType.valueOf(monsterName);
+                } catch (IllegalArgumentException e) {
+                    Bukkit.getLogger().warning("Ungültiger Monstername in Config: " + monsterName);
+                    return;
+                }
+                spawnLocation.getWorld().spawnEntity(spawnLocation, entityType);
+                break; // Nur 1 Monster spawn, danach raus aus der Schleife
+            }
+        }
+
+    }
     private void sendActionbarProgress(Player player, int currentLevel, int missingBlocks) {
         YamlConfiguration config = getIslandConfig(player.getUniqueId());
         int totalBlocks = config.getInt("TotalBlocks");

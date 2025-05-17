@@ -114,7 +114,7 @@ public class OneBlockCommands implements Listener, CommandExecutor {
             Manager.leaveIsland(player, ownerName);
 
         } else {
-            player.sendMessage(prefix + "§aNutze: /ob join | /ob delete | /ob visit <Spieler> | /ob rebirth | /ob add <Spieler> | /ob trust <Spieler> | /ob accept | /ob deny <Spieler> | /ob unban <Spieler> | /ob remove <Spieler> | /ob leave <Inselbesitzer>");
+            player.sendMessage(prefix + "§aNutze: /ob join | /ob delete | /ob visit <Spieler> | /ob rebirth | /ob trust <Spieler> | /ob accept | /ob deny <Spieler> | /ob unban <Spieler> | /ob remove <Spieler> | /ob leave <Inselbesitzer>");
         }
 
         return true;

@@ -37,7 +37,7 @@ public class Manager implements Listener {
             if (!config.contains("IslandSpawn-x") || !config.getBoolean("EigeneInsel") ||
                     !config.contains("IslandSpawn-z") || !config.contains("OneBlock-x") || !config.contains("OneBlock-z")) {
 
-                int padding = config.getInt("value");
+                int padding = Main.config.getInt("value");
                 int pos = getIslandCords(padding);
 
                 config.set("OneBlock-x", pos);
@@ -57,13 +57,13 @@ public class Manager implements Listener {
                 if (world != null) {
                     player.teleport(new Location(world, pos, 101, pos));
                 }
-                player.sendMessage(prefix + Objects.requireNonNull(Main.config.getString("islandjoinmessage.notowned")));
+                player.sendMessage(prefix + (Main.config.getString("islandjoinmessage.notowned")));
             } else {
                 World world = Bukkit.getWorld("OneBlock");
                 if (world != null) {
                     player.teleport(new Location(world, config.getInt("IslandSpawn-x"), 101, config.getInt("IslandSpawn-z")));
                     Main.setWorldBorder(player);
-                    player.sendMessage(prefix + Objects.requireNonNull(Main.config.getString("islandjoinmessage.join")));
+                    player.sendMessage(prefix + (Main.config.getString("islandjoinmessage.join")));
                 } else {
                     player.sendMessage("§cOneBlock-Welt nicht gefunden!");
                 }
