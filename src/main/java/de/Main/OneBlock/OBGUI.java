@@ -298,7 +298,7 @@ public class OBGUI implements CommandExecutor, Listener {
         String title = event.getView().getTitle();
 
         if (title.equalsIgnoreCase("§cInsel-Verwaltung")) {
-            // Klick-Zähler zurücksetzen, wenn das Verwaltung-GUI geöffnet wird
+            // Klick-Zähler zurücksetzen, wenn das Verwaltung-GUI geöffnet wirda
             UUID uuid = player.getUniqueId();
             deleteClicks.put(uuid, MAX_CLICKS);
             rebirthClicks.put(uuid, MAX_CLICKS);
