@@ -5,35 +5,40 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class TabCompleter implements org.bukkit.command.TabCompleter {
 
-    private final List<String> subCommands = Arrays.asList(
-            "join", "delete", "visit", "rebirth", "trust", "accept", "deny", "unban", "remove", "leave", "decline"
-    );
+    private final Map<String, String> permissionMap = new HashMap<>();
 
-
-    private final List<String> commandsWithPlayerArgument = Arrays.asList(
-            "visit", "add", "trust", "deny", "unban", "remove", "leave", "decline"
-    );
+    public TabCompleter() {
+        permissionMap.put("join", "oneblock.join");
+        permissionMap.put("delete", "oneblock.delete");
+        permissionMap.put("visit", "oneblock.visit");
+        permissionMap.put("rebirth", "oneblock.rebirth");
+        permissionMap.put("trust", "oneblock.trust");
+        permissionMap.put("accept", "oneblock.accept");
+        permissionMap.put("deny", "oneblock.deny");
+        permissionMap.put("unban", "oneblock.unban");
+        permissionMap.put("remove", "oneblock.remove");
+        permissionMap.put("leave", "oneblock.leave");
+        permissionMap.put("decline", "oneblock.decline");
+    }
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (!(sender instanceof Player)) return Collections.emptyList();
 
-        if (!command.getName().equalsIgnoreCase("ob")) {
-            return Collections.emptyList();
-        }
+        Player player = (Player) sender;
+
+        if (!command.getName().equalsIgnoreCase("ob")) return Collections.emptyList();
 
         if (args.length == 1) {
             String input = args[0].toLowerCase();
             List<String> matches = new ArrayList<>();
 
-            for (String sub : subCommands) {
-                if (sub.startsWith(input)) {
+            for (String sub : permissionMap.keySet()) {
+                if (sub.startsWith(input) && hasPermission(player, sub)) {
                     matches.add(sub);
                 }
             }
@@ -42,26 +47,31 @@ public class TabCompleter implements org.bukkit.command.TabCompleter {
             return matches;
         }
 
-
         if (args.length == 2) {
-            String input = args[1].toLowerCase();
             String firstArg = args[0].toLowerCase();
+            String input = args[1].toLowerCase();
 
-            for (String cmd : commandsWithPlayerArgument) {
-                if (cmd.startsWith(firstArg)) {
-                    List<String> matches = new ArrayList<>();
-                    for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-                        String name = onlinePlayer.getName();
-                        if (name.toLowerCase().startsWith(input)) {
-                            matches.add(name);
-                        }
+            if (permissionMap.containsKey(firstArg) && hasPermission(player, firstArg)) {
+                List<String> playerMatches = new ArrayList<>();
+
+                for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                    String name = onlinePlayer.getName();
+                    if (name.toLowerCase().startsWith(input)) {
+                        playerMatches.add(name);
                     }
-                    Collections.sort(matches);
-                    return matches;
                 }
+
+                Collections.sort(playerMatches);
+                return playerMatches;
             }
         }
 
         return Collections.emptyList();
+    }
+
+    private boolean hasPermission(Player player, String subCommand) {
+        return player.hasPermission("oneblock.admin")
+                || player.hasPermission(permissionMap.get(subCommand))
+                || player.isOp();
     }
 }
