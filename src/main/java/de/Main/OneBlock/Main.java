@@ -11,18 +11,14 @@ import org.bukkit.WorldType;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
-
 import java.io.File;
-import java.io.IOException;
+import java.util.UUID;
 
 public class Main extends JavaPlugin implements Listener {
-    private static Main instance; // <- Hier
+    private static Main instance;
 
     private static final String WORLD_NAME = "OneBlock";
     public static World oneBlockWorld;
@@ -45,17 +41,13 @@ public class Main extends JavaPlugin implements Listener {
         saveDefaultConfig();
         config = getConfig();
         instance = this;
-        if (!config.contains("value")) {
-            config.set("value", 400);
-            saveConfig();
-        }
 
 
         setupEconomy();
 
 
         // Listener registrieren
-        Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
+       Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
         if (economy != null) {
             Bukkit.getPluginManager().registerEvents(new Manager(economy, this), this);
             getLogger().info("Vault Economy erfolgreich erkannt.");
@@ -78,6 +70,9 @@ public class Main extends JavaPlugin implements Listener {
         // Befehle
         getCommand("ob").setExecutor(new de.Main.OneBlock.OneBlockCommands());
         getCommand("obgui").setExecutor(new OBGUI());
+
+
+
         getServer().getPluginManager().registerEvents(new OBGUI(), this);
 
         // Void Gen für OneBlock-Welt
@@ -104,7 +99,7 @@ public class Main extends JavaPlugin implements Listener {
             getLogger().warning("Fehler beim Erstellen der OneBlock-Welt");
         }
 
-        for (String playerName : Manager.getAllIslandOwners()) {
+        for (UUID playerName : Manager.getAllIslandOwners()) {
             File file = new File(islandDataFolder, playerName + ".yml");
             if (file.exists()) {
                 YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
@@ -113,7 +108,7 @@ public class Main extends JavaPlugin implements Listener {
                 int size = config.getInt("WorldBorderSize", 50);
 
 
-                Player player = Bukkit.getPlayerExact(playerName);
+                Player player = Bukkit.getPlayerExact(playerName.toString());
                 if (player != null && player.isOnline()) {
                     WorldBorder border = Bukkit.createWorldBorder();
                     border.setCenter(x, z);
@@ -142,7 +137,7 @@ public class Main extends JavaPlugin implements Listener {
 
 
     public static void setWorldBorder(Player player) {
-        YamlConfiguration config = Manager.getIslandConfig(player);
+        YamlConfiguration config = Manager.getIslandConfig(player.getUniqueId());
         int x = config.getInt("OneBlock-x");
         int z = config.getInt("OneBlock-z");
         int size = config.getInt("WorldBorderSize");

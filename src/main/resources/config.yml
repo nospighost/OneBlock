@@ -17,112 +17,196 @@ removemessage: "§a Du hast %player% von deiner Insel entfernt"
 removeplayernotinlist: "§cDer Spieler ist nicht auf deiner Insel hinzugefügt"
 rebirthinventoryfull: "§cDein Inventar ist voll bitte leere es um zu den Rebirth durchzuführen"
 rebirthhigherlevel: "§cDein Level ist nicht hoch genug um den rebirth durchzuführen. Du brauchst das level %level% um zu rebirthen "
-RebirthLevel: 4
+trustmessagealready: "§cDieser Spieler ist bereits getrustet"
+RebirthLevel: 12
 Server: "§6§lBlockhive >> "
 oneblockblocks:
-  '1': # Natur & Erde
-    - DIRT
-    - GRASS_BLOCK
-    - COARSE_DIRT
-    - PODZOL
-    - CLAY
+  '1':
+    name: "Natur & Erde"
+    blockcount: 100
+    blocks:
+      - DIRT
+      - GRASS_BLOCK
+      - COARSE_DIRT
+      - PODZOL
+      - CLAY
+    monsters:
+      - monster: ZOMBIE
+        chance: 3
+      - monster: SKELETON
+        chance: 3
+      - monster: SPIDER
+        chance: 3
 
-  '2': # Holz & Bäume
-    - OAK_LOG
-    - SPRUCE_LOG
-    - BIRCH_LOG
-    - JUNGLE_LOG
-    - ACACIA_LOG
-    - DARK_OAK_LOG
-    - OAK_WOOD
-    - SPRUCE_WOOD
-    - BIRCH_WOOD
-    - STRIPPED_OAK_LOG
-    - STRIPPED_SPRUCE_LOG
-    - STRIPPED_BIRCH_LOG
-    - STRIPPED_JUNGLE_LOG
-    - OAK_LEAVES
-    - SPRUCE_LEAVES
-    - BIRCH_LEAVES
-    - JUNGLE_LEAVES
-    - ACACIA_LEAVES
-    - DARK_OAK_LEAVES
-    - MOSS_BLOCK
-    - MOSSY_COBBLESTONE
+  '2':
+    name: "Bäume"
+    blockcount: 100
+    blocks:
+      - OAK_LOG
+      - SPRUCE_LOG
+      - BIRCH_LOG
+      - JUNGLE_LOG
+      - ACACIA_LOG
+      - DARK_OAK_LOG
+      - OAK_WOOD
+      - SPRUCE_WOOD
+      - BIRCH_WOOD
+      - STRIPPED_OAK_LOG
+      - STRIPPED_SPRUCE_LOG
+      - STRIPPED_BIRCH_LOG
+      - STRIPPED_JUNGLE_LOG
+      - OAK_LEAVES
+      - SPRUCE_LEAVES
+      - BIRCH_LEAVES
+      - JUNGLE_LEAVES
+      - ACACIA_LEAVES
+      - DARK_OAK_LEAVES
+      - MOSS_BLOCK
+      - MOSSY_COBBLESTONE
+    monsters:
+      - monster: CREEPER
+        chance: 5
+      - monster: ZOMBIE_VILLAGER
+        chance: 6
 
-  '3': # Stein & Gestein
-    - STONE
-    - COBBLESTONE
-    - ANDESITE
-    - DIORITE
-    - GRANITE
-    - TUFF
-    - STONE_BRICKS
-    - CRACKED_STONE_BRICKS
+  '3':
+    name: "Stein & Gestein"
+    blockcount: 1001
+    blocks:
+      - STONE
+      - COBBLESTONE
+      - ANDESITE
+      - DIORITE
+      - GRANITE
+      - TUFF
+      - STONE_BRICKS
+      - CRACKED_STONE_BRICKS
+    monsters:
+      - monster: ZOMBIE
+        chance: 5
+      - monster: SKELETON
+        chance: 5
 
-  '4': # Unterirdische Materialien
-    - COAL_BLOCK
-    - IRON_BLOCK
-    - COPPER_BLOCK
-    - DEEPSLATE
-    - COBBLED_DEEPSLATE
-    - POLISHED_DEEPSLATE
-    - DEEPSLATE_BRICKS
-    - DEEPSLATE_TILES
+  '4':
+    name: "Unterirdische Materialien"
+    blockcount: 100
+    blocks:
+      - COAL_BLOCK
+      - IRON_BLOCK
+      - COPPER_BLOCK
+      - DEEPSLATE
+      - COBBLED_DEEPSLATE
+      - POLISHED_DEEPSLATE
+      - DEEPSLATE_BRICKS
+      - DEEPSLATE_TILES
+    monsters:
+      - monster: CAVE_SPIDER
+        chance: 3
+      - monster: SILVERFISH
+        chance: 3
 
-  '5': # Edelmetalle & Seltenesss
-    - GOLD_BLOCK
-    - REDSTONE_BLOCK
-    - LAPIS_BLOCK
-    - EMERALD_BLOCK
-    - DIAMOND_BLOCK
-    - OBSIDIAN
+  '5':
+    name: "Edelmetalle & Seltenes"
+    blockcount: 100
+    blocks:
+      - GOLD_BLOCK
+      - REDSTONE_BLOCK
+      - LAPIS_BLOCK
+      - EMERALD_BLOCK
+      - DIAMOND_BLOCK
+      - OBSIDIAN
+    monsters:
+      - monster: ENDERMAN
+        chance: 8
+      - monster: ZOMBIE_VILLAGER
+        chance: 2
 
-  '6': # Nether-Biomaterialien
-    - NETHERRACK
-    - SOUL_SAND
-    - SOUL_SOIL
-    - BASALT
-    - POLISHED_BASALT
-    - BLACKSTONE
-    - POLISHED_BLACKSTONE
-    - NETHER_BRICKS
-    - RED_NETHER_BRICKS
+  '6':
+    name: "Nether-Biomaterialien"
+    blockcount: 100
+    blocks:
+      - NETHERRACK
+      - SOUL_SAND
+      - SOUL_SOIL
+      - BASALT
+      - POLISHED_BASALT
+      - BLACKSTONE
+      - POLISHED_BLACKSTONE
+      - NETHER_BRICKS
+      - RED_NETHER_BRICKS
+    monsters:
+      - monster: BLAZE
+        chance: 3
+      - monster: GHAST
+        chance: 3
 
-  '7': # Nether-Wald
-    - CRIMSON_NYLIUM
-    - WARPED_NYLIUM
-    - CRIMSON_STEM
-    - WARPED_STEM
-    - STRIPPED_CRIMSON_STEM
-    - STRIPPED_WARPED_STEM
-    - CRIMSON_HYPHAE
-    - WARPED_HYPHAE
-    - SHROOMLIGHT
+  '7':
+    name: "Nether-Wald"
+    blockcount: 100
+    blocks:
+      - CRIMSON_NYLIUM
+      - WARPED_NYLIUM
+      - CRIMSON_STEM
+      - WARPED_STEM
+      - STRIPPED_CRIMSON_STEM
+      - STRIPPED_WARPED_STEM
+      - CRIMSON_HYPHAE
+      - WARPED_HYPHAE
+      - SHROOMLIGHT
+    monsters:
+      - monster: PIGLIN
+        chance: 4
+      - monster: ZOMBIFIED_PIGLIN
+        chance: 5
 
-  '8': # End-Stufe
-    - END_STONE
-    - PURPUR_BLOCK
-    - PURPUR_PILLAR
-    - END_STONE_BRICKS
-    - OBSIDIAN
-    - CHISELED_PURPUR_BLOCK
+  '8':
+    name: "End-Stufe"
+    blockcount: 100
+    blocks:
+      - END_STONE
+      - PURPUR_BLOCK
+      - PURPUR_PILLAR
+      - END_STONE_BRICKS
+      - OBSIDIAN
+      - CHISELED_PURPUR_BLOCK
+    monsters:
+      - monster: ENDERMAN
+        chance: 5
+      - monster: SHULKER
+        chance: 1
 
-  '9': # Magie & Reichtum
-    - QUARTZ_BLOCK
-    - CHISELED_QUARTZ_BLOCK
-    - SMOOTH_QUARTZ
-    - HONEY_BLOCK
-    - SLIME_BLOCK
-    - GILDED_BLACKSTONE
-    - ANCIENT_DEBRIS
-    - NETHERITE_BLOCK
+  '9':
+    name: "Magie & Reichtum"
+    blockcount: 100
+    blocks:
+      - QUARTZ_BLOCK
+      - CHISELED_QUARTZ_BLOCK
+      - SMOOTH_QUARTZ
+      - HONEY_BLOCK
+      - SLIME_BLOCK
+      - GILDED_BLACKSTONE
+      - ANCIENT_DEBRIS
+      - NETHERITE_BLOCK
+    monsters:
+      - monster: WITCH
+        chance: 3
+      - monster: SLIME
+        chance: 4
 
-  '10': # Dekor & Luxus
-    - GLOWSTONE
-    - SEA_LANTERN
-    - PRISMARINE
-    - PRISMARINE_BRICKS
-    - DARK_PRISMARINE
-    - BEACON
-    - LODESTONE
+  '10':
+    name: "Dekor & Luxus"
+    blockcount: 100
+    blocks:
+      - GLOWSTONE
+      - SEA_LANTERN
+      - PRISMARINE
+      - PRISMARINE_BRICKS
+      - DARK_PRISMARINE
+      - BEACON
+      - LODESTONE
+    monsters:
+      - monster: GUARDIAN
+        chance: 3
+      - monster: ELDER_GUARDIAN
+        chance: 1
+

@@ -7,6 +7,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.type.Piston;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -21,12 +22,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.IOException;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static de.Main.OneBlock.Main.config;
-import static de.Main.OneBlock.Main.oneBlockWorld;
 import static de.Main.OneBlock.Manager.getIslandConfig;
 
 public class PlayerListener implements Listener {
@@ -46,8 +45,7 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        YamlConfiguration config = getIslandConfig(player);
-
+        YamlConfiguration config = getIslandConfig(player.getUniqueId());
 
         if (!config.contains("created") || !config.contains("WorldBorderSize") || !config.contains("TotalBlocks") || !config.contains("owner") || !config.contains("owner-uuid") || !config.contains("EigeneInsel") || !config.contains("z-position") || !config.contains("x-position") || !config.contains("IslandSpawn-x") || !config.contains("IslandSpawn-z") || !config.contains("trusted") || !config.contains("added") || !config.contains("invited") || !config.contains("invitedtrust")) {
 
@@ -58,23 +56,18 @@ public class PlayerListener implements Listener {
             config.set("z-position", 0);
             config.set("x-position", 0);
             config.set("WorldBorderSize", 50);
-            config.set("MissingBlocksToLevelUp", 200);
-            config.set("TotalBlocks", 200);
+            config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.1.blockcount", 200));
+            config.set("TotalBlocks", Main.config.getInt("oneblockblocks.1.blockcount", 200));
             config.set("IslandLevel", 1);
             config.set("OneBlock-x", 0);
             config.set("OneBlock-z", 0);
-
             config.set("trusted", new ArrayList<String>());
-            config.set("added", new ArrayList<String>());
-            config.set("invited", new ArrayList<String>());
             config.set("invitedtrust", new ArrayList<String>());
             config.set("denied", new ArrayList<String>());
 
-            Manager.saveIslandConfig(player, config);
+            Manager.saveIslandConfig(player.getUniqueId(), config);
         }
 
-
-        // WorldBorder und Teleport
         World world = Bukkit.getWorld(WORLD_NAME);
         if (world != null && player.getWorld().getName().equals(WORLD_NAME)) {
             int x = config.getInt("OneBlock-x", 0);
@@ -105,19 +98,16 @@ public class PlayerListener implements Listener {
                     List<String> addedList = otherConfig.getStringList("added");
                     List<String> trustedList = otherConfig.getStringList("trusted");
                     String ownerName = file.getName().replace(".yml", "");
-
-
                 }
             }
         }
     }
 
-
     @EventHandler
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         Player player = event.getPlayer();
         World world = Bukkit.getWorld(WORLD_NAME);
-        YamlConfiguration config = getIslandConfig(player);
+        YamlConfiguration config = getIslandConfig(player.getUniqueId());
         if (world != null) {
             event.setRespawnLocation(new Location(world, config.getInt("IslandSpawn-x"), 101, config.getInt("IslandSpawn-z")));
         }
@@ -129,31 +119,33 @@ public class PlayerListener implements Listener {
         Block block = event.getBlock();
         Location blockLocation = block.getLocation();
 
-        String ownerName = getIslandOwnerByLocation(blockLocation);
-        if (ownerName == null) {
+        UUID ownerUUID = getIslandOwnerUUIDByLocation(blockLocation);
+        if (ownerUUID == null) {
+            player.sendMessage(prefix + "§cDu darfst hier nichts abbauen!");
+            player.sendMessage(ownerUUID);
+            event.setCancelled(true);
+            return;
+        }
+
+        YamlConfiguration config = Manager.getIslandConfig(ownerUUID);
+
+        List<String> addedUUIDs = config.getStringList("added");
+        List<String> trustedUUIDs = config.getStringList("trusted");
+
+        String playerUUID = player.getUniqueId().toString();
+
+        if (!ownerUUID.equals(player.getUniqueId())
+                && !addedUUIDs.contains(playerUUID)
+                && !trustedUUIDs.contains(playerUUID)) {
+
             player.sendMessage(prefix + "§cDu darfst hier nichts abbauen!");
             event.setCancelled(true);
             return;
         }
 
-        File islandFile = new File(Main.islandDataFolder, ownerName + ".yml");
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(islandFile);
-
-        List<String> added = config.getStringList("added");
-        List<String> trusted = config.getStringList("trusted");
-
-        if (!ownerName.equals(player.getName()) &&
-                !added.contains(player.getName()) &&
-                !trusted.contains(player.getName())) {
-
-            player.sendMessage(prefix + "§cDu darfst hier nichts abbauen!");
-            event.setCancelled(true);
-            return;
-        }
-
-        int blockstolevelup = config.getInt("MissingBlocksToLevelUp");
-        int IslandLevel = config.getInt("IslandLevel");
-        int totalblocks = config.getInt("TotalBlocks");
+        int blocksToLevelUp = config.getInt("MissingBlocksToLevelUp");
+        int islandLevel = config.getInt("IslandLevel");
+        int totalBlocks = config.getInt("TotalBlocks");
 
         World world = Bukkit.getWorld("OneBlock");
 
@@ -163,49 +155,91 @@ public class PlayerListener implements Listener {
                 blockLocation.getBlockY() == 100 &&
                 blockLocation.getBlockZ() == config.getInt("OneBlock-z")) {
 
-            blockstolevelup -= 1;
-            config.set("MissingBlocksToLevelUp", blockstolevelup);
+            blocksToLevelUp -= 1;
+            config.set("MissingBlocksToLevelUp", blocksToLevelUp);
 
-            sendActionbarProgress(player, IslandLevel, blockstolevelup);
+            sendActionbarProgress(player, islandLevel, blocksToLevelUp);
 
-            if (blockstolevelup == 0) {
-                IslandLevel += 1;
-                config.set("IslandLevel", IslandLevel);
-                int v = totalblocks * 2;
-                config.set("TotalBlocks", v);
-                config.set("MissingBlocksToLevelUp", v);
+            if (blocksToLevelUp <= 0) {
+                islandLevel += 1;
+                config.set("IslandLevel", islandLevel);
+                int newTotal = Main.config.getInt("oneblockblocks." + islandLevel + ".blockcount");
+                config.set("TotalBlocks", newTotal);
+                config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks." + islandLevel + ".blockcount"));
             }
 
-            Manager.saveIslandConfig(Bukkit.getPlayer(ownerName), config); // speichert für Besitzer
+            Manager.saveIslandConfig(ownerUUID, config);
 
-            List<String> nextBlocks = Main.config.getStringList("oneblockblocks." + IslandLevel);
-            if (nextBlocks.isEmpty()) return;
+            List<String> nextBlocks = Main.config.getStringList("oneblockblocks." + islandLevel + ".blocks");
+            if (!nextBlocks.isEmpty()) {
+                int randomIndex = ThreadLocalRandom.current().nextInt(nextBlocks.size());
+                String nextBlock = nextBlocks.get(randomIndex);
 
-            int randomIndex = ThreadLocalRandom.current().nextInt(nextBlocks.size());
-            String nextBlock = nextBlocks.get(randomIndex);
-            Material blockMaterial;
-            try {
-                blockMaterial = Material.valueOf(nextBlock);
-            } catch (IllegalArgumentException e) {
-                Bukkit.getLogger().warning("Ungültiger Blockname in der Konfiguration: " + nextBlock);
-                blockMaterial = Material.STONE;
+                Material blockMaterial;
+                try {
+                    blockMaterial = Material.valueOf(nextBlock);
+                } catch (IllegalArgumentException e) {
+                    Bukkit.getLogger().warning("Ungültiger Blockname in der Konfiguration: " + nextBlock);
+                    blockMaterial = Material.STONE;
+                }
+
+                event.setDropItems(false);
+                ItemStack droppedItem = new ItemStack(block.getType());
+                Item item = block.getWorld().dropItem(blockLocation.clone().add(0.5, 1.0, 0.5), droppedItem);
+                item.setVelocity(new Vector(0, 0, 0));
+                item.setPickupDelay(10);
+
+                block.setType(Material.AIR);
+                regenerateOneBlock(blockLocation, blockMaterial);
+                monster(ownerUUID, blockLocation.clone().add(0.5, 1.0, 0.5));
+
             }
-
-            event.setDropItems(false);
-            ItemStack droppedItem = new ItemStack(block.getType());
-            Item item = block.getWorld().dropItem(blockLocation.clone().add(0.5, 1.0, 0.5), droppedItem);
-            item.setVelocity(new Vector(0, 0, 0));
-            item.setPickupDelay(10);
-
-            block.setType(Material.AIR);
-            regenerateOneBlock(blockLocation, blockMaterial);
-            Manager.saveIslandConfig(Bukkit.getPlayer(ownerName), config);
         }
     }
+    public void monster(UUID ownerUUID, Location spawnLocation) {
+        YamlConfiguration config = Manager.getIslandConfig(ownerUUID);
+        int islandLevel = config.getInt("IslandLevel");
 
+        List<Map<?, ?>> monstersList = (List<Map<?, ?>>) Main.config.getList("oneblockblocks." + islandLevel + ".monsters");
+        if (monstersList == null || monstersList.isEmpty()) return;
 
+        Random random = new Random();
+
+       // hier wird die prozent chance berechntet
+        int totalChance = 0;
+        for (Map<?, ?> monsterData : monstersList) {
+            totalChance += (int) monsterData.get("chance");
+        }
+
+        int roll = random.nextInt(100) + 1;  // 1-100
+
+        if (roll > totalChance) {
+           //also wenn die % chance nd erreicht ist kein mobser gespawnt
+            return;
+        }
+
+        // Monster anhand roll auswählen
+        int cumulativeChance = 0;
+        for (Map<?, ?> monsterData : monstersList) {
+            int chance = (int) monsterData.get("chance");
+            cumulativeChance += chance;
+            if (roll <= cumulativeChance) {
+                String monsterName = (String) monsterData.get("monster");
+                EntityType entityType;
+                try {
+                    entityType = EntityType.valueOf(monsterName);
+                } catch (IllegalArgumentException e) {
+                    Bukkit.getLogger().warning("Ungültiger Monstername in Config: " + monsterName);
+                    return;
+                }
+                spawnLocation.getWorld().spawnEntity(spawnLocation, entityType);
+                break; // Nur 1 Monster spawn, danach raus aus der Schleife
+            }
+        }
+
+    }
     private void sendActionbarProgress(Player player, int currentLevel, int missingBlocks) {
-        YamlConfiguration config = getIslandConfig(player);
+        YamlConfiguration config = getIslandConfig(player.getUniqueId());
         int totalBlocks = config.getInt("TotalBlocks");
         double progress = (double) (totalBlocks - missingBlocks) / totalBlocks;
 
@@ -266,7 +300,6 @@ public class PlayerListener implements Listener {
         });
     }
 
-
     private void regenerateOneBlock(Location blockLocation, Material blockMaterial) {
         Bukkit.getScheduler().runTaskLater(JavaPlugin.getPlugin(Main.class), () -> {
             Block newBlock = Bukkit.getWorld(WORLD_NAME).getBlockAt(blockLocation);
@@ -281,40 +314,39 @@ public class PlayerListener implements Listener {
     private boolean isPlayerAllowed(Location loc, Player player) {
         String islandOwner = getIslandOwnerByLocation(loc);
         if (islandOwner == null) return false;
-        return isPlayerAllowedOnIsland(player, islandOwner);
+        return isPlayerAllowedOnIsland(player, UUID.fromString(islandOwner));
     }
 
-    public static boolean isPlayerAllowedOnIsland(Player player, String islandOwner) {
-        File file = new File(Main.islandDataFolder, islandOwner + ".yml");
-        if (!file.exists()) return false;
-
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+    public static boolean isPlayerAllowedOnIsland(Player player, UUID islandOwnerUUID) {
+        YamlConfiguration config = Manager.getIslandConfig(islandOwnerUUID);
         List<String> added = config.getStringList("added");
         List<String> trusted = config.getStringList("trusted");
 
-        return player.getName().equalsIgnoreCase(islandOwner)
-                || added.contains(player.getName())
-                || trusted.contains(player.getName());
+        String playerUUID = player.getUniqueId().toString();
+
+        return player.getUniqueId().equals(islandOwnerUUID)
+                || added.contains(playerUUID)
+                || trusted.contains(playerUUID);
     }
 
+    public static String getIslandOwnerByLocation(Location loc) {
+        File folder = Main.islandDataFolder;
+        if (folder.exists() && folder.isDirectory()) {
+            File[] files = folder.listFiles((dir, name) -> name.endsWith(".yml"));
+            if (files != null) {
+                for (File file : files) {
+                    YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+                    int centerX = config.getInt("x-position");
+                    int centerZ = config.getInt("z-position");
+                    int borderSize = config.getInt("WorldBorderSize", 50);
 
-    public String getIslandOwnerByLocation(Location loc) {
-        File folder = new File(USER_DATA_FOLDER);
-        if (!folder.exists()) return null;
-
-        for (File file : folder.listFiles()) {
-            if (!file.getName().endsWith(".yml")) continue;
-            YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-
-            int x = config.getInt("OneBlock-x");
-            int z = config.getInt("OneBlock-z");
-            int size = config.getInt("WorldBorderSize", 50);
-            int half = size / 2;
-
-            if (loc.getWorld().getName().equals(WORLD_NAME) &&
-                    loc.getBlockX() >= x - half && loc.getBlockX() <= x + half &&
-                    loc.getBlockZ() >= z - half && loc.getBlockZ() <= z + half) {
-                return file.getName().replace(".yml", "");
+                    int halfSize = borderSize / 2;
+                    if (loc.getWorld().getName().equals("OneBlock") &&
+                            loc.getX() >= centerX - halfSize && loc.getX() <= centerX + halfSize &&
+                            loc.getZ() >= centerZ - halfSize && loc.getZ() <= centerZ + halfSize) {
+                        return file.getName().replace(".yml", "");
+                    }
+                }
             }
         }
         return null;
@@ -324,7 +356,8 @@ public class PlayerListener implements Listener {
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (event.getClickedBlock() == null) return;
         Material type = event.getClickedBlock().getType();
-        if (!(type == Material.CHEST || type == Material.TRAPPED_CHEST || type == Material.HOPPER || type == Material.SHULKER_BOX)) return;
+        if (!(type == Material.CHEST || type == Material.TRAPPED_CHEST || type == Material.HOPPER || type == Material.SHULKER_BOX))
+            return;
 
         Player player = event.getPlayer();
         if (!isPlayerAllowed(event.getClickedBlock().getLocation(), player)) {
@@ -342,5 +375,34 @@ public class PlayerListener implements Listener {
         }
     }
 
+    public static UUID getIslandOwnerUUIDByLocation(Location loc) {
+        File folder = Main.islandDataFolder;
+        if (folder.exists() && folder.isDirectory()) {
+            File[] files = folder.listFiles((dir, name) -> name.endsWith(".yml"));
+            if (files != null) {
+                for (File file : files) {
+                    YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+                    int centerX = config.getInt("x-position");
+                    int centerZ = config.getInt("z-position");
+                    int borderSize = config.getInt("WorldBorderSize", 50);
 
+                    int halfSize = borderSize / 2;
+                    if (loc.getWorld().getName().equals(WORLD_NAME) &&
+                            loc.getX() >= centerX - halfSize && loc.getX() <= centerX + halfSize &&
+                            loc.getZ() >= centerZ - halfSize && loc.getZ() <= centerZ + halfSize) {
+
+                        String ownerUUIDStr = config.getString("owner-uuid");
+                        if (ownerUUIDStr != null) {
+                            try {
+                                return UUID.fromString(ownerUUIDStr);
+                            } catch (IllegalArgumentException e) {
+                                // Ungültige UUID im File, ignorieren
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
 }
