@@ -123,7 +123,7 @@ public class PlayerListener implements Listener {
 
         Manager.saveIslandConfig(player.getUniqueId(), config);
 
-    World world = Bukkit.getWorld(WORLD_NAME);
+        World world = Bukkit.getWorld(WORLD_NAME);
         if (world != null && player.getWorld().getName().equals(WORLD_NAME)) {
             int x = config.getInt("OneBlock-x", 0);
             int z = config.getInt("OneBlock-z", 0);
@@ -201,7 +201,7 @@ public class PlayerListener implements Listener {
         int blocksToLevelUp = config.getInt("MissingBlocksToLevelUp");
         int islandLevel = config.getInt("IslandLevel");
         int totalBlocks = config.getInt("TotalBlocks");
-
+        boolean durchgespielt = config.getBoolean("Durchgespielt");
         World world = Bukkit.getWorld("OneBlock");
 
         if (world != null &&
@@ -222,7 +222,9 @@ public class PlayerListener implements Listener {
                 config.set("TotalBlocks", newTotal);
                 config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks." + islandLevel + ".blockcount"));
             }
-
+            if (islandLevel == 10 && durchgespielt !=true ){
+                config.set("Durchgespielt", true);
+            }
             Manager.saveIslandConfig(ownerUUID, config);
 
             List<String> nextBlocks = Main.config.getStringList("oneblockblocks." + islandLevel + ".blocks");
