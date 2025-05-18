@@ -22,7 +22,8 @@ trust:
   declinetrust: "§6%player% §ahat deine Einladung abgelehnt"
   declinetrustself: "§aDu hast die Einladung von §6%player% §a abgelehnt"
   declinetrustnotrust: "§cDu hast keine Einladung von %player% erhalten"
-RebirthLevel: 12
+RebirthLevel: 10
+maxlevel: 10
 Server: "§6§lBlockhive >> "
 oneblockblocks:
   '1':
