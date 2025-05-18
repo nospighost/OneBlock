@@ -8,33 +8,30 @@ import org.bukkit.World;
 import org.bukkit.WorldBorder;
 import org.bukkit.WorldCreator;
 import org.bukkit.WorldType;
-import org.bukkit.*;
-import org.bukkit.event.*;
+
 import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.block.Block;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
+
 import java.io.IOException;
 import java.util.*;
-import org.bukkit.block.Block;
+
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.*;
+
+// NEU: Imports für Scoreboard
+import org.bukkit.scoreboard.*;
 
 public class Main extends JavaPlugin implements Listener {
     private static Main instance;
@@ -54,38 +51,30 @@ public class Main extends JavaPlugin implements Listener {
         return instance;
     }
 
-    private static Economy economy = null;
-
     @Override
     public void onEnable() {
         instance = this;
 
-
-        //config
+        // config
         saveDefaultConfig();
         config = getConfig();
-        instance = this;
-
 
         setupEconomy();
 
-
         // Listener registrieren
-       Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
         if (economy != null) {
             Bukkit.getPluginManager().registerEvents(new Manager(economy, this), this);
             getLogger().info("Vault Economy erfolgreich erkannt.");
         } else {
             getLogger().warning("Vault wurde nicht gefunden – Economy wird deaktiviert.");
         }
-
+        Bukkit.getPluginManager().registerEvents(new WorldBorderManager(), this);
         getCommand("ob").setTabCompleter(new TabCompleter());
-
-
 
         getLogger().info("OneBlockPlugin aktiviert!");
 
-        // Ordner Erstellen//
+        // Ordner Erstellen
         islandDataFolder = new File(getDataFolder(), "IslandData");
         if (!islandDataFolder.exists()) {
             islandDataFolder.mkdirs();
@@ -94,9 +83,6 @@ public class Main extends JavaPlugin implements Listener {
         // Befehle
         getCommand("ob").setExecutor(new de.Main.OneBlock.OneBlockCommands());
         getCommand("obgui").setExecutor(new OBGUI());
-
-
-
         getServer().getPluginManager().registerEvents(new OBGUI(), this);
 
         // Void Gen für OneBlock-Welt
@@ -131,7 +117,6 @@ public class Main extends JavaPlugin implements Listener {
                 int z = config.getInt("OneBlock-z");
                 int size = config.getInt("WorldBorderSize", 50);
 
-
                 Player player = Bukkit.getPlayerExact(playerName.toString());
                 if (player != null && player.isOnline()) {
                     WorldBorder border = Bukkit.createWorldBorder();
@@ -146,20 +131,22 @@ public class Main extends JavaPlugin implements Listener {
                 }
             }
         }
-        loadChestData();
-        startAutoSell();
+
+        // --- NEU: Scoreboard-Update Task starten (alle 3 Sekunden = 60 Ticks)
+        Bukkit.getScheduler().runTaskTimer(this, () -> {
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                updateScoreboard(player);
+            }
+        }, 0L, 60L);
     }
 
     @Override
     public void onDisable() {
-
         Manager.saveIslandConfig(null, null);
         saveDefaultConfig();
-        saveChestData();
+
         getLogger().info("OneBlockPlugin deaktiviert.");
-
     }
-
 
     public static void setWorldBorder(Player player) {
         YamlConfiguration config = Manager.getIslandConfig(player.getUniqueId());
@@ -183,7 +170,6 @@ public class Main extends JavaPlugin implements Listener {
             } else {
                 oneBlockWorld.getBlockAt(blockLocation).setType(blockLocation.getBlock().getType());
             }
-
         }
     }
 
@@ -194,57 +180,13 @@ public class Main extends JavaPlugin implements Listener {
         }
         return economy != null;
     }
+
     public static Economy getEconomy() {
         return economy;
     }
 
-    private void loadChestData() {
-        dataFile = new File(getDataFolder(), "chests.yml");
-        if (!dataFile.exists()) saveResource("chests.yml", false);
-        dataConfig = YamlConfiguration.loadConfiguration(dataFile);
-        for (String key : dataConfig.getKeys(false)) {
-            Location loc = Location.deserialize(dataConfig.getConfigurationSection(key).getValues(false));
-            int level = dataConfig.getInt(key + ".level");
-            chests.put(loc, new ChestData(level));
-        }
-    }
-
-    private void saveChestData() {
-        for (Map.Entry<Location, ChestData> entry : chests.entrySet()) {
-            dataConfig.set(entry.getKey().hashCode() + "", entry.getKey().serialize());
-            dataConfig.set(entry.getKey().hashCode() + ".level", entry.getValue().level);
-        }
-        try {
-            dataConfig.save(dataFile);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void startAutoSell() {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                for (Map.Entry<Location, ChestData> entry : chests.entrySet()) {
-                    ChestData chest = entry.getValue();
-                    int earned = 0;
-                    Iterator<ItemStack> it = chest.contents.iterator();
-                    while (it.hasNext()) {
-                        ItemStack item = it.next();
-                        if (item != null) {
-                            earned += item.getAmount() * 5;
-                            it.remove();
-                        }
-                    }
-                    if (earned > 0) {
-                        for (Player p : Bukkit.getOnlinePlayers()) {
-                            if (p.getLocation().distance(entry.getKey()) < 10)
-                                p.sendMessage("§aChest hat " + earned + "$ verkauft!");
-                        }
-                    }
-                }
-            }
-        }.runTaskTimer(this, 200L, 600L);
+    public static Plugin getPlugin() {
+        return JavaPlugin.getPlugin(Main.class);
     }
 
     @EventHandler
@@ -280,13 +222,49 @@ public class Main extends JavaPlugin implements Listener {
         return null;
     }
 
+    // --- NEU: Scoreboard Methoden ---
+
+    private void updateScoreboard(Player player) {
+        ScoreboardManager manager = Bukkit.getScoreboardManager();
+        if (manager == null) return;
+
+        Scoreboard board = manager.getNewScoreboard();
+
+        String title = getConfig().getString("scoreboard.title", "§6Scoreboard");
+        Objective objective = board.registerNewObjective("sidebar", "dummy", colorize(title));
+        objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+
+        List<String> lines = getConfig().getStringList("scoreboard.lines");
+        int score = lines.size();
+
+        for (String line : lines) {
+            String replacedLine = replacePlaceholders(player, line);
+            Score scoreLine = objective.getScore(colorize(replacedLine));
+            scoreLine.setScore(score);
+            score--;
+        }
+
+        player.setScoreboard(board);
+    }
+
+    private String replacePlaceholders(Player player, String text) {
+        // Hier kannst du deine Platzhalter anpassen oder dynamisch aus deinem Plugin holen
+        text = text.replace("%points%", "100"); // Beispielwert
+        text = text.replace("%kills%", "5");    // Beispielwert
+        text = text.replace("%deaths%", "2");   // Beispielwert
+        return text;
+    }
+
+    private String colorize(String input) {
+        return input.replace("&", "§");
+    }
+
     static class ChestData {
         int level;
         List<ItemStack> contents = new ArrayList<>();
-        ChestData(int level) { this.level = level; }
+
+        ChestData(int level) {
+            this.level = level;
+        }
     }
-}
-
-
-
 }

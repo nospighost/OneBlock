@@ -29,7 +29,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import static de.Main.OneBlock.Manager.getIslandConfig;
 
 public class PlayerListener implements Listener {
-    private final JavaPlugin plugin;
+    private JavaPlugin plugin = null;
     private int frame = 0;
     private static final String WORLD_NAME = "OneBlock";
     private static final Location ONEBLOCK_LOCATION = new Location(Bukkit.getWorld(WORLD_NAME), 0, 100, 0);
@@ -43,7 +43,7 @@ public class PlayerListener implements Listener {
                 && block.getLocation().equals(ONEBLOCK_LOCATION);
     }
 
-    public PlayerListener(JavaPlugin plugin) {
+    public PlayerListener() {
         this.plugin = plugin;
     }
 
@@ -177,7 +177,7 @@ public class PlayerListener implements Listener {
             return;
         }
 
-        YamlConfiguration config = Manager.getIslandConfig(ownerUUID);
+        YamlConfiguration config = getIslandConfig(ownerUUID);
 
 
         List<String> addedUUIDs = config.getStringList("added");
@@ -256,7 +256,7 @@ public class PlayerListener implements Listener {
     }
 
     public void monster(UUID ownerUUID, Location spawnLocation) {
-        YamlConfiguration config = Manager.getIslandConfig(ownerUUID);
+        YamlConfiguration config = getIslandConfig(ownerUUID);
         int islandLevel = config.getInt("IslandLevel");
 
         List<Map<?, ?>> monstersList = (List<Map<?, ?>>) Main.config.getList("oneblockblocks." + islandLevel + ".monsters");
@@ -427,7 +427,7 @@ public class PlayerListener implements Listener {
     }
 
     public static boolean isPlayerAllowedOnIsland(Player player, UUID islandOwnerUUID) {
-        YamlConfiguration config = Manager.getIslandConfig(islandOwnerUUID);
+        YamlConfiguration config = getIslandConfig(islandOwnerUUID);
         List<String> added = config.getStringList("added");
         List<String> trusted = config.getStringList("trusted");
 
