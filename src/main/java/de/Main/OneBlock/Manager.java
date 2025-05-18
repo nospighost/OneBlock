@@ -2,6 +2,7 @@ package de.Main.OneBlock;
 
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
+import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
@@ -38,7 +39,6 @@ public class Manager implements Listener {
 
                 int padding = Main.config.getInt("value");
                 int pos = getIslandCords(padding);
-
                 config.set("OneBlock-x", pos);
                 config.set("OneBlock-z", pos);
                 config.set("x-position", pos);
@@ -48,30 +48,39 @@ public class Manager implements Listener {
                 config.set("WorldBorderSize", 50);
                 config.set("EigeneInsel", true);
                 config.set("owner", player.getName());
-
                 saveIslandConfig(player.getUniqueId(), config);
-                Main.setWorldBorder(player);
 
                 World world = Bukkit.getWorld("OneBlock");
                 if (world != null) {
-                    player.teleport(new Location(world, pos, 101, pos));
+                    Location teleportLocation = new Location(world, pos, 101, pos);
+                    player.teleport(teleportLocation);
+                    // Setze Border erst NACH dem Teleport
                 }
                 player.sendMessage(prefix + (Main.config.getString("islandjoinmessage.notowned")));
             } else {
                 World world = Bukkit.getWorld("OneBlock");
                 if (world != null) {
-                    player.teleport(new Location(world, config.getInt("IslandSpawn-x"), 101, config.getInt("IslandSpawn-z")));
-                    Main.setWorldBorder(player);
-                    player.sendMessage(prefix + (Main.config.getString("islandjoinmessage.join")));
+
+                    Location teleportLocation = new Location(world, config.getInt("IslandSpawn-x"), 101, config.getInt("IslandSpawn-z"));
+                    Location blockLocation = new Location(world, config.getInt("OneBlock-x"), 100, config.getInt("OneBlock-z"));
+                    Block block = blockLocation.getBlock();
+
+                    if (block.getType() == Material.AIR) {
+                        block.setType(Material.OAK_LOG);
+                    }
+                    player.teleport(teleportLocation);
+
                 } else {
                     player.sendMessage("§cOneBlock-Welt nicht gefunden!");
                 }
+                player.sendMessage(prefix + (Main.config.getString("islandjoinmessage.join")));
             }
             return true;
         }
         player.sendMessage("§cNutze: /ob join");
         return true;
     }
+
 
     public static File getIslandFile(Player player) {
         return new File(Main.islandDataFolder, player.getUniqueId().toString() + ".yml");
@@ -111,7 +120,8 @@ public class Manager implements Listener {
                 for (File file : files) {
                     try {
                         owners.add(UUID.fromString(file.getName().replace(".yml", "")));
-                    } catch (IllegalArgumentException ignored) {}
+                    } catch (IllegalArgumentException ignored) {
+                    }
                 }
             }
         }
@@ -435,7 +445,6 @@ public class Manager implements Listener {
     }
 
 
-
     public static void declineinvite(Player player, String targetName) {
         // UUID vom Zielspieler holen
         OfflinePlayer targetPlayer = Bukkit.getOfflinePlayer(targetName);
@@ -475,7 +484,6 @@ public class Manager implements Listener {
             player.sendMessage(Main.config.getString("trust.declinetrustnotrust").replace("%player%", targetName));
         }
     }
-
 
 
 }

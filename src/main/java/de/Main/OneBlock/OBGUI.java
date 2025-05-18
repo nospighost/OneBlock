@@ -504,7 +504,7 @@ public class OBGUI implements CommandExecutor, Listener {
                         WorldBorder border = player.getWorld().getWorldBorder();
                         border.setCenter(player.getLocation());
                         border.setSize(currentSize);
-                        Main.setWorldBorder(player);
+
 
                         player.sendMessage("§aDeine WorldBorder wurde auf §e" + currentSize + " §avergrößert!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);

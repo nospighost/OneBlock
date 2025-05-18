@@ -1,12 +1,29 @@
 package de.Main.OneBlock;
 
 import net.milkbowl.vault.economy.Economy;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.WorldBorder;
+import org.bukkit.WorldCreator;
+import org.bukkit.WorldType;
 import org.bukkit.*;
+import org.bukkit.event.*;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.block.Block;
+import org.bukkit.scheduler.BukkitRunnable;
+import java.io.IOException;
+import java.util.*;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.event.*;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -14,20 +31,21 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
 public class Main extends JavaPlugin implements Listener {
-
     private static Main instance;
+
     private static final String WORLD_NAME = "OneBlock";
     public static World oneBlockWorld;
+
     public static FileConfiguration config;
     public static File islandDataFolder;
     private static Economy economy = null;
 
-    // AdvancedChest-Daten
     private final Map<Location, ChestData> chests = new HashMap<>();
     private File dataFile;
     private YamlConfiguration dataConfig;
@@ -36,17 +54,24 @@ public class Main extends JavaPlugin implements Listener {
         return instance;
     }
 
+    private static Economy economy = null;
+
     @Override
     public void onEnable() {
         instance = this;
 
+
+        //config
         saveDefaultConfig();
         config = getConfig();
+        instance = this;
+
+
         setupEconomy();
 
-        Bukkit.getPluginManager().registerEvents(this, this);
-        Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
 
+        // Listener registrieren
+       Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
         if (economy != null) {
             Bukkit.getPluginManager().registerEvents(new Manager(economy, this), this);
             getLogger().info("Vault Economy erfolgreich erkannt.");
@@ -54,16 +79,27 @@ public class Main extends JavaPlugin implements Listener {
             getLogger().warning("Vault wurde nicht gefunden – Economy wird deaktiviert.");
         }
 
-        getCommand("ob").setExecutor(new OneBlockCommands());
-        getCommand("obgui").setExecutor(new OBGUI());
         getCommand("ob").setTabCompleter(new TabCompleter());
+
+
+
+        getLogger().info("OneBlockPlugin aktiviert!");
+
+        // Ordner Erstellen//
+        islandDataFolder = new File(getDataFolder(), "IslandData");
+        if (!islandDataFolder.exists()) {
+            islandDataFolder.mkdirs();
+        }
+
+        // Befehle
+        getCommand("ob").setExecutor(new de.Main.OneBlock.OneBlockCommands());
+        getCommand("obgui").setExecutor(new OBGUI());
+
+
+
         getServer().getPluginManager().registerEvents(new OBGUI(), this);
 
-        // Insel-Datenordner
-        islandDataFolder = new File(getDataFolder(), "IslandData");
-        if (!islandDataFolder.exists()) islandDataFolder.mkdirs();
-
-        // OneBlock-Welt erzeugen
+        // Void Gen für OneBlock-Welt
         WorldCreator worldCreator = new WorldCreator(WORLD_NAME);
         worldCreator.environment(World.Environment.NORMAL);
         worldCreator.type(WorldType.FLAT);
@@ -74,6 +110,8 @@ public class Main extends JavaPlugin implements Listener {
         if (oneBlockWorld != null) {
             getLogger().info("OneBlock-Welt wurde erfolgreich erstellt!");
             oneBlockWorld.setSpawnLocation(0, 100, 0);
+
+            // Setze die Border für die gesamte Welt
             WorldBorder worldBorder = oneBlockWorld.getWorldBorder();
             worldBorder.setCenter(0, 0);
             worldBorder.setSize(50);
@@ -81,16 +119,20 @@ public class Main extends JavaPlugin implements Listener {
             worldBorder.setDamageAmount(0.5);
             worldBorder.setWarningDistance(5);
             worldBorder.setWarningTime(15);
+        } else {
+            getLogger().warning("Fehler beim Erstellen der OneBlock-Welt");
         }
 
-        for (UUID playerUUID : Manager.getAllIslandOwners()) {
-            File file = new File(islandDataFolder, playerUUID + ".yml");
+        for (UUID playerName : Manager.getAllIslandOwners()) {
+            File file = new File(islandDataFolder, playerName + ".yml");
             if (file.exists()) {
                 YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
                 int x = config.getInt("OneBlock-x");
                 int z = config.getInt("OneBlock-z");
                 int size = config.getInt("WorldBorderSize", 50);
-                Player player = Bukkit.getPlayer(playerUUID);
+
+
+                Player player = Bukkit.getPlayerExact(playerName.toString());
                 if (player != null && player.isOnline()) {
                     WorldBorder border = Bukkit.createWorldBorder();
                     border.setCenter(x, z);
@@ -99,23 +141,25 @@ public class Main extends JavaPlugin implements Listener {
                     border.setDamageAmount(0.5);
                     border.setWarningDistance(5);
                     border.setWarningTime(15);
+
                     player.setWorldBorder(border);
                 }
             }
         }
-
-        // AdvancedChest-Logik laden
         loadChestData();
         startAutoSell();
     }
 
     @Override
     public void onDisable() {
+
         Manager.saveIslandConfig(null, null);
         saveDefaultConfig();
         saveChestData();
         getLogger().info("OneBlockPlugin deaktiviert.");
+
     }
+
 
     public static void setWorldBorder(Player player) {
         YamlConfiguration config = Manager.getIslandConfig(player.getUniqueId());
@@ -129,6 +173,7 @@ public class Main extends JavaPlugin implements Listener {
         border.setDamageAmount(0.5);
         border.setWarningDistance(5);
         border.setWarningTime(15);
+
         player.setWorldBorder(border);
 
         if (oneBlockWorld != null) {
@@ -138,20 +183,20 @@ public class Main extends JavaPlugin implements Listener {
             } else {
                 oneBlockWorld.getBlockAt(blockLocation).setType(blockLocation.getBlock().getType());
             }
+
         }
     }
 
     private boolean setupEconomy() {
         RegisteredServiceProvider<Economy> rsp = Bukkit.getServicesManager().getRegistration(Economy.class);
-        if (rsp != null) economy = rsp.getProvider();
+        if (rsp != null) {
+            economy = rsp.getProvider();
+        }
         return economy != null;
     }
-
     public static Economy getEconomy() {
         return economy;
     }
-
-    // ----------------------- AdvancedChest Code -----------------------
 
     private void loadChestData() {
         dataFile = new File(getDataFolder(), "chests.yml");
@@ -240,4 +285,8 @@ public class Main extends JavaPlugin implements Listener {
         List<ItemStack> contents = new ArrayList<>();
         ChestData(int level) { this.level = level; }
     }
+}
+
+
+
 }

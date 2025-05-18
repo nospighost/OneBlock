@@ -19,7 +19,9 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
+
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -27,7 +29,8 @@ import java.util.concurrent.ThreadLocalRandom;
 import static de.Main.OneBlock.Manager.getIslandConfig;
 
 public class PlayerListener implements Listener {
-
+    private final JavaPlugin plugin;
+    private int frame = 0;
     private static final String WORLD_NAME = "OneBlock";
     private static final Location ONEBLOCK_LOCATION = new Location(Bukkit.getWorld(WORLD_NAME), 0, 100, 0);
     private static final String USER_DATA_FOLDER = "plugins/OneBlockPlugin/IslandData";
@@ -38,6 +41,10 @@ public class PlayerListener implements Listener {
         return world != null
                 && WORLD_NAME.equals(world.getName())
                 && block.getLocation().equals(ONEBLOCK_LOCATION);
+    }
+
+    public PlayerListener(JavaPlugin plugin) {
+        this.plugin = plugin;
     }
 
     @EventHandler
@@ -197,20 +204,26 @@ public class PlayerListener implements Listener {
                 blockLocation.getBlockX() == config.getInt("OneBlock-x") &&
                 blockLocation.getBlockY() == 100 &&
                 blockLocation.getBlockZ() == config.getInt("OneBlock-z")) {
+            int maxlevel = Main.config.getInt("maxlevel");
+            if (islandLevel != maxlevel) {
+                blocksToLevelUp -= 1;
+                sendActionbarProgress(player, islandLevel, blocksToLevelUp);
+            } else {
+                sendActionbarProgress(player, islandLevel, Integer.MIN_VALUE);
+            }
 
-            blocksToLevelUp -= 1;
             config.set("MissingBlocksToLevelUp", blocksToLevelUp);
 
-            sendActionbarProgress(player, islandLevel, blocksToLevelUp);
 
-            if (blocksToLevelUp <= 0) {
+            if (blocksToLevelUp <= 0 && islandLevel - 1 >= maxlevel) {
                 islandLevel += 1;
                 config.set("IslandLevel", islandLevel);
                 int newTotal = Main.config.getInt("oneblockblocks." + islandLevel + ".blockcount");
                 config.set("TotalBlocks", newTotal);
                 config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks." + islandLevel + ".blockcount"));
             }
-            if (islandLevel == 10 && durchgespielt !=true ){
+
+            if (islandLevel == 10 && durchgespielt != true) {
                 config.set("Durchgespielt", true);
             }
             Manager.saveIslandConfig(ownerUUID, config);
@@ -241,6 +254,7 @@ public class PlayerListener implements Listener {
             }
         }
     }
+
     public void monster(UUID ownerUUID, Location spawnLocation) {
         YamlConfiguration config = Manager.getIslandConfig(ownerUUID);
         int islandLevel = config.getInt("IslandLevel");
@@ -283,21 +297,71 @@ public class PlayerListener implements Listener {
         }
 
     }
-    private void sendActionbarProgress(Player player, int currentLevel, int missingBlocks) {
-        YamlConfiguration config = getIslandConfig(player.getUniqueId());
-        int totalBlocks = config.getInt("TotalBlocks");
-        double progress = (double) (totalBlocks - missingBlocks) / totalBlocks;
 
-        int progressLength = (int) (progress * 10);
+    public void start(Player player, int currentLevel, int missingBlocks) {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (!player.isOnline()) {
+                    cancel();
+                    return;
+                }
+                sendActionbarProgress(player, currentLevel, missingBlocks);
+                frame++;
+            }
+        }.runTaskTimer(plugin, 0L, 5L); // Alle 5 Ticks (0,25s) für flüssige Welle
+    }
+
+
+    private void sendActionbarProgress(Player player, int currentLevel, int missingBlocks) {
+
+        // Max-Level mit pulsiertem ∞
+        if (missingBlocks == Integer.MIN_VALUE) {
+
+            String[] pulse = {"§a", "§2", "§a", "§2"};
+            String color = pulse[frame % pulse.length];
+            String bar = "§7[" + color + "██████████§7]";
+            String msg = "§bLevel: §eMaximal §8| " + bar + " §6§l∞ Max Level!";
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(msg));
+            return;
+        }
+
+        // Normaler Fortschritt + Wellen-Highlight
+        YamlConfiguration cfg = getIslandConfig(player.getUniqueId());
+        int total = cfg.getInt("TotalBlocks");
+        double prog = (double) (total - missingBlocks) / total;
+        int filled = (int) (prog * 10);
+
+        // Sinus-Welle [0..9]
+        double radians = frame * 0.3; // Geschwindigkeit
+        int wavePos = (int) ((Math.sin(radians) + 1) * 4.5);
+
         StringBuilder bar = new StringBuilder("§7[");
         for (int i = 0; i < 10; i++) {
-            bar.append(i < progressLength ? "§a█" : "§7█");
+            if (i < filled) {
+                // bereits freigeschaltet
+                if (i == wavePos) {
+                    bar.append("§e█");      // Wellen-Highlight gelb
+                } else {
+                    bar.append("§a█");      // Grün für normalen Fortschritt
+                }
+            } else {
+                // noch nicht geschafft
+                if (i == wavePos) {
+                    bar.append("§e▓");      // Halber gelber Block als Wave
+                } else {
+                    bar.append("§7█");      // Grau für leer
+                }
+            }
         }
         bar.append("§7]");
 
-        String message = "§bLevel: §e" + currentLevel + " §8| §7" + bar + " §7Noch §c" + missingBlocks + " §7Blöcke bis zum nächsten Level";
+        String message = "§bLevel: §e" + currentLevel +
+                " §8| " + bar +
+                " §7Noch §c" + missingBlocks + " §7Blöcke";
         player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(message));
     }
+
 
     @EventHandler
     public void onBlockPiston(BlockPistonExtendEvent event) {
@@ -444,11 +508,6 @@ public class PlayerListener implements Listener {
     }
 
 
-
-
-
-
-
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
 
@@ -459,7 +518,6 @@ public class PlayerListener implements Listener {
             event.setCancelled(true);
         }
     }
-
 
 
 }
