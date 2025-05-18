@@ -1,11 +1,40 @@
-name: OneBlockPlugin
+name: oneblockplugin
 version: '1.0'
 main: de.Main.OneBlock.Main
 api-version: '1.21'
+
 commands:
   ob:
     description: OneBlock Command
-    usage: /ob join | /ob setspawn
+    usage: /ob join | /ob delete | ...
+    permission: oneblock.use
+    permission-message: §cDu hast keine Berechtigung diesen Befehl zu verwenden.
   obgui:
     description: Öffnet das OneBlock GUI
     usage: /obgui
+    permission: oneblock.gui
+
+permissions:
+  oneblock.use:
+    description: Basisberechtigung für /ob
+    default: true
+
+  oneblock.admin:
+    description: Vollzugriff auf alle OneBlock-Befehle
+    default: op
+
+  oneblock.gui:
+    description: Öffnet das OneBlock GUI
+    default: true
+
+  oneblock.join: {}
+  oneblock.delete: {}
+  oneblock.visit: {}
+  oneblock.rebirth: {}
+  oneblock.trust: {}
+  oneblock.accept: {}
+  oneblock.deny: {}
+  oneblock.unban: {}
+  oneblock.remove: {}
+  oneblock.leave: {}
+  oneblock.decline: {}

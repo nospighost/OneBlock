@@ -13,6 +13,7 @@ import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -47,8 +48,10 @@ public class Manager implements Listener {
                 config.set("IslandSpawn-z", pos);
                 config.set("WorldBorderSize", 50);
                 config.set("EigeneInsel", true);
+                config.set("EigeneInsel", true);
                 config.set("owner", player.getName());
                 saveIslandConfig(player.getUniqueId(), config);
+
 
                 World world = Bukkit.getWorld("OneBlock");
                 if (world != null) {
@@ -56,6 +59,8 @@ public class Manager implements Listener {
                     player.teleport(teleportLocation);
                     // Setze Border erst NACH dem Teleport
                 }
+
+
                 player.sendMessage(prefix + (Main.config.getString("islandjoinmessage.notowned")));
             } else {
                 World world = Bukkit.getWorld("OneBlock");
@@ -484,6 +489,7 @@ public class Manager implements Listener {
             player.sendMessage(Main.config.getString("trust.declinetrustnotrust").replace("%player%", targetName));
         }
     }
+
 
 
 }

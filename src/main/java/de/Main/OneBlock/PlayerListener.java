@@ -52,6 +52,17 @@ public class PlayerListener implements Listener {
         Player player = event.getPlayer();
         YamlConfiguration config = getIslandConfig(player.getUniqueId());
 
+        File islandFolder = Main.islandDataFolder;
+        if (islandFolder.exists() && islandFolder.isDirectory()) {
+            File[] files = islandFolder.listFiles((dir, name) -> name.endsWith(".yml"));
+            if (files != null) {
+                for (File file : files) {
+                    YamlConfiguration otherConfig = YamlConfiguration.loadConfiguration(file);
+
+
+                }
+            }
+
         if (!config.contains("created") || !config.contains("WorldBorderSize") || !config.contains("TotalBlocks")) {
             if (!config.contains("created")) {
                 config.set("created", System.nanoTime());
@@ -140,16 +151,7 @@ public class PlayerListener implements Listener {
 
         }
 
-        File islandFolder = Main.islandDataFolder;
-        if (islandFolder.exists() && islandFolder.isDirectory()) {
-            File[] files = islandFolder.listFiles((dir, name) -> name.endsWith(".yml"));
-            if (files != null) {
-                for (File file : files) {
-                    YamlConfiguration otherConfig = YamlConfiguration.loadConfiguration(file);
 
-
-                }
-            }
         }
     }
 
