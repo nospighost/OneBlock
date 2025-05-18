@@ -864,7 +864,7 @@ private void sendSuggestCommandMessage(Player player, String command) {
         }
 
         if (title.equalsIgnoreCase("§aOneBlock-Menü")) {
-            // WICHTIG: Kopf aktualisieren, damit Daten immer aktuell sind
+            // WICHTIG: Kopf aktualisieren, damit Daten immer aktuell sinda
             setPlayerHeadInMainGUI(player);
             updateVerwaltungGUI(player);
         }
