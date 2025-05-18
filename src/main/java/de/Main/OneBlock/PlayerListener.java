@@ -20,9 +20,7 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
-
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -47,28 +45,81 @@ public class PlayerListener implements Listener {
         Player player = event.getPlayer();
         YamlConfiguration config = getIslandConfig(player.getUniqueId());
 
-        if   (!config.contains("Durchgespielt") || (!config.contains("created") || !config.contains("WorldBorderSize") || !config.contains("TotalBlocks") || !config.contains("owner") || !config.contains("owner-uuid") || !config.contains("EigeneInsel") || !config.contains("z-position") || !config.contains("x-position") || !config.contains("IslandSpawn-x") || !config.contains("IslandSpawn-z") || !config.contains("trusted") || !config.contains("added") || !config.contains("invited") || !config.contains("invitedtrust"))) {
-
-            config.set("created", System.nanoTime());
-            config.set("owner", player.getName());
-            config.set("owner-uuid", player.getUniqueId().toString());
-            config.set("EigeneInsel", false);
-            config.set("z-position", 0);
-            config.set("x-position", 0);
-            config.set("WorldBorderSize", 50);
-            config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.1.blockcount", 200));
-            config.set("TotalBlocks", Main.config.getInt("oneblockblocks.1.blockcount", 200));
-            config.set("IslandLevel", 1);
-            config.set("OneBlock-x", 0);
-            config.set("OneBlock-z", 0);
-            config.set("trusted", new ArrayList<String>());
-            config.set("invitedtrust", new ArrayList<String>());
-            config.set("denied", new ArrayList<String>());
-            config.set("Durchgespielt", false);
-
-
-            Manager.saveIslandConfig(player.getUniqueId(), config);
+        if (!config.contains("created") || !config.contains("WorldBorderSize") || !config.contains("TotalBlocks")) {
+            if (!config.contains("created")) {
+                config.set("created", System.nanoTime());
+            }
+            if (!config.contains("WorldBorderSize")) {
+                config.set("WorldBorderSize", 50);
+            }
+            if (!config.contains("TotalBlocks")) {
+                config.set("TotalBlocks", Main.config.getInt("oneblockblocks.1.blockcount", 200));
+            }
         }
+
+        if (!config.contains("owner") || !config.contains("owner-uuid") || !config.contains("EigeneInsel")) {
+            if (!config.contains("owner")) {
+                config.set("owner", player.getName());
+            }
+            if (!config.contains("owner-uuid")) {
+                config.set("owner-uuid", player.getUniqueId().toString());
+            }
+            if (!config.contains("EigeneInsel")) {
+                config.set("EigeneInsel", false);
+            }
+        }
+
+        if (!config.contains("z-position") || !config.contains("x-position")) {
+            if (!config.contains("z-position")) {
+                config.set("z-position", 0);
+            }
+            if (!config.contains("x-position")) {
+                config.set("x-position", 0);
+            }
+        }
+
+        if (!config.contains("IslandSpawn-x") || !config.contains("IslandSpawn-z")) {
+            if (!config.contains("IslandSpawn-x")) {
+                config.set("IslandSpawn-x", 0);
+            }
+            if (!config.contains("IslandSpawn-z")) {
+                config.set("IslandSpawn-z", 0);
+            }
+        }
+
+        if (!config.contains("trusted") || !config.contains("invited") || !config.contains("invitedtrust") || !config.contains("denied")) {
+            if (!config.contains("trusted")) {
+                config.set("trusted", new ArrayList<String>());
+            }
+            if (!config.contains("invited")) {
+                config.set("invited", new ArrayList<String>());
+            }
+            if (!config.contains("invitedtrust")) {
+                config.set("invitedtrust", new ArrayList<String>());
+            }
+            if (!config.contains("denied")) {
+                config.set("denied", new ArrayList<String>());
+            }
+        }
+
+        if (!config.contains("MissingBlocksToLevelUp")) {
+            config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.1.blockcount", 200));
+        }
+
+        if (!config.contains("IslandLevel")) {
+            config.set("IslandLevel", 1);
+        }
+
+        if (!config.contains("OneBlock-x") || !config.contains("OneBlock-z")) {
+            if (!config.contains("OneBlock-x")) {
+                config.set("OneBlock-x", 0);
+            }
+            if (!config.contains("OneBlock-z")) {
+                config.set("OneBlock-z", 0);
+            }
+        }
+
+        Manager.saveIslandConfig(player.getUniqueId(), config);
 
         World world = Bukkit.getWorld(WORLD_NAME);
         if (world != null && player.getWorld().getName().equals(WORLD_NAME)) {
@@ -76,18 +127,10 @@ public class PlayerListener implements Listener {
             int z = config.getInt("OneBlock-z", 0);
             int size = config.getInt("WorldBorderSize", 50);
 
-            WorldBorder border = world.getWorldBorder();
-            border.setCenter(x, z);
-            border.setSize(size);
-            border.setDamageBuffer(0);
-            border.setDamageAmount(0.5);
-            border.setWarningDistance(5);
-            border.setWarningTime(15);
-
-            player.setWorldBorder(border);
 
             Location spawn = new Location(world, config.getInt("x-position"), 100, config.getInt("z-position"));
             player.teleport(spawn);
+
         }
 
         File islandFolder = Main.islandDataFolder;
@@ -97,17 +140,11 @@ public class PlayerListener implements Listener {
                 for (File file : files) {
                     YamlConfiguration otherConfig = YamlConfiguration.loadConfiguration(file);
 
-                    List<String> addedList = otherConfig.getStringList("added");
-                    List<String> trustedList = otherConfig.getStringList("trusted");
-                    String ownerName = file.getName().replace(".yml", "");
+
                 }
             }
         }
     }
-
-
-
-
 
     @EventHandler
     public void onPlayerRespawn(PlayerRespawnEvent event) {
@@ -135,6 +172,7 @@ public class PlayerListener implements Listener {
 
         YamlConfiguration config = Manager.getIslandConfig(ownerUUID);
 
+
         List<String> addedUUIDs = config.getStringList("added");
         List<String> trustedUUIDs = config.getStringList("trusted");
 
@@ -151,9 +189,7 @@ public class PlayerListener implements Listener {
 
         int blocksToLevelUp = config.getInt("MissingBlocksToLevelUp");
         int islandLevel = config.getInt("IslandLevel");
-        int totalBlocks = config.getInt("TotalBlocks");
         boolean durchgespielt = config.getBoolean("Durchgespielt");
-
         World world = Bukkit.getWorld("OneBlock");
 
         if (world != null &&
@@ -173,14 +209,10 @@ public class PlayerListener implements Listener {
                 int newTotal = Main.config.getInt("oneblockblocks." + islandLevel + ".blockcount");
                 config.set("TotalBlocks", newTotal);
                 config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks." + islandLevel + ".blockcount"));
-
             }
-
             if (islandLevel == 10 && durchgespielt !=true ){
                 config.set("Durchgespielt", true);
             }
-
-
             Manager.saveIslandConfig(ownerUUID, config);
 
             List<String> nextBlocks = Main.config.getStringList("oneblockblocks." + islandLevel + ".blocks");
@@ -218,7 +250,7 @@ public class PlayerListener implements Listener {
 
         Random random = new Random();
 
-       // hier wird die prozent chance berechntet
+        // hier wird die prozent chance berechntet
         int totalChance = 0;
         for (Map<?, ?> monsterData : monstersList) {
             totalChance += (int) monsterData.get("chance");
@@ -227,7 +259,7 @@ public class PlayerListener implements Listener {
         int roll = random.nextInt(100) + 1;  // 1-100
 
         if (roll > totalChance) {
-           //also wenn die % chance nd erreicht ist kein mobser gespawnt
+            //also wenn die % chance nd erreicht ist kein mobser gespawnt
             return;
         }
 
@@ -379,14 +411,6 @@ public class PlayerListener implements Listener {
         }
     }
 
-    @EventHandler
-    public void onBlockPlace(BlockPlaceEvent event) {
-        Player player = event.getPlayer();
-        if (!isPlayerAllowed(event.getBlock().getLocation(), player)) {
-            player.sendMessage(prefix + " §cDu darfst hier nichts platzieren!");
-            event.setCancelled(true);
-        }
-    }
 
     public static UUID getIslandOwnerUUIDByLocation(Location loc) {
         File folder = Main.islandDataFolder;
@@ -418,4 +442,24 @@ public class PlayerListener implements Listener {
         }
         return null;
     }
+
+
+
+
+
+
+
+    @EventHandler
+    public void onBlockPlace(BlockPlaceEvent event) {
+
+        Player player = event.getPlayer();
+
+        if (!isPlayerAllowed(event.getBlock().getLocation(), player)) {
+            player.sendMessage(prefix + " §cDu darfst hier nichts platzieren!");
+            event.setCancelled(true);
+        }
+    }
+
+
+
 }

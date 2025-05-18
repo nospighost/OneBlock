@@ -225,6 +225,7 @@ public class Manager implements Listener {
         config.set("IslandLevel", 1);
         config.set("TotalBlocks", 200);
         config.set("MissingBlocksToLevelUp", 200);
+        config.set("Durchgespielt", false);
 
         ItemStack stack = new ItemStack(Material.NETHERITE_PICKAXE);
         ItemMeta meta = stack.getItemMeta();

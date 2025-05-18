@@ -31,7 +31,10 @@ import static org.bukkit.Material.*;
 public class OBGUI implements CommandExecutor, Listener {
 
     private final int[] grayglasmaingui = {0, 1, 2, 6, 7, 8};
-    private final int[] grayglasmaingui2 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26};
+    private final int[] grayglasmaingui2 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 17, 19, 20, 21, 22, 23, 24, 25, 26};
+    private final int[] grayglasmaingui3 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 22, 23, 24, 25, 26, 28, 29, 30, 31, 32, 33, 34, 35};
+    private final int[] grayglasmaingui4 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 20, 22, 23, 24, 25, 26, 28, 29, 30, 31, 32, 33, 34, 35};
+
     private final int MAX_CLICKS = 3;
 
     public static Inventory upgradeShop;
@@ -69,10 +72,10 @@ public class OBGUI implements CommandExecutor, Listener {
 
         Einstellungen = Bukkit.createInventory(null, 3 * 9, "§cInsel-Einstellungen");
         Rebirth = Bukkit.createInventory(null, 3 * 9, "§eRebirth");
-        Befehle = Bukkit.createInventory(null, 3 * 9, "§8Spielerbefehle");
+        Befehle = Bukkit.createInventory(null, 4 * 9, "§8Spielerbefehle");
         Auswahl = Bukkit.createInventory(null, 4 * 9, "§aPhasen-Auswahl");
         Verwaltung = Bukkit.createInventory(null, 3 * 9, "§cInsel-Verwaltung");
-        mainGUI = Bukkit.createInventory(null, 9, "§8OneBlock-Menü");
+        mainGUI = Bukkit.createInventory(null, 9, "§aOneBlock-Menü");
 
         for (int pos : grayglasmaingui) {
             mainGUI.setItem(pos, new ItemStack(GRAY_STAINED_GLASS_PANE));
@@ -82,6 +85,15 @@ public class OBGUI implements CommandExecutor, Listener {
             Verwaltung.setItem(pos, new ItemStack(GRAY_STAINED_GLASS_PANE));
         }
 
+        for (int pos : grayglasmaingui3) {
+            Auswahl.setItem(pos, new ItemStack(GRAY_STAINED_GLASS_PANE));
+
+        }
+
+        for (int pos : grayglasmaingui4) {
+            Befehle.setItem(pos, new ItemStack(GRAY_STAINED_GLASS_PANE));
+        }
+
         setPlayerHeadInMainGUI(player);
 
         // Phasen-Auswahl
@@ -89,6 +101,14 @@ public class OBGUI implements CommandExecutor, Listener {
         ItemMeta meta6 = xpBottle.getItemMeta();
         if (meta6 != null) {
             meta6.setDisplayName("§aPhasen-Auswahl");
+            List<String> lore = new ArrayList<>();
+
+            lore.add(" ");
+            lore.add("§fKlicke um in das Phasen-Auswahl-Menü zu gelangen!");
+            lore.add(" ");
+
+
+            meta6.setLore(lore);
             xpBottle.setItemMeta(meta6);
         }
         mainGUI.setItem(3, xpBottle);
@@ -98,6 +118,13 @@ public class OBGUI implements CommandExecutor, Listener {
         ItemMeta meta8 = comparator.getItemMeta();
         if (meta8 != null) {
             meta8.setDisplayName("§cInsel-Verwaltung");
+            List<String> lore = new ArrayList<>();
+
+            lore.add(" ");
+            lore.add("§fKlicke um in das Insel-Verwaltung-Menü zu gelangen!");
+            lore.add(" ");
+
+            meta8.setLore(lore);
             comparator.setItemMeta(meta8);
         }
         mainGUI.setItem(5, comparator);
@@ -108,6 +135,7 @@ public class OBGUI implements CommandExecutor, Listener {
         ItemMeta auswahlmeta = auswahl.getItemMeta();
         if (auswahlmeta != null) {
             String name = Main.config.getString("oneblockblocks." + 1 + ".name", "Unbekannt");
+            auswahlmeta.setDisplayName("§bPhase: §a" + name);
             auswahl.setItemMeta(auswahlmeta);
         }
         Auswahl.setItem(10, auswahl);
@@ -116,6 +144,7 @@ public class OBGUI implements CommandExecutor, Listener {
         ItemMeta auswahlmeta1 = auswahl1.getItemMeta();
         if (auswahlmeta1 != null) {
             String name = Main.config.getString("oneblockblocks." + 2 + ".name", "Unbekannt");
+            auswahlmeta1.setDisplayName("§bPhase: §a" + name);
             auswahl1.setItemMeta(auswahlmeta1);
         }
         Auswahl.setItem(11, auswahl1);
@@ -124,6 +153,7 @@ public class OBGUI implements CommandExecutor, Listener {
         ItemMeta auswahlmeta2 = auswahl2.getItemMeta();
         if (auswahlmeta2 != null) {
             String name = Main.config.getString("oneblockblocks." + 3 + ".name", "Unbekannt");
+            auswahlmeta2.setDisplayName("§bPhase: §a" + name);
             auswahl2.setItemMeta(auswahlmeta2);
         }
         Auswahl.setItem(12, auswahl2);
@@ -132,6 +162,7 @@ public class OBGUI implements CommandExecutor, Listener {
         ItemMeta auswahlmeta3 = auswahl3.getItemMeta();
         if (auswahlmeta3 != null) {
             String name = Main.config.getString("oneblockblocks." + 4 + ".name", "Unbekannt");
+            auswahlmeta3.setDisplayName("§bPhase: §a" + name);
             auswahl3.setItemMeta(auswahlmeta3);
         }
         Auswahl.setItem(13, auswahl3);
@@ -140,6 +171,7 @@ public class OBGUI implements CommandExecutor, Listener {
         ItemMeta auswahlmeta4 = auswahl4.getItemMeta();
         if (auswahlmeta4 != null) {
             String name = Main.config.getString("oneblockblocks." + 5 + ".name", "Unbekannt");
+            auswahlmeta4.setDisplayName("§bPhase: §a" + name);
             auswahl4.setItemMeta(auswahlmeta4);
         }
         Auswahl.setItem(14, auswahl4);
@@ -157,7 +189,8 @@ public class OBGUI implements CommandExecutor, Listener {
         ItemMeta auswahlmeta6 = auswahl6.getItemMeta();
         if (auswahlmeta6 != null) {
             String name = Main.config.getString("oneblockblocks." + 7 + ".name", "Unbekannt");
-            auswahl.setItemMeta(auswahlmeta6);
+            auswahlmeta6.setDisplayName("§bPhase: §a" + name);
+            auswahl6.setItemMeta(auswahlmeta6);
         }
         Auswahl.setItem(16, auswahl6);
 
@@ -165,6 +198,7 @@ public class OBGUI implements CommandExecutor, Listener {
         ItemMeta auswahlmeta7 = auswahl7.getItemMeta();
         if (auswahlmeta7 != null) {
             String name = Main.config.getString("oneblockblocks." + 8 + ".name", "Unbekannt");
+            auswahlmeta7.setDisplayName("§bPhase: §a" + name);
             auswahl7.setItemMeta(auswahlmeta7);
         }
         Auswahl.setItem(19, auswahl7);
@@ -173,6 +207,7 @@ public class OBGUI implements CommandExecutor, Listener {
         ItemMeta auswahlmeta8 = auswahl8.getItemMeta();
         if (auswahlmeta8 != null) {
             String name = Main.config.getString("oneblockblocks." + 9 + ".name", "Unbekannt");
+            auswahlmeta8.setDisplayName("§bPhase: §a" + name);
             auswahl8.setItemMeta(auswahlmeta8);
         }
         Auswahl.setItem(20, auswahl8);
@@ -181,9 +216,101 @@ public class OBGUI implements CommandExecutor, Listener {
         ItemMeta auswahlmeta9 = auswahl9.getItemMeta();
         if (auswahlmeta9 != null) {
             String name = Main.config.getString("oneblockblocks." + 10 + ".name", "Unbekannt");
+            auswahlmeta9.setDisplayName("§bPhase: §a" + name);
             auswahl9.setItemMeta(auswahlmeta9);
         }
         Auswahl.setItem(21, auswahl9);
+
+        ItemStack zurück = new ItemStack(RED_DYE);
+        ItemMeta zurückmeta = zurück.getItemMeta();
+        if (zurückmeta != null) {
+            zurückmeta.setDisplayName("§cZurück zum §aOneBlock-Menü");
+            zurück.setItemMeta(zurückmeta);
+        }
+        Auswahl.setItem(27, zurück);
+
+
+
+
+        ItemStack befehl = new ItemStack(GRASS_BLOCK);
+        ItemMeta befehlmeta = befehl.getItemMeta();
+        if (befehlmeta != null) {
+            befehlmeta.setDisplayName("§a/ob join");
+            befehl.setItemMeta(befehlmeta);
+        }
+        Befehle.setItem(10, befehl);
+
+        ItemStack befehl2 = new ItemStack(NAME_TAG);
+        ItemMeta befehlmeta2 = befehl2.getItemMeta();
+        if (befehlmeta2 != null) {
+            befehlmeta2.setDisplayName("§a/ob trust");
+            befehl2.setItemMeta(befehlmeta2);
+        }
+        Befehle.setItem(11, befehl2);
+
+        ItemStack befehl3 = new ItemStack(GREEN_DYE);
+        ItemMeta befehlmeta3 = befehl3.getItemMeta();
+        if (befehlmeta3 != null) {
+            befehlmeta3.setDisplayName("§a/ob accept");
+            befehl3.setItemMeta(befehlmeta3);
+        }
+        Befehle.setItem(12, befehl3);
+
+        ItemStack befehl4 = new ItemStack(BARRIER);
+        ItemMeta befehlmeta4 = befehl4.getItemMeta();
+        if (befehlmeta4 != null) {
+            befehlmeta4.setDisplayName("§a/ob decline");
+            befehl4.setItemMeta(befehlmeta4);
+        }
+        Befehle.setItem(13, befehl4);
+
+        ItemStack befehl5 = new ItemStack(DARK_OAK_DOOR);
+        ItemMeta befehlmeta5 = befehl5.getItemMeta();
+        if (befehlmeta5 != null) {
+            befehlmeta5.setDisplayName("§a/ob leave");
+            befehl5.setItemMeta(befehlmeta5);
+        }
+        Befehle.setItem(14, befehl5);
+
+        ItemStack befehl6 = new ItemStack(TNT);
+        ItemMeta befehlmeta6 = befehl6.getItemMeta();
+        if (befehlmeta6 != null) {
+            befehlmeta6.setDisplayName("§a/ob remove");
+            befehl6.setItemMeta(befehlmeta6);
+        }
+        Befehle.setItem(15, befehl6);
+
+        ItemStack befehl7 = new ItemStack(RED_STAINED_GLASS_PANE);
+        ItemMeta befehlmeta7 = befehl7.getItemMeta();
+        if (befehlmeta7 != null) {
+            befehlmeta7.setDisplayName("§a/ob deny");
+            befehl7.setItemMeta(befehlmeta7);
+        }
+        Befehle.setItem(16, befehl7);
+
+        ItemStack befehl8 = new ItemStack(LIME_DYE);
+        ItemMeta befehlmeta8 = befehl8.getItemMeta();
+        if (befehlmeta8 != null) {
+            befehlmeta8.setDisplayName("§a/ob unban");
+            befehl8.setItemMeta(befehlmeta8);
+        }
+        Befehle.setItem(19, befehl8);
+
+        ItemStack befehl9 = new ItemStack(ENDER_PEARL);
+        ItemMeta befehlmeta9 = befehl9.getItemMeta();
+        if (befehlmeta9 != null) {
+            befehlmeta9.setDisplayName("§a/ob visit");
+            befehl9.setItemMeta(befehlmeta9);
+        }
+        Befehle.setItem(20, befehl9);
+
+        ItemStack zurück1 = new ItemStack(RED_DYE);
+        ItemMeta zurückmeta1 = zurück1.getItemMeta();
+        if (zurückmeta1 != null) {
+            zurückmeta1.setDisplayName("§cZurück zum §aOneBlock-Menü");
+            zurück1.setItemMeta(zurückmeta1);
+        }
+        Befehle.setItem(27, zurück1);
 
 
     }
@@ -199,6 +326,9 @@ public class OBGUI implements CommandExecutor, Listener {
 
             lore.add(" ");
             lore.add("§fDein Profil:");
+            lore.add(" ");
+
+            lore.add("§fKlicke, dass du zu den Spielerbefehle-Menü zu gelangst!");
             lore.add(" ");
 
             boolean hatInsel = config.getBoolean("EigeneInsel", false);
@@ -284,6 +414,15 @@ public class OBGUI implements CommandExecutor, Listener {
                 item.setItemMeta(meta);
             }
             Verwaltung.setItem(slot, item);
+
+
+            ItemStack zurück = new ItemStack(RED_DYE);
+            ItemMeta zurückmeta = zurück.getItemMeta();
+            if (zurückmeta != null) {
+                zurückmeta.setDisplayName("§cZurück zum §aOneBlock-Menü");
+                zurück.setItemMeta(zurückmeta);
+            }
+            Verwaltung.setItem(18, zurück);
         }
     }
 
@@ -349,12 +488,11 @@ public class OBGUI implements CommandExecutor, Listener {
         Material type = clicked.getType();
 
 
-
-
         if (title.equalsIgnoreCase("§cInsel-Verwaltung")) {
             event.setCancelled(true);
 
             switch (type) {
+
                 case STRUCTURE_VOID -> {
                     int currentSize = config.getInt("WorldBorderSize", 50);
 
@@ -404,13 +542,16 @@ public class OBGUI implements CommandExecutor, Listener {
                         player.performCommand("ob delete");
                     }
                 }
+                case RED_DYE -> {
+                    player.openInventory(mainGUI);
+                }
                 default -> {
                     // Nichts tun bei anderen Items
                 }
             }
         }
 
-        if (title.equalsIgnoreCase("§8OneBlock-Menü")) {
+        if (title.equalsIgnoreCase("§aOneBlock-Menü")) {
             event.setCancelled(true);
             player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
 
@@ -443,7 +584,7 @@ public class OBGUI implements CommandExecutor, Listener {
                         config.set("Durchgespielt", true);
                         Manager.saveIslandConfig(player.getUniqueId(), config);
 
-                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf"  + "§c" + Main.config.getString("oneblockblocks." + 1 + ".name", "Unbekannt") + "§a" + "zurückgesetzt!");
+                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 1 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                         player.closeInventory();
                     } else {
@@ -452,23 +593,23 @@ public class OBGUI implements CommandExecutor, Listener {
                     }
                     break;
 
-                        case OAK_LOG:
+                case OAK_LOG:
 
-                            if (durchgespielt = true) {
-                                config.set("IslandLevel", 2);
-                                config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.2.blockcount"));
-                                config.set("TotalBlocks", Main.config.getInt("oneblockblocks.2.blockcount"));
-                                config.set("Durchgespielt", true);
-                                Manager.saveIslandConfig(player.getUniqueId(), config);
+                    if (durchgespielt = true) {
+                        config.set("IslandLevel", 2);
+                        config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.2.blockcount"));
+                        config.set("TotalBlocks", Main.config.getInt("oneblockblocks.2.blockcount"));
+                        config.set("Durchgespielt", true);
+                        Manager.saveIslandConfig(player.getUniqueId(), config);
 
-                                player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf"  + "§c" + Main.config.getString("oneblockblocks." + 2 + ".name", "Unbekannt") + "§a" + "zurückgesetzt!");
-                                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
-                                player.closeInventory();
-                            } else {
-                                player.sendMessage("§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
-                                player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
-                            }
-                            break;
+                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 2 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
+                        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
+                        player.closeInventory();
+                    } else {
+                        player.sendMessage("§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
+                        player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
+                    }
+                    break;
 
                 case STONE:
 
@@ -479,7 +620,7 @@ public class OBGUI implements CommandExecutor, Listener {
                         config.set("Durchgespielt", true);
                         Manager.saveIslandConfig(player.getUniqueId(), config);
 
-                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf"  + "§c" + Main.config.getString("oneblockblocks." + 3 + ".name", "Unbekannt") + "§a" + "zurückgesetzt!");
+                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 3 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                         player.closeInventory();
                     } else {
@@ -497,7 +638,7 @@ public class OBGUI implements CommandExecutor, Listener {
                         config.set("Durchgespielt", true);
                         Manager.saveIslandConfig(player.getUniqueId(), config);
 
-                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf"  + "§c" + Main.config.getString("oneblockblocks." + 4 + ".name", "Unbekannt") + "§a" + "zurückgesetzt!");
+                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 4 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                         player.closeInventory();
                     } else {
@@ -515,7 +656,7 @@ public class OBGUI implements CommandExecutor, Listener {
                         config.set("Durchgespielt", true);
                         Manager.saveIslandConfig(player.getUniqueId(), config);
 
-                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf"  + "§c" + Main.config.getString("oneblockblocks." + 5 + ".name", "Unbekannt") + "§a" + "zurückgesetzt!");
+                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 5 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                         player.closeInventory();
                     } else {
@@ -533,7 +674,7 @@ public class OBGUI implements CommandExecutor, Listener {
                         config.set("Durchgespielt", true);
                         Manager.saveIslandConfig(player.getUniqueId(), config);
 
-                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf"  + "§c" + Main.config.getString("oneblockblocks." + 6 + ".name", "Unbekannt") + "§a" + "zurückgesetzt!");
+                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 6 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                         player.closeInventory();
                     } else {
@@ -551,7 +692,7 @@ public class OBGUI implements CommandExecutor, Listener {
                         config.set("Durchgespielt", true);
                         Manager.saveIslandConfig(player.getUniqueId(), config);
 
-                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf"  + "§c" + Main.config.getString("oneblockblocks." + 7 + ".name", "Unbekannt") + "§a" + "zurückgesetzt!");
+                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 7 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                         player.closeInventory();
                     } else {
@@ -569,7 +710,7 @@ public class OBGUI implements CommandExecutor, Listener {
                         config.set("Durchgespielt", true);
                         Manager.saveIslandConfig(player.getUniqueId(), config);
 
-                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf"  + "§c" + Main.config.getString("oneblockblocks." + 8 + ".name", "Unbekannt") + "§a" + "zurückgesetzt!");
+                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 8 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                         player.closeInventory();
                     } else {
@@ -587,7 +728,7 @@ public class OBGUI implements CommandExecutor, Listener {
                         config.set("Durchgespielt", true);
                         Manager.saveIslandConfig(player.getUniqueId(), config);
 
-                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf"  + "§c" + Main.config.getString("oneblockblocks." + 9 + ".name", "Unbekannt") + "§a" + "zurückgesetzt!");
+                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 9 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                         player.closeInventory();
                     } else {
@@ -605,7 +746,7 @@ public class OBGUI implements CommandExecutor, Listener {
                         config.set("Durchgespielt", true);
                         Manager.saveIslandConfig(player.getUniqueId(), config);
 
-                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf"  + "§c" + Main.config.getString("oneblockblocks." + 10 + ".name", "Unbekannt") + "§a" + "zurückgesetzt!");
+                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 10 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                         player.closeInventory();
                     } else {
@@ -614,14 +755,89 @@ public class OBGUI implements CommandExecutor, Listener {
                     }
                     break;
 
-                    }
-
+                case RED_DYE:
+                    player.openInventory(mainGUI);
+                    break;
             }
-
         }
 
+        if (title.equalsIgnoreCase("§8Spielerbefehle")) {
+            event.setCancelled(true);
 
-    @EventHandler
+            switch (type) {
+                case GRASS_BLOCK:
+                    player.performCommand("ob join");
+                    player.closeInventory();
+                    break;
+
+                case NAME_TAG:
+                    player.closeInventory();
+                    sendSuggestCommandMessage(player, "trust");
+                    break;
+
+                case GREEN_DYE:
+                    player.performCommand("ob accept");
+                    player.closeInventory();
+                    break;
+
+                case BARRIER:
+                    player.closeInventory();
+                    sendSuggestCommandMessage(player, "decline");
+                    break;
+
+                case DARK_OAK_DOOR:
+                    player.closeInventory();
+                    sendSuggestCommandMessage(player, "leave");
+                    break;
+
+                case TNT:
+                    player.closeInventory();
+                    sendSuggestCommandMessage(player, "remove");
+                    break;
+
+                case RED_STAINED_GLASS_PANE:
+                    player.closeInventory();
+                    sendSuggestCommandMessage(player, "deny");
+                    break;
+
+                case LIME_DYE:
+                    player.closeInventory();
+                    sendSuggestCommandMessage(player, "unban");
+                    break;
+
+                case ENDER_PEARL:
+                    player.closeInventory();
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    sendSuggestCommandMessage(player, "visit ");
+                    break;
+
+
+                case RED_DYE:
+                    player.openInventory(mainGUI);
+                break;
+
+                default:
+                    break;
+            }
+
+            }
+        }
+
+private void sendSuggestCommandMessage(Player player, String command) {
+    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+
+    TextComponent msg = new TextComponent("§aKlicke hier, um den Befehl einzugeben: ");
+    TextComponent commandPart = new TextComponent("§e/ob " + command);
+
+    commandPart.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/ob " + command));
+    msg.addExtra(commandPart);
+
+    player.spigot().sendMessage(msg);
+}
+
+
+
+@EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
         if (!(event.getPlayer() instanceof Player player)) return;
 
@@ -647,7 +863,7 @@ public class OBGUI implements CommandExecutor, Listener {
             updateVerwaltungGUI(player);
         }
 
-        if (title.equalsIgnoreCase("§8OneBlock-Menü")) {
+        if (title.equalsIgnoreCase("§aOneBlock-Menü")) {
             // WICHTIG: Kopf aktualisieren, damit Daten immer aktuell sind
             setPlayerHeadInMainGUI(player);
             updateVerwaltungGUI(player);
