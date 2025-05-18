@@ -8,33 +8,16 @@ import org.bukkit.World;
 import org.bukkit.WorldBorder;
 import org.bukkit.WorldCreator;
 import org.bukkit.WorldType;
-import org.bukkit.*;
-import org.bukkit.event.*;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.block.Block;
-import org.bukkit.scheduler.BukkitRunnable;
-import java.io.IOException;
-import java.util.*;
-import org.bukkit.block.Block;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.*;
+
 
 public class Main extends JavaPlugin implements Listener {
     private static Main instance;
@@ -46,15 +29,10 @@ public class Main extends JavaPlugin implements Listener {
     public static File islandDataFolder;
     private static Economy economy = null;
 
-    private final Map<Location, ChestData> chests = new HashMap<>();
-    private File dataFile;
-    private YamlConfiguration dataConfig;
-
     public static Main getInstance() {
         return instance;
     }
 
-    private static Economy economy = null;
 
     @Override
     public void onEnable() {
@@ -71,16 +49,15 @@ public class Main extends JavaPlugin implements Listener {
 
 
         // Listener registrieren
-       Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
         if (economy != null) {
             Bukkit.getPluginManager().registerEvents(new Manager(economy, this), this);
             getLogger().info("Vault Economy erfolgreich erkannt.");
         } else {
             getLogger().warning("Vault wurde nicht gefunden – Economy wird deaktiviert.");
         }
-
+        Bukkit.getPluginManager().registerEvents(new WorldBorderManager(), this);
         getCommand("ob").setTabCompleter(new TabCompleter());
-
 
 
         getLogger().info("OneBlockPlugin aktiviert!");
@@ -91,10 +68,10 @@ public class Main extends JavaPlugin implements Listener {
             islandDataFolder.mkdirs();
         }
 
+
         // Befehle
         getCommand("ob").setExecutor(new de.Main.OneBlock.OneBlockCommands());
         getCommand("obgui").setExecutor(new OBGUI());
-
 
 
         getServer().getPluginManager().registerEvents(new OBGUI(), this);
@@ -111,43 +88,20 @@ public class Main extends JavaPlugin implements Listener {
             getLogger().info("OneBlock-Welt wurde erfolgreich erstellt!");
             oneBlockWorld.setSpawnLocation(0, 100, 0);
 
-            // Setze die Border für die gesamte Welt
-            WorldBorder worldBorder = oneBlockWorld.getWorldBorder();
-            worldBorder.setCenter(0, 0);
-            worldBorder.setSize(50);
-            worldBorder.setDamageBuffer(0);
-            worldBorder.setDamageAmount(0.5);
-            worldBorder.setWarningDistance(5);
-            worldBorder.setWarningTime(15);
+            WorldBorder border = Bukkit.createWorldBorder();
+            border.setCenter(0, 0);
+            border.setSize(100000);
+            border.setDamageBuffer(0);
+            border.setDamageAmount(0.5);
+            border.setWarningDistance(5);
+            border.setWarningTime(15);
+
         } else {
             getLogger().warning("Fehler beim Erstellen der OneBlock-Welt");
         }
 
-        for (UUID playerName : Manager.getAllIslandOwners()) {
-            File file = new File(islandDataFolder, playerName + ".yml");
-            if (file.exists()) {
-                YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-                int x = config.getInt("OneBlock-x");
-                int z = config.getInt("OneBlock-z");
-                int size = config.getInt("WorldBorderSize", 50);
 
 
-                Player player = Bukkit.getPlayerExact(playerName.toString());
-                if (player != null && player.isOnline()) {
-                    WorldBorder border = Bukkit.createWorldBorder();
-                    border.setCenter(x, z);
-                    border.setSize(size);
-                    border.setDamageBuffer(0);
-                    border.setDamageAmount(0.5);
-                    border.setWarningDistance(5);
-                    border.setWarningTime(15);
-
-                    player.setWorldBorder(border);
-                }
-            }
-        }
-        loadChestData();
-        startAutoSell();
     }
 
     @Override
@@ -155,7 +109,7 @@ public class Main extends JavaPlugin implements Listener {
 
         Manager.saveIslandConfig(null, null);
         saveDefaultConfig();
-        saveChestData();
+
         getLogger().info("OneBlockPlugin deaktiviert.");
 
     }
@@ -194,99 +148,18 @@ public class Main extends JavaPlugin implements Listener {
         }
         return economy != null;
     }
+
     public static Economy getEconomy() {
         return economy;
     }
 
-    private void loadChestData() {
-        dataFile = new File(getDataFolder(), "chests.yml");
-        if (!dataFile.exists()) saveResource("chests.yml", false);
-        dataConfig = YamlConfiguration.loadConfiguration(dataFile);
-        for (String key : dataConfig.getKeys(false)) {
-            Location loc = Location.deserialize(dataConfig.getConfigurationSection(key).getValues(false));
-            int level = dataConfig.getInt(key + ".level");
-            chests.put(loc, new ChestData(level));
-        }
+
+    public static Plugin getPlugin() {
+        return JavaPlugin.getPlugin(Main.class);
     }
 
-    private void saveChestData() {
-        for (Map.Entry<Location, ChestData> entry : chests.entrySet()) {
-            dataConfig.set(entry.getKey().hashCode() + "", entry.getKey().serialize());
-            dataConfig.set(entry.getKey().hashCode() + ".level", entry.getValue().level);
-        }
-        try {
-            dataConfig.save(dataFile);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
-    private void startAutoSell() {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                for (Map.Entry<Location, ChestData> entry : chests.entrySet()) {
-                    ChestData chest = entry.getValue();
-                    int earned = 0;
-                    Iterator<ItemStack> it = chest.contents.iterator();
-                    while (it.hasNext()) {
-                        ItemStack item = it.next();
-                        if (item != null) {
-                            earned += item.getAmount() * 5;
-                            it.remove();
-                        }
-                    }
-                    if (earned > 0) {
-                        for (Player p : Bukkit.getOnlinePlayers()) {
-                            if (p.getLocation().distance(entry.getKey()) < 10)
-                                p.sendMessage("§aChest hat " + earned + "$ verkauft!");
-                        }
-                    }
-                }
-            }
-        }.runTaskTimer(this, 200L, 600L);
-    }
-
-    @EventHandler
-    public void onInteract(PlayerInteractEvent e) {
-        if (e.getAction() == Action.RIGHT_CLICK_BLOCK && e.hasItem() && e.getItem().getType() == Material.CHEST) {
-            Block block = e.getClickedBlock();
-            if (block == null) return;
-            Location loc = block.getLocation().add(0, 1, 0);
-            loc.getBlock().setType(Material.ENDER_CHEST);
-            chests.put(loc, new ChestData(0));
-            e.getPlayer().sendMessage("§aAdvancedChest platziert!");
-        }
-    }
-
-    @EventHandler
-    public void onClick(InventoryClickEvent e) {
-        if (e.getView().getTitle().startsWith("§6Chest Lvl ")) {
-            Player p = (Player) e.getWhoClicked();
-            Location loc = findChest(p.getLocation());
-            if (loc == null) return;
-            ChestData data = chests.get(loc);
-            Bukkit.getScheduler().runTaskLater(this, () -> {
-                data.contents = Arrays.asList(e.getInventory().getContents());
-            }, 1L);
-        }
-    }
-
-    private Location findChest(Location near) {
-        for (Location loc : chests.keySet()) {
-            if (loc.getWorld().equals(near.getWorld()) && loc.distance(near) < 5)
-                return loc;
-        }
-        return null;
-    }
-
-    static class ChestData {
-        int level;
-        List<ItemStack> contents = new ArrayList<>();
-        ChestData(int level) { this.level = level; }
-    }
 }
 
 
 
-}
