@@ -4,6 +4,7 @@ import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.Chest;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.type.Piston;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -17,6 +18,7 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -36,6 +38,7 @@ public class PlayerListener implements Listener {
     private static final String USER_DATA_FOLDER = "plugins/OneBlockPlugin/IslandData";
     String prefix = Main.config.getString("Server");
 
+    private boolean forward = true;
     private boolean isOneBlock(Block block) {
         World world = block.getWorld();
         return world != null
@@ -217,7 +220,7 @@ public class PlayerListener implements Listener {
             config.set("MissingBlocksToLevelUp", blocksToLevelUp);
 
 
-            if (blocksToLevelUp <= 0 && islandLevel - 1 >= maxlevel) {
+            if (blocksToLevelUp <= 0 && islandLevel != maxlevel) {
                 islandLevel += 1;
                 config.set("IslandLevel", islandLevel);
                 int newTotal = Main.config.getInt("oneblockblocks." + islandLevel + ".blockcount");
@@ -250,14 +253,92 @@ public class PlayerListener implements Listener {
                 item.setPickupDelay(10);
 
                 block.setType(Material.AIR);
-                regenerateOneBlock(blockLocation, blockMaterial);
+                regenerateOneBlock(blockLocation, blockMaterial, islandLevel);
                 monster(ownerUUID, blockLocation.clone().add(0.5, 1.0, 0.5));
 
             }
         }
     }
 
-    public void monster(UUID ownerUUID, Location spawnLocation) {
+    private void regenerateOneBlock(Location blockLocation, Material blockMaterial, Integer IslandLevel) {
+        Bukkit.getScheduler().runTaskLater(JavaPlugin.getPlugin(Main.class), () -> {
+            Block newBlock = Bukkit.getWorld(WORLD_NAME).getBlockAt(blockLocation);
+            newBlock.setType(blockMaterial);
+
+            if (blockMaterial == Material.CHEST) {
+                Chest chest = (Chest) newBlock.getState();
+                chest.setCustomName("§6Erste Kiste");
+                spawnChestWithConfig(blockLocation, "onechest", IslandLevel);
+                chest.update();
+            }
+
+            BlockData blockData = newBlock.getBlockData();
+            if (blockData instanceof Piston) {
+                newBlock.setBlockData(blockData);
+            }
+        }, 1L);
+    }
+
+    public void spawnChestWithConfig(Location location, String chestKey, int IslandLevel) {
+        YamlConfiguration config = (YamlConfiguration) Main.config; // Deine Config laden
+
+        if (!config.contains("oneblockblocks.10.chests." + chestKey)) {
+            Bukkit.getLogger().warning("Chest-Key nicht in Config gefunden: " + chestKey);
+            return;
+        }
+
+        String name = config.getString("oneblockblocks."+ IslandLevel +".chests." + chestKey + ".name");
+        List<String> contents = config.getStringList("oneblockblocks.10.chests." + chestKey + ".contents");
+
+        Block block = location.getBlock();
+        block.setType(Material.CHEST);
+
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            Chest chest = (Chest) block.getState();
+            chest.setCustomName(name);
+            chest.update();
+
+            Inventory inv = chest.getBlockInventory();
+            inv.clear();
+
+            for (String itemString : contents) {
+                String[] parts = itemString.split(":");
+                Material mat = Material.getMaterial(parts[0].toUpperCase());
+                int amount = parts.length > 1 ? Integer.parseInt(parts[1]) : 1;
+
+                if (mat != null) {
+                    ItemStack item = new ItemStack(mat, amount);
+                    inv.addItem(item);
+                }
+            }
+        }, 1L);
+    }
+
+
+    @EventHandler
+    public void onChestBreak(BlockBreakEvent event) {
+        Block block = event.getBlock();
+
+        if (block.getType() != Material.CHEST) return;
+
+        Chest chest = (Chest) block.getState();
+
+        if (chest.getCustomName() != null && chest.getCustomName().equals("§6Erste Kiste")) {
+            Inventory inv = chest.getBlockInventory();
+
+            for (ItemStack item : inv.getContents()) {
+                if (item != null && item.getType() != Material.AIR) {
+                    block.getWorld().dropItemNaturally(block.getLocation(), item);
+                }
+            }
+
+            inv.clear(); // Sonst wird's evtl. nochmal gespeichert (besonders bei Multiverse etc.)
+        }
+    }
+
+
+
+        public void monster(UUID ownerUUID, Location spawnLocation) {
         YamlConfiguration config = Manager.getIslandConfig(ownerUUID);
         int islandLevel = config.getInt("IslandLevel");
 
@@ -300,30 +381,32 @@ public class PlayerListener implements Listener {
 
     }
 
-    public void start(Player player, int currentLevel, int missingBlocks) {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (!player.isOnline()) {
-                    cancel();
-                    return;
-                }
-                sendActionbarProgress(player, currentLevel, missingBlocks);
-                frame++;
-            }
-        }.runTaskTimer(plugin, 0L, 5L); // Alle 5 Ticks (0,25s) für flüssige Welle
-    }
-
-
     private void sendActionbarProgress(Player player, int currentLevel, int missingBlocks) {
-
-        // Max-Level mit pulsiertem ∞
+        // Max-Level mit pulsierendem Block, der hoch und runter wandert
         if (missingBlocks == Integer.MIN_VALUE) {
+            StringBuilder barBuilder = new StringBuilder("§7[");
 
-            String[] pulse = {"§a", "§2", "§a", "§2"};
-            String color = pulse[frame % pulse.length];
-            String bar = "§7[" + color + "██████████§7]";
-            String msg = "§bLevel: §eMaximal §8| " + bar + " §6§l∞ Max Level!";
+            // Animation: frame läuft hoch und runter von 0 bis 9
+            if (forward) {
+                frame++;
+                if (frame >= 9) forward = false;
+            } else {
+                frame--;
+                if (frame <= 0) forward = true;
+            }
+
+            for (int i = 0; i < 10; i++) {
+                if (i == frame) {
+                    barBuilder.append("§a█");  // Hellgrün pulsierender Block
+                } else {
+                    barBuilder.append("§2█");  // Dunkelgrün andere Blöcke
+                }
+            }
+
+            barBuilder.append("§7]");
+
+            String bar = barBuilder.toString();
+            String msg = "§bLevel: §eMaximal §8| " + " §6§l∞ " +bar  ;
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(msg));
             return;
         }
@@ -343,14 +426,14 @@ public class PlayerListener implements Listener {
             if (i < filled) {
                 // bereits freigeschaltet
                 if (i == wavePos) {
-                    bar.append("§e█");      // Wellen-Highlight gelb
+                    bar.append("§7█");  //Wellen-Highlight gelb
                 } else {
-                    bar.append("§a█");      // Grün für normalen Fortschritt
+                    bar.append("§7█");        // Grün für normalen Fortschritt
                 }
             } else {
                 // noch nicht geschafft
                 if (i == wavePos) {
-                    bar.append("§e▓");      // Halber gelber Block als Wave
+                    bar.append("§7█");       // Halber gelber Block als Wave
                 } else {
                     bar.append("§7█");      // Grau für leer
                 }
@@ -363,7 +446,6 @@ public class PlayerListener implements Listener {
                 " §7Noch §c" + missingBlocks + " §7Blöcke";
         player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(message));
     }
-
 
     @EventHandler
     public void onBlockPiston(BlockPistonExtendEvent event) {
@@ -409,17 +491,6 @@ public class PlayerListener implements Listener {
             Block oneBlock = Bukkit.getWorld(WORLD_NAME).getBlockAt(ONEBLOCK_LOCATION);
             oneBlock.setType(finalBlockMaterial);
         });
-    }
-
-    private void regenerateOneBlock(Location blockLocation, Material blockMaterial) {
-        Bukkit.getScheduler().runTaskLater(JavaPlugin.getPlugin(Main.class), () -> {
-            Block newBlock = Bukkit.getWorld(WORLD_NAME).getBlockAt(blockLocation);
-            newBlock.setType(blockMaterial);
-            BlockData blockData = newBlock.getBlockData();
-            if (blockData instanceof Piston) {
-                newBlock.setBlockData(blockData);
-            }
-        }, 1L);
     }
 
     private boolean isPlayerAllowed(Location loc, Player player) {
