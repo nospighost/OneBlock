@@ -44,7 +44,7 @@ public class Main extends JavaPlugin implements Listener {
         saveDefaultConfig();
         config = getConfig();
         instance = this;
-
+//
 
         setupEconomy();
 
