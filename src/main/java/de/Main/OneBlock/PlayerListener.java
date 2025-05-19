@@ -29,7 +29,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import static de.Main.OneBlock.Manager.getIslandConfig;
 
 public class PlayerListener implements Listener {
-    private JavaPlugin plugin = null;
+    private final JavaPlugin plugin;
     private int frame = 0;
     private static final String WORLD_NAME = "OneBlock";
     private static final Location ONEBLOCK_LOCATION = new Location(Bukkit.getWorld(WORLD_NAME), 0, 100, 0);
@@ -43,7 +43,7 @@ public class PlayerListener implements Listener {
                 && block.getLocation().equals(ONEBLOCK_LOCATION);
     }
 
-    public PlayerListener() {
+    public PlayerListener(JavaPlugin plugin) {
         this.plugin = plugin;
     }
 
@@ -63,93 +63,93 @@ public class PlayerListener implements Listener {
                 }
             }
 
-        if (!config.contains("created") || !config.contains("WorldBorderSize") || !config.contains("TotalBlocks")) {
-            if (!config.contains("created")) {
-                config.set("created", System.nanoTime());
+            if (!config.contains("created") || !config.contains("WorldBorderSize") || !config.contains("TotalBlocks")) {
+                if (!config.contains("created")) {
+                    config.set("created", System.nanoTime());
+                }
+                if (!config.contains("WorldBorderSize")) {
+                    config.set("WorldBorderSize", 50);
+                }
+                if (!config.contains("TotalBlocks")) {
+                    config.set("TotalBlocks", Main.config.getInt("oneblockblocks.1.blockcount", 200));
+                }
             }
-            if (!config.contains("WorldBorderSize")) {
-                config.set("WorldBorderSize", 50);
-            }
-            if (!config.contains("TotalBlocks")) {
-                config.set("TotalBlocks", Main.config.getInt("oneblockblocks.1.blockcount", 200));
-            }
-        }
 
-        if (!config.contains("owner") || !config.contains("owner-uuid") || !config.contains("EigeneInsel")) {
-            if (!config.contains("owner")) {
-                config.set("owner", player.getName());
+            if (!config.contains("owner") || !config.contains("owner-uuid") || !config.contains("EigeneInsel")) {
+                if (!config.contains("owner")) {
+                    config.set("owner", player.getName());
+                }
+                if (!config.contains("owner-uuid")) {
+                    config.set("owner-uuid", player.getUniqueId().toString());
+                }
+                if (!config.contains("EigeneInsel")) {
+                    config.set("EigeneInsel", false);
+                }
             }
-            if (!config.contains("owner-uuid")) {
-                config.set("owner-uuid", player.getUniqueId().toString());
-            }
-            if (!config.contains("EigeneInsel")) {
-                config.set("EigeneInsel", false);
-            }
-        }
 
-        if (!config.contains("z-position") || !config.contains("x-position")) {
-            if (!config.contains("z-position")) {
-                config.set("z-position", 0);
+            if (!config.contains("z-position") || !config.contains("x-position")) {
+                if (!config.contains("z-position")) {
+                    config.set("z-position", 0);
+                }
+                if (!config.contains("x-position")) {
+                    config.set("x-position", 0);
+                }
             }
-            if (!config.contains("x-position")) {
-                config.set("x-position", 0);
+
+            if (!config.contains("IslandSpawn-x") || !config.contains("IslandSpawn-z")) {
+                if (!config.contains("IslandSpawn-x")) {
+                    config.set("IslandSpawn-x", 0);
+                }
+                if (!config.contains("IslandSpawn-z")) {
+                    config.set("IslandSpawn-z", 0);
+                }
             }
-        }
 
-        if (!config.contains("IslandSpawn-x") || !config.contains("IslandSpawn-z")) {
-            if (!config.contains("IslandSpawn-x")) {
-                config.set("IslandSpawn-x", 0);
+            if (!config.contains("trusted") || !config.contains("invited") || !config.contains("invitedtrust") || !config.contains("denied")) {
+                if (!config.contains("trusted")) {
+                    config.set("trusted", new ArrayList<String>());
+                }
+                if (!config.contains("invited")) {
+                    config.set("invited", new ArrayList<String>());
+                }
+                if (!config.contains("invitedtrust")) {
+                    config.set("invitedtrust", new ArrayList<String>());
+                }
+                if (!config.contains("denied")) {
+                    config.set("denied", new ArrayList<String>());
+                }
             }
-            if (!config.contains("IslandSpawn-z")) {
-                config.set("IslandSpawn-z", 0);
+
+            if (!config.contains("MissingBlocksToLevelUp")) {
+                config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.1.blockcount", 200));
             }
-        }
 
-        if (!config.contains("trusted") || !config.contains("invited") || !config.contains("invitedtrust") || !config.contains("denied")) {
-            if (!config.contains("trusted")) {
-                config.set("trusted", new ArrayList<String>());
+            if (!config.contains("IslandLevel")) {
+                config.set("IslandLevel", 1);
             }
-            if (!config.contains("invited")) {
-                config.set("invited", new ArrayList<String>());
+
+            if (!config.contains("OneBlock-x") || !config.contains("OneBlock-z")) {
+                if (!config.contains("OneBlock-x")) {
+                    config.set("OneBlock-x", 0);
+                }
+                if (!config.contains("OneBlock-z")) {
+                    config.set("OneBlock-z", 0);
+                }
             }
-            if (!config.contains("invitedtrust")) {
-                config.set("invitedtrust", new ArrayList<String>());
+
+            Manager.saveIslandConfig(player.getUniqueId(), config);
+
+            World world = Bukkit.getWorld(WORLD_NAME);
+            if (world != null && player.getWorld().getName().equals(WORLD_NAME)) {
+                int x = config.getInt("OneBlock-x", 0);
+                int z = config.getInt("OneBlock-z", 0);
+                int size = config.getInt("WorldBorderSize", 50);
+
+
+                Location spawn = new Location(world, config.getInt("x-position"), 100, config.getInt("z-position"));
+                player.teleport(spawn);
+
             }
-            if (!config.contains("denied")) {
-                config.set("denied", new ArrayList<String>());
-            }
-        }
-
-        if (!config.contains("MissingBlocksToLevelUp")) {
-            config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.1.blockcount", 200));
-        }
-
-        if (!config.contains("IslandLevel")) {
-            config.set("IslandLevel", 1);
-        }
-
-        if (!config.contains("OneBlock-x") || !config.contains("OneBlock-z")) {
-            if (!config.contains("OneBlock-x")) {
-                config.set("OneBlock-x", 0);
-            }
-            if (!config.contains("OneBlock-z")) {
-                config.set("OneBlock-z", 0);
-            }
-        }
-
-        Manager.saveIslandConfig(player.getUniqueId(), config);
-
-        World world = Bukkit.getWorld(WORLD_NAME);
-        if (world != null && player.getWorld().getName().equals(WORLD_NAME)) {
-            int x = config.getInt("OneBlock-x", 0);
-            int z = config.getInt("OneBlock-z", 0);
-            int size = config.getInt("WorldBorderSize", 50);
-
-
-            Location spawn = new Location(world, config.getInt("x-position"), 100, config.getInt("z-position"));
-            player.teleport(spawn);
-
-        }
 
 
         }
@@ -179,7 +179,7 @@ public class PlayerListener implements Listener {
             return;
         }
 
-        YamlConfiguration config = getIslandConfig(ownerUUID);
+        YamlConfiguration config = Manager.getIslandConfig(ownerUUID);
 
 
         List<String> addedUUIDs = config.getStringList("added");
@@ -258,7 +258,7 @@ public class PlayerListener implements Listener {
     }
 
     public void monster(UUID ownerUUID, Location spawnLocation) {
-        YamlConfiguration config = getIslandConfig(ownerUUID);
+        YamlConfiguration config = Manager.getIslandConfig(ownerUUID);
         int islandLevel = config.getInt("IslandLevel");
 
         List<Map<?, ?>> monstersList = (List<Map<?, ?>>) Main.config.getList("oneblockblocks." + islandLevel + ".monsters");
@@ -429,7 +429,7 @@ public class PlayerListener implements Listener {
     }
 
     public static boolean isPlayerAllowedOnIsland(Player player, UUID islandOwnerUUID) {
-        YamlConfiguration config = getIslandConfig(islandOwnerUUID);
+        YamlConfiguration config = Manager.getIslandConfig(islandOwnerUUID);
         List<String> added = config.getStringList("added");
         List<String> trusted = config.getStringList("trusted");
 
