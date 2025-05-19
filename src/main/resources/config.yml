@@ -1,3 +1,11 @@
+scoreboard:
+  title: "&6&lMein Scoreboard"
+  lines:
+    - "&ePunkte: &a%points%"
+    - "&eKills: &c%kills%"
+    - "&eTode: &7%deaths%"
+
+
 islandjoinmessage:
   join: "§a Du wurdest zu deiner Insel teleportiert"
   notowned: "§aDeine Insel wurde Erstellt"
@@ -12,6 +20,7 @@ addmessagealreadyadded: "§cDieser Spieler wurde bereits eingeladen"
 trustmessage: "§aDu hast %player% auf deine Insel eingeladen"
 unbanmessage: "§a Du hast %player% von deiner Insel entbannt"
 banmessage: "§a Du hast %player% von deiner Insel gebannt"
+playergetdeniedmessage: "§cDer Spieler %player% hat dich von seiner Insel gebannt!"
 notbannedmessage: "§aDer Spieler ist nicht gebannt!"
 removemessage: "§a Du hast %player% von deiner Insel entfernt"
 removeplayernotinlist: "§cDer Spieler ist nicht auf deiner Insel hinzugefügt"

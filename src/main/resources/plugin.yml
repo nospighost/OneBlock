@@ -12,6 +12,9 @@ commands:
   obgui:
     description: Öffnet das OneBlock GUI
     usage: /obgui
+  scoreboardreload:
+    description: Reloads the scoreboard config
+    usage: /scoreboardreload
     permission: oneblock.gui
   globaltrash:
     description: Öffnet das OneBlock GUI
