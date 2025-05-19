@@ -54,7 +54,11 @@ public class Main extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(obItems, this);
         getCommand("globaltrash").setExecutor(obItems);
         obItems.start();
-      // Bukkit.getPluginManager().registerEvents(new Generator(this), this);
+
+
+      Bukkit.getPluginManager().registerEvents(new Generator(this), this);
+
+
         Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
         if (economy != null) {
             Bukkit.getPluginManager().registerEvents(new Manager(economy, this), this);
