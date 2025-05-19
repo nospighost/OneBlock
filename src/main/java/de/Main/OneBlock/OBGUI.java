@@ -24,8 +24,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 import javax.naming.Name;
 import java.util.*;
 
-import static de.Main.OneBlock.Manager.getIslandConfig;
-import static de.Main.OneBlock.Manager.saveIslandConfig;
+import static de.Main.OneBlock.Manager.*;
 import static org.bukkit.Material.*;
 
 public class OBGUI implements CommandExecutor, Listener {
@@ -398,10 +397,17 @@ public class OBGUI implements CommandExecutor, Listener {
                     displayName = "§aWorldBorder Größe";
                     YamlConfiguration config = getIslandConfig(player.getUniqueId());
                     int currentSize = config.getInt("WorldBorderSize", 50);
+
+                    int basePrice = 100;
+                    int upgradesDone = (currentSize - 50) / 10; // wie viele Upgrades schon gemacht wurden
+                    int price = (int) (basePrice * Math.pow(2, upgradesDone)); // Preis verdoppelt sich pro Upgrade
+
                     lore.add("§7Aktuelle Größe: §e" + currentSize);
                     lore.add("§7Klicke, um die Größe zu erhöhen");
                     lore.add("§7(Maximal 200)");
+                    lore.add("§7Preis für nächstes Upgrade: §e" + price + " Coins");
                 }
+
                 default -> {
                     continue;
                 }
@@ -494,23 +500,9 @@ public class OBGUI implements CommandExecutor, Listener {
             switch (type) {
 
                 case STRUCTURE_VOID -> {
-                    int currentSize = config.getInt("WorldBorderSize", 50);
-
-                    if (currentSize < 200) {
-                        currentSize += 10;
-                        config.set("WorldBorderSize", currentSize);
-                        saveIslandConfig(uuid, config);
-
-
-
-                        player.sendMessage("§aDeine WorldBorder wurde auf §e" + currentSize + " §avergrößert!");
-                        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
-                        player.closeInventory();
-                    } else {
-                        player.sendMessage("§cDu hast das Limit erreicht");
-                        player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
-                    }
+                    addWorldBoarder(config, player);
                 }
+
                 case TOTEM_OF_UNDYING -> {
                     int clicksLeft = rebirthClicks.getOrDefault(uuid, MAX_CLICKS) - 1;
 
@@ -568,13 +560,14 @@ public class OBGUI implements CommandExecutor, Listener {
         }
         if (title.equalsIgnoreCase("§aPhasen-Auswahl")) {
             event.setCancelled(true);
+
+
             boolean durchgespielt = config.getBoolean("Durchgespielt");
+
             switch (type) {
                 case GRASS_BLOCK:
 
-
-
-                    if (durchgespielt == true) {
+                    if (durchgespielt) {
                         config.set("IslandLevel", 1);
                         config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.1.blockcount"));
                         config.set("TotalBlocks", Main.config.getInt("oneblockblocks.1.blockcount"));
@@ -628,7 +621,7 @@ public class OBGUI implements CommandExecutor, Listener {
 
                 case IRON_ORE:
 
-                    if (durchgespielt = true) {
+                    if (durchgespielt) {
                         config.set("IslandLevel", 4);
                         config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.4.blockcount"));
                         config.set("TotalBlocks", Main.config.getInt("oneblockblocks.4.blockcount"));
@@ -646,7 +639,7 @@ public class OBGUI implements CommandExecutor, Listener {
 
                 case DIAMOND_BLOCK:
 
-                    if (durchgespielt = true) {
+                    if (durchgespielt) {
                         config.set("IslandLevel", 5);
                         config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.5.blockcount"));
                         config.set("TotalBlocks", Main.config.getInt("oneblockblocks.5.blockcount"));
@@ -664,7 +657,7 @@ public class OBGUI implements CommandExecutor, Listener {
 
                 case NETHERRACK:
 
-                    if (durchgespielt = true) {
+                    if (durchgespielt) {
                         config.set("IslandLevel", 6);
                         config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.6.blockcount"));
                         config.set("TotalBlocks", Main.config.getInt("oneblockblocks.6.blockcount"));
@@ -682,7 +675,7 @@ public class OBGUI implements CommandExecutor, Listener {
 
                 case WARPED_STEM:
 
-                    if (durchgespielt = true) {
+                    if (durchgespielt) {
                         config.set("IslandLevel", 7);
                         config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.7.blockcount"));
                         config.set("TotalBlocks", Main.config.getInt("oneblockblocks.7.blockcount"));
@@ -700,7 +693,7 @@ public class OBGUI implements CommandExecutor, Listener {
 
                 case END_STONE:
 
-                    if (durchgespielt = true) {
+                    if (durchgespielt) {
                         config.set("IslandLevel", 8);
                         config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.8.blockcount"));
                         config.set("TotalBlocks", Main.config.getInt("oneblockblocks.8.blockcount"));
@@ -718,7 +711,7 @@ public class OBGUI implements CommandExecutor, Listener {
 
                 case NETHERITE_BLOCK:
 
-                    if (durchgespielt = true) {
+                    if (durchgespielt) {
                         config.set("IslandLevel", 9);
                         config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.9.blockcount"));
                         config.set("TotalBlocks", Main.config.getInt("oneblockblocks.9.blockcount"));
@@ -736,7 +729,7 @@ public class OBGUI implements CommandExecutor, Listener {
 
                 case BEACON:
 
-                    if (durchgespielt = true) {
+                    if (durchgespielt) {
                         config.set("IslandLevel", 10);
                         config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.10.blockcount"));
                         config.set("TotalBlocks", Main.config.getInt("oneblockblocks.10.blockcount"));
@@ -811,30 +804,30 @@ public class OBGUI implements CommandExecutor, Listener {
 
                 case RED_DYE:
                     player.openInventory(mainGUI);
-                break;
+                    break;
 
                 default:
                     break;
             }
 
-            }
         }
+    }
 
-private void sendSuggestCommandMessage(Player player, String command) {
-    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+    private void sendSuggestCommandMessage(Player player, String command) {
+        player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
 
-    TextComponent msg = new TextComponent("§aKlicke hier, um den Befehl einzugeben: ");
-    TextComponent commandPart = new TextComponent("§e/ob " + command);
+        TextComponent msg = new TextComponent("§aKlicke hier, um den Befehl einzugeben: ");
+        TextComponent commandPart = new TextComponent("§e/ob " + command);
 
-    commandPart.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/ob " + command));
-    msg.addExtra(commandPart);
+        commandPart.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/ob " + command));
+        msg.addExtra(commandPart);
 
-    player.spigot().sendMessage(msg);
-}
+        player.spigot().sendMessage(msg);
+    }
 
 
 
-@EventHandler
+    @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
         if (!(event.getPlayer() instanceof Player player)) return;
 
@@ -866,4 +859,43 @@ private void sendSuggestCommandMessage(Player player, String command) {
             updateVerwaltungGUI(player);
         }
     }
+    public static void addWorldBoarder (YamlConfiguration config, Player player){
+
+        UUID uuid = player.getUniqueId();
+
+        int currentSize = config.getInt("WorldBorderSize", 50); // Startgröße 50
+        int maxSize = 200;
+
+        if (currentSize >= maxSize) {
+            player.sendMessage("§cDu hast das Limit erreicht");
+            player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
+            return;
+        }
+
+        int basePrice = 20000;
+        int upgradesDone = (currentSize - 50) / 10; // Anzahl der Upgrades, bei 50 = 0
+        int price = (int) (basePrice * Math.pow(2, upgradesDone)); // Preis verdoppelt sich pro Upgrade
+
+        if (economy.getBalance(player) < price) {
+            player.sendMessage("§cDu hast nicht genug Geld! Benötigt: §e" + price + " Coins");
+            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
+            return;
+        }
+
+        // Geld abziehen
+        economy.withdrawPlayer(player, price);
+
+        // Upgrade durchführen
+        currentSize += 10;
+        config.set("WorldBorderSize", currentSize);
+        saveIslandConfig(uuid, config);
+
+        player.sendMessage("§aDeine WorldBorder wurde auf §e" + currentSize + " §avergrößert!");
+        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
+        player.closeInventory();
+
+        // Optional: Hier kannst du die Item-Lore vom Upgrade-Item updaten,
+        // damit der neue Preis für das nächste Upgrade angezeigt wird.
+    }
+
 }
