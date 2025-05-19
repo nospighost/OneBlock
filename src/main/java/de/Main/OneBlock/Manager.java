@@ -15,9 +15,11 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.checkerframework.checker.units.qual.Prefix;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.annotation.Target;
 import java.util.*;
 
 import static de.Main.OneBlock.Main.*;
@@ -399,7 +401,7 @@ public class Manager implements Listener {
             saveIslandConfig(owner.getUniqueId(), config);
             owner.sendMessage(prefix + Main.config.getString("banmessage").replace("%player%", target.getName()));
             if (target.isOnline()) {
-                target.getPlayer().sendMessage(prefix + "§cDu wurdest auf der Insel von " + owner.getName() + " gebannt.");
+                target.getPlayer().sendMessage(prefix + Main.config.getString("playergetdeniedmessage").replace("%player%", target.getName()));
             }
         } else {
             owner.sendMessage(prefix + "§cDieser Spieler ist bereits gebannt.");
