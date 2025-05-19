@@ -52,7 +52,7 @@ public class OBItems implements CommandExecutor, Listener {
         Chest chest = (Chest) clicked.getState();
 
 
-      if (chest.getCustomName() != null && chest.getCustomName().equals("§6Erste Kiste")) {
+      if (chest.getCustomName() != null && chest.getCustomName().equals("TestChest")) {
           event.setCancelled(true); // Standard-Öffnen abbrechen
 
 

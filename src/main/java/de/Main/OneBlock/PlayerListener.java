@@ -37,18 +37,14 @@ public class PlayerListener implements Listener {
     private final JavaPlugin plugin;
     private int frame = 0;
     private static final String WORLD_NAME = "OneBlock";
-    private static final Location ONEBLOCK_LOCATION = new Location(Bukkit.getWorld(WORLD_NAME), 0, 100, 0);
+
+
     private static final String USER_DATA_FOLDER = "plugins/OneBlockPlugin/IslandData";
     String prefix = Main.config.getString("Server");
 
     private boolean forward = true;
 
-    private boolean isOneBlock(Block block) {
-        World world = block.getWorld();
-        return world != null
-                && WORLD_NAME.equals(world.getName())
-                && block.getLocation().equals(ONEBLOCK_LOCATION);
-    }
+
 
     public PlayerListener(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -572,12 +568,16 @@ public class PlayerListener implements Listener {
     }
 
     @EventHandler
-    public void onEntityExplode (EntityExplodeEvent event){
-        event.blockList().removeIf(this::isOneBlock);
+    public void onEntityExplode(EntityExplodeEvent event) {
+        // Entferne aus der Explosionsliste alle Blöcke, die ein OneBlock von irgendeinem User sind
+        event.blockList().removeIf(block -> isAnyUserOneBlock(block));
+
         List<String> nextBlocks = Main.config.getStringList("oneblockblocks.block");
         if (nextBlocks.isEmpty()) return;
+
         int randomIndex = ThreadLocalRandom.current().nextInt(nextBlocks.size());
         String nextBlock = nextBlocks.get(randomIndex);
+
         Material blockMaterial;
         try {
             blockMaterial = Material.valueOf(nextBlock);
@@ -585,12 +585,40 @@ public class PlayerListener implements Listener {
             Bukkit.getLogger().warning("Ungültiger Blockname in der Konfiguration: " + nextBlock);
             blockMaterial = Material.STONE;
         }
+
         Material finalBlockMaterial = blockMaterial;
         Bukkit.getScheduler().runTask(JavaPlugin.getPlugin(Main.class), () -> {
-            Block oneBlock = Bukkit.getWorld(WORLD_NAME).getBlockAt(ONEBLOCK_LOCATION);
+            Block oneBlock = (Block) Bukkit.getWorld(WORLD_NAME);
             oneBlock.setType(finalBlockMaterial);
         });
     }
+
+
+    // Hilfsmethode, die alle User-Configs durchgeht und prüft, ob der Block an der OneBlock-Position eines Users ist
+    public boolean isAnyUserOneBlock(Block block) {
+        World world = block.getWorld();
+        if (world == null || !world.getName().equals(WORLD_NAME)) return false;
+
+        // Alle UUIDs der Spieler mit Inseln durchgehen
+        for (UUID ownerUUID : Manager.getAllIslandOwners()) {
+            YamlConfiguration config = Manager.getIslandConfig(ownerUUID);
+            if (config == null) continue;
+
+            // Koordinaten der OneBlock-Insel aus der Config lesen
+            int x = config.getInt("OneBlock-x", Integer.MIN_VALUE);
+            int y = 100; // falls fest definiert
+            int z = config.getInt("OneBlock-z", Integer.MIN_VALUE);
+
+            Location oneBlockLocation = new Location(world, x, y, z);
+
+            if (block.getLocation().equals(oneBlockLocation)) {
+                return true; // Das ist ein OneBlock eines Spielers
+            }
+        }
+
+        return false;
+    }
+
 
     private boolean isPlayerAllowed (Location loc, Player player){
         String islandOwner = getIslandOwnerByLocation(loc);
