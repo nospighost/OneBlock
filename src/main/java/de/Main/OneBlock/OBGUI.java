@@ -501,9 +501,6 @@ public class OBGUI implements CommandExecutor, Listener {
                         config.set("WorldBorderSize", currentSize);
                         saveIslandConfig(uuid, config);
 
-                        WorldBorder border = player.getWorld().getWorldBorder();
-                        border.setCenter(player.getLocation());
-                        border.setSize(currentSize);
 
 
                         player.sendMessage("§aDeine WorldBorder wurde auf §e" + currentSize + " §avergrößert!");
@@ -571,13 +568,13 @@ public class OBGUI implements CommandExecutor, Listener {
         }
         if (title.equalsIgnoreCase("§aPhasen-Auswahl")) {
             event.setCancelled(true);
-
+            boolean durchgespielt = config.getBoolean("Durchgespielt");
             switch (type) {
                 case GRASS_BLOCK:
 
-                    boolean durchgespielt = config.getBoolean("Durchgespielt");
 
-                    if (durchgespielt = true) {
+
+                    if (durchgespielt == true) {
                         config.set("IslandLevel", 1);
                         config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.1.blockcount"));
                         config.set("TotalBlocks", Main.config.getInt("oneblockblocks.1.blockcount"));
@@ -595,7 +592,7 @@ public class OBGUI implements CommandExecutor, Listener {
 
                 case OAK_LOG:
 
-                    if (durchgespielt = true) {
+                    if (durchgespielt) {
                         config.set("IslandLevel", 2);
                         config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.2.blockcount"));
                         config.set("TotalBlocks", Main.config.getInt("oneblockblocks.2.blockcount"));
@@ -613,7 +610,7 @@ public class OBGUI implements CommandExecutor, Listener {
 
                 case STONE:
 
-                    if (durchgespielt = true) {
+                    if (durchgespielt) {
                         config.set("IslandLevel", 3);
                         config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.3.blockcount"));
                         config.set("TotalBlocks", Main.config.getInt("oneblockblocks.3.blockcount"));

@@ -200,6 +200,17 @@ oneblockblocks:
 
   '10':
     name: "Dekor & Luxus"
+    chests:
+      onechest:
+        name: "§6Erste Kiste"
+        contents:
+          - "DIAMOND_SWORD:1"
+          - "APPLE:5"
+      twochest:
+        name: "§aZweite Kiste"
+        contents:
+          - "IRON_INGOT:10"
+          - "BREAD:3"
     blockcount: 100
     blocks:
       - GLOWSTONE
@@ -207,7 +218,7 @@ oneblockblocks:
       - PRISMARINE
       - PRISMARINE_BRICKS
       - DARK_PRISMARINE
-      - BEACON
+      - CHEST
       - LODESTONE
     monsters:
       - monster: GUARDIAN

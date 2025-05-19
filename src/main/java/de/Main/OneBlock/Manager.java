@@ -24,7 +24,7 @@ import static de.Main.OneBlock.Main.*;
 
 public class Manager implements Listener {
     public static Economy economy;
-    private final JavaPlugin plugin;
+    private static  JavaPlugin plugin;
     static String prefix = Main.config.getString("Server");
 
     public Manager(Economy eco, JavaPlugin plugin) {
@@ -87,13 +87,51 @@ public class Manager implements Listener {
     }
 
 
-    public static File getIslandFile(Player player) {
-        return new File(Main.islandDataFolder, player.getUniqueId().toString() + ".yml");
-    }
-
     public static File getIslandFile(UUID uuid) {
         return new File(Main.islandDataFolder, uuid.toString() + ".yml");
     }
+    public static File getgeneratorFile(Location genlocation) {
+        return new File(GenDataFolder, "generators.yml");
+    }
+
+
+    public static File getGeneratorFile(Location loc) {
+        File file = new File(plugin.getDataFolder(), "generator.yml");
+
+        if (!file.exists()) {
+            try {
+                file.getParentFile().mkdirs();
+                file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return file;
+    }
+    public static File createGeneratorFile(Location loc) {
+        // Erstelle neuen Unterordner im Plugin-Datenverzeichnis
+        File dir = new File(plugin.getDataFolder(), "GenDataFolder");
+
+        if (!dir.exists()) {
+            dir.mkdirs(); // erstellt alle fehlenden Ordner
+        }
+
+        // Optional: Dateiname z. B. nach Koordinaten benennen
+        String filename = "generator.yml"; // oder z.B. loc.getBlockX() + "_" + loc.getBlockY() + "_" + loc.getBlockZ() + ".yml"
+        File file = new File(dir, filename);
+
+        if (!file.exists()) {
+            try {
+                file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return file;
+    }
+
 
     public static YamlConfiguration getIslandConfig(UUID uuid) {
         File file = getIslandFile(uuid);

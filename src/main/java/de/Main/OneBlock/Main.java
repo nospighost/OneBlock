@@ -27,6 +27,7 @@ public class Main extends JavaPlugin implements Listener {
 
     public static FileConfiguration config;
     public static File islandDataFolder;
+    public static File GenDataFolder;
     private static Economy economy = null;
 
     public static Main getInstance() {
@@ -49,6 +50,8 @@ public class Main extends JavaPlugin implements Listener {
 
 
         // Listener registrieren
+       // Bukkit.getPluginManager().registerEvents(new Generator(this), this);
+        Bukkit.getPluginManager().registerEvents(new OBItems(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
         if (economy != null) {
             Bukkit.getPluginManager().registerEvents(new Manager(economy, this), this);
@@ -67,12 +70,18 @@ public class Main extends JavaPlugin implements Listener {
         if (!islandDataFolder.exists()) {
             islandDataFolder.mkdirs();
         }
+        GenDataFolder = new File(getDataFolder(), "GenDataFolder");
+        if (!GenDataFolder.exists()) {
+            GenDataFolder.mkdirs();
+        } else {
+            getLogger().info("GenDataFolder wurde NICHT erfolgreich erstellt!");
+        }
 
 
         // Befehle
         getCommand("ob").setExecutor(new de.Main.OneBlock.OneBlockCommands());
         getCommand("obgui").setExecutor(new OBGUI());
-
+        getCommand("globaltrash").setExecutor(new OBItems());
 
         getServer().getPluginManager().registerEvents(new OBGUI(), this);
 
@@ -99,7 +108,6 @@ public class Main extends JavaPlugin implements Listener {
         } else {
             getLogger().warning("Fehler beim Erstellen der OneBlock-Welt");
         }
-
 
 
     }

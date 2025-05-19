@@ -13,6 +13,10 @@ commands:
     description: Öffnet das OneBlock GUI
     usage: /obgui
     permission: oneblock.gui
+  globaltrash:
+    description: Öffnet das OneBlock GUI
+    usage: /globaltrash
+    permission: oneblock.gui
 
 permissions:
   oneblock.use:
