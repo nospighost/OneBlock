@@ -49,9 +49,12 @@ public class Main extends JavaPlugin implements Listener {
         setupEconomy();
 
 
-        // Listener registrieren
-       //Bukkit.getPluginManager().registerEvents(new Generator(this), this);
-        Bukkit.getPluginManager().registerEvents(new OBItems(), this);
+
+   //    Bukkit.getPluginManager().registerEvents(new Generator(this), this);
+        OBItems obItems = new OBItems(this);
+        getServer().getPluginManager().registerEvents(obItems, this);
+        getCommand("globaltrash").setExecutor(obItems);
+        obItems.start();
         Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
         if (economy != null) {
             Bukkit.getPluginManager().registerEvents(new Manager(economy, this), this);
@@ -81,7 +84,6 @@ public class Main extends JavaPlugin implements Listener {
         // Befehle
         getCommand("ob").setExecutor(new de.Main.OneBlock.OneBlockCommands());
         getCommand("obgui").setExecutor(new OBGUI());
-        getCommand("globaltrash").setExecutor(new OBItems());
 
         getServer().getPluginManager().registerEvents(new OBGUI(), this);
 

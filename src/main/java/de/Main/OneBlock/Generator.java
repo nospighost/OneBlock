@@ -5,6 +5,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -16,14 +17,11 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 public class Generator implements Listener {
 
     private final JavaPlugin plugin;
+    private final int multi = 1;
 
     public Generator(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -52,7 +50,9 @@ public class Generator implements Listener {
 
                     if (material != null) {
                         // 1. Richtigen Block droppen
-                        loc.getWorld().dropItemNaturally(loc, new ItemStack(material));
+                        ;
+                        loc.getWorld().dropItemNaturally(loc, new ItemStack(material, multi));
+
 
                         // 2. Generator-Eintrag entfernen
 
@@ -78,7 +78,6 @@ public class Generator implements Listener {
     }
 
 
-
     @EventHandler(ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
@@ -86,6 +85,14 @@ public class Generator implements Listener {
 
         File file = Manager.getGeneratorFile(loc);
         YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+
+        ItemStack item = event.getItemInHand();
+
+        if (!item.containsEnchantment(Enchantment.SILK_TOUCH)) return;
+
+        int enchantLevel = item.getEnchantmentLevel(Enchantment.SILK_TOUCH);
+        if (enchantLevel < 5) return;
+
 
         String blockType = event.getBlock().getType().toString();
 
@@ -95,7 +102,6 @@ public class Generator implements Listener {
         config.set("Blocks." + key + ".x", loc.getBlockX());
         config.set("Blocks." + key + ".y", loc.getBlockY());
         config.set("Blocks." + key + ".z", loc.getBlockZ());
-
         try {
             config.save(file);
             player.sendMessage("Generator gesetzt bei " + loc.getBlockX() + " " + loc.getBlockY() + " " + loc.getBlockZ());
@@ -103,5 +109,6 @@ public class Generator implements Listener {
             e.printStackTrace();
         }
     }
+
 }
 

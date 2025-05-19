@@ -1,13 +1,11 @@
 package de.Main.OneBlock;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
+
 import org.bukkit.Material;
-import org.bukkit.World;
+
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.Chest;
-import org.bukkit.block.Container;
+
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -15,18 +13,22 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.Objects;
 
 
 public class OBItems implements CommandExecutor, Listener {
     private Inventory globalTrashInventory;
-
+    private final JavaPlugin plugin;
     private Inventory onechest;
 
-    public OBItems() {
+
+
+    public OBItems(JavaPlugin plugin) {
+        this.plugin = plugin;
         globalTrashInventory = Bukkit.createInventory(null, 54, "§6Globaler Mülleimer");
     }
 
@@ -37,37 +39,30 @@ public class OBItems implements CommandExecutor, Listener {
             return true;
         }
         Player player = (Player) sender;
-        player.openInventory(globalTrashInventory); // Gleiches Inventory für alle
+        player.openInventory(globalTrashInventory);
         return true;
     }
 
-    @EventHandler
-    public void onPlayerInteract(PlayerInteractEvent event) {
-        Player player = event.getPlayer();
 
+    public void start() {
+        Bukkit.getScheduler().runTaskTimer(Objects.requireNonNull(Bukkit.getPluginManager().getPlugin("oneblockplugin")), () -> {
+            globalTrashInventory.clear();
+        }, 0L, 5 * 60 * 20L);
+    }
+
+
+    @EventHandler(ignoreCancelled = true)
+    public void onShiftRightClick(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         Block clicked = event.getClickedBlock();
-        if (clicked == null || clicked.getType() != Material.CHEST) return;
+        if(clicked.getType() == Material.PODZOL) {
+            player.openInventory(globalTrashInventory);
 
-        Chest chest = (Chest) clicked.getState();
-
-
-      if (chest.getCustomName() != null && chest.getCustomName().equals("TestChest")) {
-          event.setCancelled(true); // Standard-Öffnen abbrechen
-
-
-            if (onechest == null) {
-                onechest = Bukkit.createInventory(null, 27, "§6Ibecgest");
-                onechest.setItem(3, new ItemStack(Material.STONE));
-                onechest.setItem(13, new ItemStack(Material.DIAMOND));
-                onechest.setItem(23, new ItemStack(Material.DIRT));
-                onechest.setItem(21, new ItemStack(Material.COBBLESTONE));
-            }
-
-
-            player.openInventory(onechest);
         }
+
     }
+
 }
 
 
