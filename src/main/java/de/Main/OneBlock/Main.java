@@ -50,7 +50,7 @@ public class Main extends JavaPlugin implements Listener {
 
 
         // Listener registrieren
-        Bukkit.getPluginManager().registerEvents(new Generator(this), this);
+       //Bukkit.getPluginManager().registerEvents(new Generator(this), this);
         Bukkit.getPluginManager().registerEvents(new OBItems(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
         if (economy != null) {
@@ -61,7 +61,6 @@ public class Main extends JavaPlugin implements Listener {
         }
         Bukkit.getPluginManager().registerEvents(new WorldBorderManager(), this);
         getCommand("ob").setTabCompleter(new TabCompleter());
-        Bukkit.getPluginManager().registerEvents(new Generator(this), this);
 
 
         getLogger().info("OneBlockPlugin aktiviert!");
@@ -169,3 +168,6 @@ public class Main extends JavaPlugin implements Listener {
 
 
 }
+
+
+
