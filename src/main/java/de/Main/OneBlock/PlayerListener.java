@@ -39,6 +39,7 @@ public class PlayerListener implements Listener {
     String prefix = Main.config.getString("Server");
 
     private boolean forward = true;
+
     private boolean isOneBlock(Block block) {
         World world = block.getWorld();
         return world != null
@@ -281,14 +282,14 @@ public class PlayerListener implements Listener {
 
     public void spawnChestWithConfig(Location location, String chestKey, int IslandLevel) {
         YamlConfiguration config = (YamlConfiguration) Main.config; // Deine Config laden
-
+        List<String> kisten = config.getStringList("oneblockblocks" + IslandLevel + ".chests." + chestKey);
         if (!config.contains("oneblockblocks.10.chests." + chestKey)) {
             Bukkit.getLogger().warning("Chest-Key nicht in Config gefunden: " + chestKey);
             return;
         }
 
-        String name = config.getString("oneblockblocks."+ IslandLevel +".chests." + chestKey + ".name");
-        List<String> contents = config.getStringList("oneblockblocks.10.chests." + chestKey + ".contents");
+        String name = config.getString("oneblockblocks." + IslandLevel + ".chests." + chestKey + ".name");
+        List<String> contents = config.getStringList("oneblockblocks." + IslandLevel + ".chests." + chestKey + ".contents");
 
         Block block = location.getBlock();
         block.setType(Material.CHEST);
@@ -337,8 +338,7 @@ public class PlayerListener implements Listener {
     }
 
 
-
-        public void monster(UUID ownerUUID, Location spawnLocation) {
+    public void monster(UUID ownerUUID, Location spawnLocation) {
         YamlConfiguration config = Manager.getIslandConfig(ownerUUID);
         int islandLevel = config.getInt("IslandLevel");
 
@@ -406,7 +406,7 @@ public class PlayerListener implements Listener {
             barBuilder.append("§7]");
 
             String bar = barBuilder.toString();
-            String msg = "§bLevel: §eMaximal §8| " + " §6§l∞ " +bar  ;
+            String msg = "§bLevel: §eMaximal §8| " + " §6§l∞ " + bar;
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(msg));
             return;
         }

@@ -393,6 +393,10 @@ public class Manager implements Listener {
         List<String> denied = config.getStringList("denied");
         String uuidStr = target.getUniqueId().toString();
 
+
+
+
+
         if (!denied.contains(uuidStr)) {
             denied.add(uuidStr);
             config.set("denied", denied);

@@ -3,6 +3,7 @@ package de.Main.OneBlock;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -15,6 +16,9 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class Generator implements Listener {
@@ -35,26 +39,44 @@ public class Generator implements Listener {
 
         YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
 
-        String worldName = config.getString("generator.world");
-        int x = config.getInt("generator.x");
-        int y = config.getInt("generator.y");
-        int z = config.getInt("generator.z");
+        ConfigurationSection blocksSection = config.getConfigurationSection("Blocks");
+        if (blocksSection != null) {
+            for (String key : blocksSection.getKeys(false)) {
+                int x = config.getInt("Blocks." + key + ".x");
+                int y = config.getInt("Blocks." + key + ".y");
+                int z = config.getInt("Blocks." + key + ".z");
 
-        Location generator = new Location(Bukkit.getWorld(worldName), x, y, z);
+                if (x == loc.getBlockX() && y == loc.getBlockY() && z == loc.getBlockZ()) {
+                    String typeString = config.getString("Blocks." + key + ".type");
+                    Material material = Material.getMaterial(typeString);
 
-        if (!loc.equals(generator)) return;
+                    if (material != null) {
+                        // 1. Richtigen Block droppen
+                        loc.getWorld().dropItemNaturally(loc, new ItemStack(material));
 
-        // Drop manuell erzeugen
-        loc.getWorld().dropItemNaturally(loc, new ItemStack(Material.STONE));
+                        // 2. Generator-Eintrag entfernen
 
-        // Regeneriere Block nach 1 Tick
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                loc.getBlock().setType(Material.STONE);
+                        try {
+                            config.save(file);
+
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+
+                        new BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                loc.getBlock().setType(material);
+                            }
+                        }.runTaskLater(plugin, 1L);
+                    }
+                    break;
+                }
             }
-        }.runTaskLater(plugin, 1L);
+        }
     }
+
 
 
     @EventHandler(ignoreCancelled = true)
@@ -65,10 +87,14 @@ public class Generator implements Listener {
         File file = Manager.getGeneratorFile(loc);
         YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
 
-        config.set("generator.world", loc.getWorld().getName());
-        config.set("generator.x", loc.getBlockX());
-        config.set("generator.y", loc.getBlockY());
-        config.set("generator.z", loc.getBlockZ());
+        String blockType = event.getBlock().getType().toString();
+
+        String key = blockType + "_" + loc.getBlockX() + "_" + loc.getBlockY() + "_" + loc.getBlockZ();
+
+        config.set("Blocks." + key + ".type", blockType);
+        config.set("Blocks." + key + ".x", loc.getBlockX());
+        config.set("Blocks." + key + ".y", loc.getBlockY());
+        config.set("Blocks." + key + ".z", loc.getBlockZ());
 
         try {
             config.save(file);
@@ -78,5 +104,4 @@ public class Generator implements Listener {
         }
     }
 }
-
 
