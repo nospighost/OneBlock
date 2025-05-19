@@ -7,11 +7,14 @@ import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.type.Piston;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
 import org.bukkit.event.entity.EntityExplodeEvent;
@@ -178,14 +181,11 @@ public class PlayerListener implements Listener {
         UUID ownerUUID = getIslandOwnerUUIDByLocation(blockLocation);
         if (ownerUUID == null) {
             player.sendMessage(prefix + "§cDu darfst hier nichts abbauen!");
-            player.sendMessage(ownerUUID);
             event.setCancelled(true);
             return;
         }
 
         YamlConfiguration config = Manager.getIslandConfig(ownerUUID);
-
-
         List<String> addedUUIDs = config.getStringList("added");
         List<String> trustedUUIDs = config.getStringList("trusted");
 
@@ -194,11 +194,42 @@ public class PlayerListener implements Listener {
         if (!ownerUUID.equals(player.getUniqueId())
                 && !addedUUIDs.contains(playerUUID)
                 && !trustedUUIDs.contains(playerUUID)) {
-
             player.sendMessage(prefix + "§cDu darfst hier nichts abbauen!");
             event.setCancelled(true);
             return;
         }
+
+
+        if (block.getType() == Material.CHEST) {
+            Chest chest = (Chest) block.getState();
+            String chestName = chest.getCustomName();
+
+            if (chestName != null) {
+                int islandLevel = config.getInt("IslandLevel");
+
+                ConfigurationSection chestsSection = Main.getInstance().getConfig()
+                        .getConfigurationSection("oneblockblocks." + islandLevel + ".chests");
+
+                if (chestsSection != null) {
+                    for (String chestKey : chestsSection.getKeys(false)) {
+                        String configuredName = Main.getInstance().getConfig()
+                                .getString("oneblockblocks." + islandLevel + ".chests." + chestKey + ".name", "§7Kiste");
+
+                        if (configuredName.equals(chestName)) {
+                            Inventory inv = chest.getBlockInventory();
+                            for (ItemStack item : inv.getContents()) {
+                                if (item != null && item.getType() != Material.AIR) {
+                                    block.getWorld().dropItemNaturally(block.getLocation(), item);
+                                }
+                            }
+                            inv.clear();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
 
         int blocksToLevelUp = config.getInt("MissingBlocksToLevelUp");
         int islandLevel = config.getInt("IslandLevel");
@@ -210,6 +241,7 @@ public class PlayerListener implements Listener {
                 blockLocation.getBlockX() == config.getInt("OneBlock-x") &&
                 blockLocation.getBlockY() == 100 &&
                 blockLocation.getBlockZ() == config.getInt("OneBlock-z")) {
+
             int maxlevel = Main.config.getInt("maxlevel");
             if (islandLevel != maxlevel) {
                 blocksToLevelUp -= 1;
@@ -220,18 +252,18 @@ public class PlayerListener implements Listener {
 
             config.set("MissingBlocksToLevelUp", blocksToLevelUp);
 
-
             if (blocksToLevelUp <= 0 && islandLevel != maxlevel) {
                 islandLevel += 1;
                 config.set("IslandLevel", islandLevel);
                 int newTotal = Main.config.getInt("oneblockblocks." + islandLevel + ".blockcount");
                 config.set("TotalBlocks", newTotal);
-                config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks." + islandLevel + ".blockcount"));
+                config.set("MissingBlocksToLevelUp", newTotal);
             }
 
-            if (islandLevel == 10 && durchgespielt != true) {
+            if (islandLevel == 10 && !durchgespielt) {
                 config.set("Durchgespielt", true);
             }
+
             Manager.saveIslandConfig(ownerUUID, config);
 
             List<String> nextBlocks = Main.config.getStringList("oneblockblocks." + islandLevel + ".blocks");
@@ -256,10 +288,10 @@ public class PlayerListener implements Listener {
                 block.setType(Material.AIR);
                 regenerateOneBlock(blockLocation, blockMaterial, islandLevel);
                 monster(ownerUUID, blockLocation.clone().add(0.5, 1.0, 0.5));
-
             }
         }
     }
+
 
     private void regenerateOneBlock(Location blockLocation, Material blockMaterial, Integer IslandLevel) {
         Bukkit.getScheduler().runTaskLater(JavaPlugin.getPlugin(Main.class), () -> {
@@ -267,35 +299,51 @@ public class PlayerListener implements Listener {
             newBlock.setType(blockMaterial);
 
             if (blockMaterial == Material.CHEST) {
-                Chest chest = (Chest) newBlock.getState();
-                chest.setCustomName("§6Erste Kiste");
-                spawnChestWithConfig(blockLocation, "onechest", IslandLevel);
-                chest.update();
-            }
+                YamlConfiguration config = (YamlConfiguration) Main.config;
+                newBlock.setType(Material.CHEST);
 
-            BlockData blockData = newBlock.getBlockData();
-            if (blockData instanceof Piston) {
-                newBlock.setBlockData(blockData);
+                ConfigurationSection chestsSection = config.getConfigurationSection("oneblockblocks." + IslandLevel + ".chests");
+                if (chestsSection == null || chestsSection.getKeys(false).isEmpty()) {
+                    Bukkit.getLogger().warning("Keine Kisten für Level " + IslandLevel + " gefunden!");
+                    return;
+                }
+
+                List<String> chestKeys = new ArrayList<>(chestsSection.getKeys(false));
+                String randomChestKey = chestKeys.get(new Random().nextInt(chestKeys.size()));
+
+
+                Bukkit.getScheduler().runTaskLater(JavaPlugin.getPlugin(Main.class), () -> {
+                    spawnChestWithConfig(blockLocation, randomChestKey, IslandLevel);
+                }, 1L);
             }
         }, 1L);
     }
 
-    public void spawnChestWithConfig(Location location, String chestKey, int IslandLevel) {
-        YamlConfiguration config = (YamlConfiguration) Main.config; // Deine Config laden
-        List<String> kisten = config.getStringList("oneblockblocks" + IslandLevel + ".chests." + chestKey);
-        if (!config.contains("oneblockblocks.10.chests." + chestKey)) {
-            Bukkit.getLogger().warning("Chest-Key nicht in Config gefunden: " + chestKey);
+
+    public void spawnChestWithConfig (Location location, String chestKey,int islandLevel) {
+        YamlConfiguration config = (YamlConfiguration) Main.config;
+
+        String path = "oneblockblocks." + islandLevel + ".chests." + chestKey;
+
+        if (!config.contains(path)) {
+            Bukkit.getLogger().warning("Chest-Key nicht in Config gefunden: " + chestKey + " für Level " + islandLevel);
             return;
         }
 
-        String name = config.getString("oneblockblocks." + IslandLevel + ".chests." + chestKey + ".name");
-        List<String> contents = config.getStringList("oneblockblocks." + IslandLevel + ".chests." + chestKey + ".contents");
+        String name = config.getString(path + ".name", "§7Kiste");
+        List<String> contents = config.getStringList(path + ".contents");
 
         Block block = location.getBlock();
         block.setType(Material.CHEST);
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            Chest chest = (Chest) block.getState();
+            Block updatedBlock = location.getBlock();
+            if (updatedBlock.getType() != Material.CHEST) {
+                Bukkit.getLogger().warning("Block ist nach Delay keine Chest: " + updatedBlock.getType());
+                return;
+            }
+
+            Chest chest = (Chest) updatedBlock.getState();
             chest.setCustomName(name);
             chest.update();
 
@@ -304,41 +352,92 @@ public class PlayerListener implements Listener {
 
             for (String itemString : contents) {
                 String[] parts = itemString.split(":");
-                Material mat = Material.getMaterial(parts[0].toUpperCase());
+                Material mat = Material.matchMaterial(parts[0].toUpperCase());
                 int amount = parts.length > 1 ? Integer.parseInt(parts[1]) : 1;
 
                 if (mat != null) {
-                    ItemStack item = new ItemStack(mat, amount);
-                    inv.addItem(item);
+                    inv.addItem(new ItemStack(mat, amount));
                 }
             }
-        }, 1L);
+        }, 1L); // dieser Delay bleibt
     }
-
-
     @EventHandler
-    public void onChestBreak(BlockBreakEvent event) {
+    public void onChestBreak (BlockBreakEvent event){
         Block block = event.getBlock();
 
+        System.out.println(block.getType());
         if (block.getType() != Material.CHEST) return;
 
+
         Chest chest = (Chest) block.getState();
+        String chestName = chest.getCustomName();
 
-        if (chest.getCustomName() != null && chest.getCustomName().equals("§6Erste Kiste")) {
-            Inventory inv = chest.getBlockInventory();
+        // Wenn kein CustomName, abbrechen
+        if (chestName == null) return;
 
-            for (ItemStack item : inv.getContents()) {
-                if (item != null && item.getType() != Material.AIR) {
-                    block.getWorld().dropItemNaturally(block.getLocation(), item);
-                }
+        // Insel-Level holen (deine Methode)
+        int islandLevel = getIslandLevelForLocation(block.getLocation());
+        if (islandLevel == -1) return; // keine Insel
+
+        // Config laden
+        FileConfiguration config = Main.getInstance().getConfig();
+        ConfigurationSection chestsSection = config.getConfigurationSection("oneblockblocks." + islandLevel + ".chests");
+
+        if (chestsSection == null) return;
+
+        // Prüfen, ob Truhe in Config konfiguriert ist
+        boolean isConfiguredChest = false;
+
+        for (String chestKey : chestsSection.getKeys(false)) {
+            String configuredName = config.getString("oneblockblocks." + islandLevel + ".chests." + chestKey + ".name", "§7Kiste");
+            if (configuredName.equals(chestName)) {
+                isConfiguredChest = true;
+                break;
             }
-
-            inv.clear(); // Sonst wird's evtl. nochmal gespeichert (besonders bei Multiverse etc.)
         }
+
+        if (!isConfiguredChest) return;
+
+        // Items aus Truhe droppen lassen
+        Inventory inv = chest.getBlockInventory();
+        for (ItemStack item : inv.getContents()) {
+            if (item != null && item.getType() != Material.AIR) {
+                block.getWorld().dropItemNaturally(block.getLocation(), item);
+            }
+        }
+
+        // Truhe leeren
+        inv.clear();
+    }
+
+    private int getIslandLevelForLocation (Location location){
+        File folder = Main.islandDataFolder; // Ordner mit Insel-YMLs
+        if (!folder.exists() || !folder.isDirectory()) return -1;
+
+        File[] files = folder.listFiles((dir, name) -> name.endsWith(".yml"));
+        if (files == null) return -1;
+
+        for (File file : files) {
+            YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+            int centerX = config.getInt("x-position");
+            int centerZ = config.getInt("z-position");
+            int borderSize = config.getInt("WorldBorderSize", 50);
+            int halfSize = borderSize / 2;
+
+            if (location.getWorld() != null && location.getWorld().getName().equals("OneBlock")
+                    && location.getBlockX() >= centerX - halfSize
+                    && location.getBlockX() <= centerX + halfSize
+                    && location.getBlockZ() >= centerZ - halfSize
+                    && location.getBlockZ() <= centerZ + halfSize) {
+                return config.getInt("IslandLevel", 1);
+            }
+        }
+
+        return -1; // Keine Insel gefunden
     }
 
 
-    public void monster(UUID ownerUUID, Location spawnLocation) {
+    public void monster (UUID ownerUUID, Location spawnLocation){
         YamlConfiguration config = Manager.getIslandConfig(ownerUUID);
         int islandLevel = config.getInt("IslandLevel");
 
@@ -381,7 +480,7 @@ public class PlayerListener implements Listener {
 
     }
 
-    private void sendActionbarProgress(Player player, int currentLevel, int missingBlocks) {
+    private void sendActionbarProgress (Player player,int currentLevel, int missingBlocks){
         // Max-Level mit pulsierendem Block, der hoch und runter wandert
         if (missingBlocks == Integer.MIN_VALUE) {
             StringBuilder barBuilder = new StringBuilder("§7[");
@@ -448,7 +547,7 @@ public class PlayerListener implements Listener {
     }
 
     @EventHandler
-    public void onBlockPiston(BlockPistonExtendEvent event) {
+    public void onBlockPiston (BlockPistonExtendEvent event){
         for (Block block : event.getBlocks()) {
             if (block.getY() != 100) continue;
 
@@ -473,7 +572,7 @@ public class PlayerListener implements Listener {
     }
 
     @EventHandler
-    public void onEntityExplode(EntityExplodeEvent event) {
+    public void onEntityExplode (EntityExplodeEvent event){
         event.blockList().removeIf(this::isOneBlock);
         List<String> nextBlocks = Main.config.getStringList("oneblockblocks.block");
         if (nextBlocks.isEmpty()) return;
@@ -493,13 +592,13 @@ public class PlayerListener implements Listener {
         });
     }
 
-    private boolean isPlayerAllowed(Location loc, Player player) {
+    private boolean isPlayerAllowed (Location loc, Player player){
         String islandOwner = getIslandOwnerByLocation(loc);
         if (islandOwner == null) return false;
         return isPlayerAllowedOnIsland(player, UUID.fromString(islandOwner));
     }
 
-    public static boolean isPlayerAllowedOnIsland(Player player, UUID islandOwnerUUID) {
+    public static boolean isPlayerAllowedOnIsland (Player player, UUID islandOwnerUUID){
         YamlConfiguration config = Manager.getIslandConfig(islandOwnerUUID);
         List<String> added = config.getStringList("added");
         List<String> trusted = config.getStringList("trusted");
@@ -511,7 +610,7 @@ public class PlayerListener implements Listener {
                 || trusted.contains(playerUUID);
     }
 
-    public static String getIslandOwnerByLocation(Location loc) {
+    public static String getIslandOwnerByLocation (Location loc){
         File folder = Main.islandDataFolder;
         if (folder.exists() && folder.isDirectory()) {
             File[] files = folder.listFiles((dir, name) -> name.endsWith(".yml"));
@@ -535,7 +634,7 @@ public class PlayerListener implements Listener {
     }
 
     @EventHandler
-    public void onPlayerInteract(PlayerInteractEvent event) {
+    public void onPlayerInteract (PlayerInteractEvent event){
         if (event.getClickedBlock() == null) return;
         Material type = event.getClickedBlock().getType();
         if (!(type == Material.CHEST || type == Material.TRAPPED_CHEST || type == Material.HOPPER || type == Material.SHULKER_BOX))
@@ -549,7 +648,7 @@ public class PlayerListener implements Listener {
     }
 
 
-    public static UUID getIslandOwnerUUIDByLocation(Location loc) {
+    public static UUID getIslandOwnerUUIDByLocation (Location loc){
         File folder = Main.islandDataFolder;
         if (folder.exists() && folder.isDirectory()) {
             File[] files = folder.listFiles((dir, name) -> name.endsWith(".yml"));
@@ -582,7 +681,7 @@ public class PlayerListener implements Listener {
 
 
     @EventHandler
-    public void onBlockPlace(BlockPlaceEvent event) {
+    public void onBlockPlace (BlockPlaceEvent event){
 
         Player player = event.getPlayer();
 

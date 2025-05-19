@@ -52,9 +52,9 @@ public class OBItems implements CommandExecutor, Listener {
         Chest chest = (Chest) clicked.getState();
 
 
-        //if (chest.getCustomName() != null && chest.getCustomName().equals("§6Erste Kiste")) {
-        //    event.setCancelled(true); // Standard-Öffnen abbrechen
-//
+      if (chest.getCustomName() != null && chest.getCustomName().equals("§6Erste Kiste")) {
+          event.setCancelled(true); // Standard-Öffnen abbrechen
+
 
             if (onechest == null) {
                 onechest = Bukkit.createInventory(null, 27, "§6Ibecgest");
@@ -68,6 +68,7 @@ public class OBItems implements CommandExecutor, Listener {
             player.openInventory(onechest);
         }
     }
+}
 
 
 
