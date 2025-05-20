@@ -59,6 +59,8 @@ public class Main extends JavaPlugin implements Listener {
 
         // Bukkit.getPluginManager().registerEvents(new Generator(this), this);
 
+        Bukkit.getPluginManager().registerEvents(new Test(), this);
+
 
         Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
         if (economy != null) {
