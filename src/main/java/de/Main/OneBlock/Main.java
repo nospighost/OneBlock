@@ -48,9 +48,11 @@ public class Main extends JavaPlugin implements Listener {
 
 
         setupEconomy();
-        OBItems.createCustomItemsConfig(this);
+
 
         // Listener registrieren
+          Bukkit.getPluginManager().registerEvents(new test(), this);
+        Bukkit.getPluginManager().registerEvents(this, this);
         OBItems obItems = new OBItems(this);
         getServer().getPluginManager().registerEvents(obItems, this);
         getCommand("globaltrash").setExecutor(obItems);

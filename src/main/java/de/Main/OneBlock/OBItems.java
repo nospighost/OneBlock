@@ -1,8 +1,6 @@
 package de.Main.OneBlock;
 
-import org.bukkit.Bukkit;
-
-import org.bukkit.Material;
+import org.bukkit.*;
 
 import org.bukkit.block.Block;
 
@@ -24,9 +22,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 
 public class OBItems implements CommandExecutor, Listener {
@@ -67,9 +63,69 @@ public class OBItems implements CommandExecutor, Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
-        if (isMagnet(event)) return;
+        Player player = event.getPlayer();
+        Block block = event.getBlock();
+        Material type = block.getType();
+
+        boolean hasMagnet = isValidMagnet(player.getInventory().getItemInMainHand()) ||
+                isValidMagnet(player.getInventory().getItemInOffHand());
+
+        if (!isLog(type)) return;
+        if (!isAxe(player.getInventory().getItemInMainHand().getType())) return;
+
+        World world = block.getWorld();
+        int startY = block.getY();
+        int x = block.getX();
+        int z = block.getZ();
+
+        int maxBlocks = 32;
+
+        for (int i = 0; i < maxBlocks; i++) {
+            int currentY = startY + i;
+            if (currentY > world.getMaxHeight()) break;
+
+            Block current = world.getBlockAt(x, currentY, z);
+
+            if (isLog(current.getType())) {
+                Material mat = current.getType();
+                Location loc = current.getLocation().add(0.5, 0.5, 0.5);
+
+                current.setType(Material.AIR);
+
+
+                if (hasMagnet) {
+                    player.getInventory().addItem(new ItemStack(mat));
+                } else {
+                    current.getWorld().dropItemNaturally(loc, new ItemStack(mat));
+                }
+
+                world.spawnParticle(Particle.COMPOSTER, loc, 10);
+
+                int delay = i;
+                Bukkit.getScheduler().runTaskLater(plugin, () ->
+                                world.playSound(loc, Sound.BLOCK_WOOD_BREAK, 1.0f, 1.0f)
+                        , delay);
+
+            } else {
+                break;
+            }
+        }
+
+
+        if (hasMagnet) {
+            event.setDropItems(false);
+        }
     }
 
+
+
+    private boolean isLog(Material material) {
+        return material.name().endsWith("_LOG") || material.name().endsWith("_STEM");
+    }
+
+    private boolean isAxe(Material material) {
+        return material.name().endsWith("_AXE");
+    }
     private boolean isMagnet(BlockBreakEvent event) {
         Player player = event.getPlayer();
         ItemStack mainhand = player.getInventory().getItemInMainHand();
@@ -89,6 +145,7 @@ public class OBItems implements CommandExecutor, Listener {
 
         return true;
     }
+
     private boolean isValidMagnet(ItemStack item) {
         if (item == null || item.getType() == Material.AIR) return false;
         if (!item.hasItemMeta()) return false;
@@ -116,7 +173,7 @@ public class OBItems implements CommandExecutor, Listener {
         Player player = event.getPlayer();
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         Block clicked = event.getClickedBlock();
-        if (clicked.getType() == Material.PODZOL) {
+        if (clicked.getType() == Material.BEDROCK) {
             player.openInventory(globalTrashInventory);
             createCustomItemsConfig(plugin);
 
@@ -173,8 +230,9 @@ public class OBItems implements CommandExecutor, Listener {
         }
     }
 
-
 }
+
+
 
 
 
