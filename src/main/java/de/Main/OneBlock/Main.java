@@ -29,6 +29,7 @@ public class Main extends JavaPlugin implements Listener {
     public static File islandDataFolder;
     public static File GenDataFolder;
     private static Economy economy = null;
+    public File CustomItems;
 
     public static Main getInstance() {
         return instance;
@@ -47,7 +48,7 @@ public class Main extends JavaPlugin implements Listener {
 
 
         setupEconomy();
-
+        OBItems.createCustomItemsConfig(this);
 
         // Listener registrieren
         OBItems obItems = new OBItems(this);
@@ -56,7 +57,7 @@ public class Main extends JavaPlugin implements Listener {
         obItems.start();
 
 
-      Bukkit.getPluginManager().registerEvents(new Generator(this), this);
+        // Bukkit.getPluginManager().registerEvents(new Generator(this), this);
 
 
         Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
@@ -82,6 +83,12 @@ public class Main extends JavaPlugin implements Listener {
             GenDataFolder.mkdirs();
         } else {
             getLogger().info("GenDataFolder wurde NICHT erfolgreich erstellt!");
+        }
+        CustomItems = new File(getDataFolder(), "CustomItems");
+        if (!CustomItems.exists()) {
+            CustomItems.mkdirs();
+        } else {
+            getLogger().info("CustomItems folder wurde nicht  erstellt!");
         }
 
 

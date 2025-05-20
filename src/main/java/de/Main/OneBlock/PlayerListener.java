@@ -361,7 +361,7 @@ public class PlayerListener implements Listener {
     public void onChestBreak (BlockBreakEvent event){
         Block block = event.getBlock();
 
-        System.out.println(block.getType());
+
         if (block.getType() != Material.CHEST) return;
 
 
