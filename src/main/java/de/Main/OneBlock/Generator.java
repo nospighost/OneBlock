@@ -195,6 +195,4 @@ public class Generator implements Listener {
             e.printStackTrace();
         }
     }
-
 }
-
