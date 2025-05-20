@@ -101,7 +101,7 @@ public class Main extends JavaPlugin implements Listener {
 
         getServer().getPluginManager().registerEvents(new OBGUI(), this);
 
-        // Void Gen für OneBlock-Welta
+        // Void Gen für OneBlock-Weltaa
         WorldCreator worldCreator = new WorldCreator(WORLD_NAME);
         worldCreator.environment(World.Environment.NORMAL);
         worldCreator.type(WorldType.FLAT);
