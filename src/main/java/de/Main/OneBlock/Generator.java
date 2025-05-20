@@ -29,13 +29,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static de.Main.OneBlock.Manager.*;
+import static de.Main.OneBlock.Manager.economy;
+import static de.Main.OneBlock.Manager.getIslandConfig;
 
 public class Generator implements Listener {
 
     private final JavaPlugin plugin;
     private int multi = 1;
-
     public Generator(JavaPlugin plugin) {
         this.plugin = plugin;
     }
@@ -62,9 +62,8 @@ public class Generator implements Listener {
                     Material material = Material.getMaterial(typeString);
 
                     if (material != null) {
-
-
-                        loc.getWorld().dropItemNaturally(loc, new ItemStack(material, multi));
+                        // 1. Richtigen Block droppen
+                        loc.getWorld().dropItemNaturally(loc, new ItemStack(material));
 
                         // 2. Generator-Eintrag entfernen
 
@@ -167,7 +166,6 @@ public class Generator implements Listener {
         }
     }
 
-
     @EventHandler(ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
@@ -175,9 +173,13 @@ public class Generator implements Listener {
 
         File file = Manager.getGeneratorFile(loc);
         YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+
         ItemStack item = event.getItemInHand();
 
-        if (item.containsEnchantment(Enchantment.FORTUNE));
+        if (!item.containsEnchantment(Enchantment.SILK_TOUCH)) return;
+
+        int enchantLevel = item.getEnchantmentLevel(Enchantment.SILK_TOUCH);
+        if (enchantLevel < 5) return;
 
         String blockType = event.getBlock().getType().toString();
 
@@ -196,3 +198,4 @@ public class Generator implements Listener {
         }
     }
 }
+

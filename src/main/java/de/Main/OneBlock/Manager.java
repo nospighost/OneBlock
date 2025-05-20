@@ -147,6 +147,7 @@ public class Manager implements Listener {
         return YamlConfiguration.loadConfiguration(file);
     }
 
+
     public static void saveIslandConfig(UUID uuid, YamlConfiguration config) {
         try {
             config.save(getIslandFile(uuid));

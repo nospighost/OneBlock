@@ -131,7 +131,7 @@ public class WorldBorderManager implements Listener {
             double step = 1.0;
 
             // Höhen: 1 Block runter, dann 5 Blöcke hoch (insgesamt 6 Ebenen)
-            int[] heights = {-1, 1, 2, 3, 4 };
+            int[] heights = {-1, 0, 1, 2, 3, 4 };
 
             for (int h : heights) {
                 double y = Math.floor(baseY) + h;  // Ganze Blöcke, damit es sauber aussieht

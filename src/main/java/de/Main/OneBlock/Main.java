@@ -29,6 +29,7 @@ public class Main extends JavaPlugin implements Listener {
     public static File islandDataFolder;
     public static File GenDataFolder;
     private static Economy economy = null;
+    public File CustomItems;
 
     public static Main getInstance() {
         return instance;
@@ -47,12 +48,18 @@ public class Main extends JavaPlugin implements Listener {
 
 
         setupEconomy();
-
+        OBItems.createCustomItemsConfig(this);
 
         // Listener registrieren
-        Bukkit.getPluginManager().registerEvents(new Test(), this);
-       //Bukkit.getPluginManager().registerEvents(new Generator(this), this);
-        Bukkit.getPluginManager().registerEvents(new OBItems(), this);
+        OBItems obItems = new OBItems(this);
+        getServer().getPluginManager().registerEvents(obItems, this);
+        getCommand("globaltrash").setExecutor(obItems);
+        obItems.start();
+
+
+        // Bukkit.getPluginManager().registerEvents(new Generator(this), this);
+
+
         Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
         if (economy != null) {
             Bukkit.getPluginManager().registerEvents(new Manager(economy, this), this);
@@ -77,12 +84,18 @@ public class Main extends JavaPlugin implements Listener {
         } else {
             getLogger().info("GenDataFolder wurde NICHT erfolgreich erstellt!");
         }
+        CustomItems = new File(getDataFolder(), "CustomItems");
+        if (!CustomItems.exists()) {
+            CustomItems.mkdirs();
+        } else {
+            getLogger().info("CustomItems folder wurde nicht  erstellt!");
+        }
 
 
         // Befehle
         getCommand("ob").setExecutor(new de.Main.OneBlock.OneBlockCommands());
         getCommand("obgui").setExecutor(new OBGUI());
-        getCommand("globaltrash").setExecutor(new OBItems());
+        getCommand("globaltrash").setExecutor(new OBItems(this));
 
         getServer().getPluginManager().registerEvents(new OBGUI(), this);
 

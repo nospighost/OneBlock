@@ -1,16 +1,16 @@
 package de.Main.OneBlock;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
+
 import org.bukkit.Material;
-import org.bukkit.World;
+
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.Chest;
-import org.bukkit.block.Container;
+
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -19,14 +19,26 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 
 
 public class OBItems implements CommandExecutor, Listener {
     private Inventory globalTrashInventory;
-
+    private final JavaPlugin plugin;
     private Inventory onechest;
+    public static File configFile;
+    public static YamlConfiguration config;
 
-    public OBItems() {
+
+    public OBItems(JavaPlugin plugin) {
+        this.plugin = plugin;
         globalTrashInventory = Bukkit.createInventory(null, 54, "§6Globaler Mülleimer");
     }
 
@@ -37,37 +49,131 @@ public class OBItems implements CommandExecutor, Listener {
             return true;
         }
         Player player = (Player) sender;
-        player.openInventory(globalTrashInventory); // Gleiches Inventory für alle
+        player.openInventory(globalTrashInventory);
+        ItemStack magnet = new ItemStack(Material.SADDLE);
+        ItemMeta meta2 = magnet.getItemMeta();
+        meta2.setLore(config.getStringList("Magnet.lore"));
+        magnet.setItemMeta(meta2);
+        player.getInventory().addItem(magnet);
         return true;
     }
 
-    @EventHandler
-    public void onPlayerInteract(PlayerInteractEvent event) {
-        Player player = event.getPlayer();
 
+    public void start() {
+        Bukkit.getScheduler().runTaskTimer(Objects.requireNonNull(Bukkit.getPluginManager().getPlugin("oneblockplugin")), () -> {
+            globalTrashInventory.clear();
+        }, 0L, 5 * 60 * 20L);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockBreak(BlockBreakEvent event) {
+        if (isMagnet(event)) return;
+    }
+
+    private boolean isMagnet(BlockBreakEvent event) {
+        Player player = event.getPlayer();
+        ItemStack mainhand = player.getInventory().getItemInMainHand();
+        ItemStack offhand = player.getInventory().getItemInOffHand();
+
+
+        if (!isValidMagnet(mainhand) && !isValidMagnet(offhand)) return false;
+
+
+        Block block = event.getBlock();
+        Material blockType = block.getType();
+
+        event.setDropItems(false);
+        block.setType(Material.AIR);
+        player.getInventory().addItem(new ItemStack(blockType));
+
+
+        return true;
+    }
+    private boolean isValidMagnet(ItemStack item) {
+        if (item == null || item.getType() == Material.AIR) return false;
+        if (!item.hasItemMeta()) return false;
+
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null || !meta.hasLore()) return false;
+
+        List<String> itemLore = meta.getLore();
+        List<String> configLore = config.getStringList("Magnet.lore");
+
+        if (itemLore == null || configLore == null) return false;
+        if (itemLore.size() < configLore.size()) return false;
+
+        for (int i = 0; i < configLore.size(); i++) {
+            if (!itemLore.get(i).equals(configLore.get(i))) return false;
+        }
+
+        return true;
+    }
+
+
+
+    @EventHandler(ignoreCancelled = true)
+    public void onShiftRightClick(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         Block clicked = event.getClickedBlock();
-        if (clicked == null || clicked.getType() != Material.CHEST) return;
+        if (clicked.getType() == Material.PODZOL) {
+            player.openInventory(globalTrashInventory);
+            createCustomItemsConfig(plugin);
 
-        Chest chest = (Chest) clicked.getState();
+        }
 
+    }
 
-      if (chest.getCustomName() != null && chest.getCustomName().equals("TestChest")) {
-          event.setCancelled(true); // Standard-Öffnen abbrechen
+    public static YamlConfiguration getCustomItemsConfig(JavaPlugin plugin) {
+        File folder = new File(plugin.getDataFolder(), "CustomItems");
+        if (!folder.exists()) {
+            folder.mkdirs(); // Ordner erstellenfalls nicht vorhanden
+        }
 
+        configFile = new File(folder, "CustomItems.yml");
 
-            if (onechest == null) {
-                onechest = Bukkit.createInventory(null, 27, "§6Ibecgest");
-                onechest.setItem(3, new ItemStack(Material.STONE));
-                onechest.setItem(13, new ItemStack(Material.DIAMOND));
-                onechest.setItem(23, new ItemStack(Material.DIRT));
-                onechest.setItem(21, new ItemStack(Material.COBBLESTONE));
+        if (!configFile.exists()) {
+            try {
+                configFile.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
+        }
+
+        config = YamlConfiguration.loadConfiguration(configFile);
+
+        return config;
+    }
+
+    public static void createCustomItemsConfig(JavaPlugin plugin) {
+        getCustomItemsConfig(plugin);
 
 
-            player.openInventory(onechest);
+        config.set("Magnet", "Magnet");
+        config.set("Magnet.lore", Collections.singletonList("§7§lEffekt §f§l>> §c§lSammelt Alle Items auf"));
+        config.set("Magnet.material", "SADDLE");
+
+        ItemStack magnet = config.getItemStack("Magnet.material");
+        if (magnet != null && magnet.getType() != Material.AIR) {
+            ItemMeta meta = magnet.getItemMeta();
+            meta.setLore(Collections.singletonList(config.getString("Magnet.lore")));
+
+        }
+        saveCustomItemsConfig();
+
+    }
+
+    public static void saveCustomItemsConfig() {
+        try {
+            if (config != null && configFile != null) {
+                config.save(configFile);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
+
+
 }
 
 
