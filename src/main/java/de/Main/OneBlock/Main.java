@@ -51,7 +51,7 @@ public class Main extends JavaPlugin implements Listener {
 
 
         // Listener registrieren
-          Bukkit.getPluginManager().registerEvents(new Test(), this);
+        //  Bukkit.getPluginManager().registerEvents(new Test(), this);
         Bukkit.getPluginManager().registerEvents(this, this);
         OBItems obItems = new OBItems(this);
         getServer().getPluginManager().registerEvents(obItems, this);
