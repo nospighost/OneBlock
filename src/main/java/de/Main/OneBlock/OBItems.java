@@ -209,7 +209,9 @@ public class OBItems implements CommandExecutor, Listener {
         config.set("Magnet", "Magnet");
         config.set("Magnet.lore", Collections.singletonList("§7§lEffekt §f§l>> §c§lSammelt Alle Items auf"));
         config.set("Magnet.material", "SADDLE");
-
+        config.set("WoodCutter", "WoodCutter");
+        config.set("WoodCutter.lore", Collections.singletonList("§7§lEffekt §f§l>> §c§lBaut den ganzen Baumstamm ab"));)
+        config.set("WoodCutter.material", "NETHERITE_AXE");
         ItemStack magnet = config.getItemStack("Magnet.material");
         if (magnet != null && magnet.getType() != Material.AIR) {
             ItemMeta meta = magnet.getItemMeta();
