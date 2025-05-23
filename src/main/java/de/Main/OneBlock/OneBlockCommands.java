@@ -82,7 +82,7 @@ public class OneBlockCommands implements Listener, CommandExecutor {
             }
             OfflinePlayer toTrust = Bukkit.getOfflinePlayer(args[1]);
             if (toTrust != null && (toTrust.isOnline() || toTrust.hasPlayedBefore())) {
-                Manager.trustPlayer(player, toTrust.getPlayer() != null ? toTrust.getPlayer() : player); // fallback
+                Manager.trustPlayer(player, toTrust.getPlayer() != null ? toTrust.getPlayer() : player);
             } else {
                 player.sendMessage(prefix + "§cSpieler nicht gefunden.");
             }
