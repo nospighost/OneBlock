@@ -45,21 +45,10 @@ public class Main extends JavaPlugin implements Listener {
         saveDefaultConfig();
         config = getConfig();
         instance = this;
-
-
+        if (!config.contains("maxlevel")) {
+            config.set("maxlevel", 10);
+        }
         setupEconomy();
-
-
-        // Listener registrieren
-          Bukkit.getPluginManager().registerEvents(new Test(), this);
-        Bukkit.getPluginManager().registerEvents(this, this);
-        OBItems obItems = new OBItems(this);
-        getServer().getPluginManager().registerEvents(obItems, this);
-        getCommand("globaltrash").setExecutor(obItems);
-        obItems.start();
-
-
-        // Bukkit.getPluginManager().registerEvents(new Generator(this), this);
 
 
         Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
@@ -80,24 +69,11 @@ public class Main extends JavaPlugin implements Listener {
         if (!islandDataFolder.exists()) {
             islandDataFolder.mkdirs();
         }
-        GenDataFolder = new File(getDataFolder(), "GenDataFolder");
-        if (!GenDataFolder.exists()) {
-            GenDataFolder.mkdirs();
-        } else {
-            getLogger().info("GenDataFolder wurde NICHT erfolgreich erstellt!");
-        }
-        CustomItems = new File(getDataFolder(), "CustomItems");
-        if (!CustomItems.exists()) {
-            CustomItems.mkdirs();
-        } else {
-            getLogger().info("CustomItems folder wurde nicht  erstellt!");
-        }
 
 
         // Befehle
         getCommand("ob").setExecutor(new de.Main.OneBlock.OneBlockCommands());
         getCommand("obgui").setExecutor(new OBGUI());
-        getCommand("globaltrash").setExecutor(new OBItems(this));
 
         getServer().getPluginManager().registerEvents(new OBGUI(), this);
 
@@ -138,43 +114,12 @@ public class Main extends JavaPlugin implements Listener {
 
     }
 
-
-    public static void setWorldBorder(Player player) {
-        YamlConfiguration config = Manager.getIslandConfig(player.getUniqueId());
-        int x = config.getInt("OneBlock-x");
-        int z = config.getInt("OneBlock-z");
-        int size = config.getInt("WorldBorderSize");
-        WorldBorder border = player.getWorld().getWorldBorder();
-        border.setCenter(x, z);
-        border.setSize(size);
-        border.setDamageBuffer(0);
-        border.setDamageAmount(0.5);
-        border.setWarningDistance(5);
-        border.setWarningTime(15);
-
-        player.setWorldBorder(border);
-
-        if (oneBlockWorld != null) {
-            Location blockLocation = new Location(oneBlockWorld, x, 100, z);
-            if (blockLocation.getBlock().getType() == Material.AIR) {
-                oneBlockWorld.setType(blockLocation, Material.OAK_LOG);
-            } else {
-                oneBlockWorld.getBlockAt(blockLocation).setType(blockLocation.getBlock().getType());
-            }
-
-        }
-    }
-
     private boolean setupEconomy() {
         RegisteredServiceProvider<Economy> rsp = Bukkit.getServicesManager().getRegistration(Economy.class);
         if (rsp != null) {
             economy = rsp.getProvider();
         }
         return economy != null;
-    }
-
-    public static Economy getEconomy() {
-        return economy;
     }
 
 

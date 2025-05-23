@@ -3,10 +3,14 @@ package de.Main.OneBlock;
 import org.bukkit.*;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
 
@@ -59,7 +63,7 @@ public class WorldBorderManager implements Listener {
                         if (currentTask != null) {
                             currentTask.cancel();
                         }
-                        // Neuen Task starten
+
                         IslandBorderParticles newTask = new IslandBorderParticles(player, centerX, centerZ, half);
                         newTask.start();
                         runningTasks.put(playerUUID, newTask);
@@ -92,7 +96,7 @@ public class WorldBorderManager implements Listener {
             runningTasks.remove(uuid);
         }
     }
-    // Innere Klasse für pulsierende Partikel-Border
+
     private static class IslandBorderParticles extends BukkitRunnable {
 
         private final Player player;
@@ -109,7 +113,7 @@ public class WorldBorderManager implements Listener {
         }
 
         public void start() {
-            // Task alle 5 Ticks (0,25 Sek)
+
             this.runTaskTimer(Main.getPlugin(), 0L, 3L);
         }
 
@@ -117,7 +121,7 @@ public class WorldBorderManager implements Listener {
         public void run() {
             if (!player.isOnline()) {
                 this.cancel();
-                WorldBorderManager.runningTasks.remove(player.getUniqueId()); // Task entfernen wenn abgebrochen
+                WorldBorderManager.runningTasks.remove(player.getUniqueId());
                 return;
             }
             tick++;
@@ -126,15 +130,15 @@ public class WorldBorderManager implements Listener {
 
 
         private void spawnBorderParticles() {
-            double baseY = player.getLocation().getY();  // Spielerhöhe
+            double baseY = player.getLocation().getY();
 
             double step = 1.0;
 
-            // Höhen: 1 Block runter, dann 5 Blöcke hoch (insgesamt 6 Ebenen)
+
             int[] heights = {-1, 0, 1, 2, 3, 4 };
 
             for (int h : heights) {
-                double y = Math.floor(baseY) + h;  // Ganze Blöcke, damit es sauber aussieht
+                double y = Math.floor(baseY) + h;
 
                 for (double x = centerX - halfSize; x <= centerX + halfSize; x += step) {
                     spawnParticleAt(x, y, centerZ - halfSize);
@@ -161,7 +165,7 @@ public class WorldBorderManager implements Listener {
         @Override
         public synchronized void cancel() throws IllegalStateException {
             super.cancel();
-            WorldBorderManager.runningTasks.remove(player.getUniqueId()); // Sicherstellen, dass Task entfernt wird
+            WorldBorderManager.runningTasks.remove(player.getUniqueId());
         }
 
         public boolean matches(int centerX, int centerZ, int halfSize) {
@@ -169,5 +173,52 @@ public class WorldBorderManager implements Listener {
         }
 
     }
+    @EventHandler
+    public void onPlayerTeleport(PlayerTeleportEvent event) {
+        Location to = event.getTo();
+        if (to == null) return;
+
+
+        if (event.getCause() != PlayerTeleportEvent.TeleportCause.ENDER_PEARL) {
+            return;
+        }
+
+        File folder = new File("plugins/oneblockplugin/IslandData");
+        if (!folder.exists() || !folder.isDirectory()) return;
+
+        boolean isWithinBorder = false;
+
+        for (File file : folder.listFiles()) {
+            if (!file.getName().endsWith(".yml")) continue;
+
+            YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+
+            int centerX = config.getInt("x-position");
+            int centerZ = config.getInt("z-position");
+            int size = config.getInt("WorldBorderSize");
+            int half = (int) (size / 2.0 - 0.5);
+
+            double minX = centerX - half;
+            double maxX = centerX + half;
+            double minZ = centerZ - half;
+            double maxZ = centerZ + half;
+
+
+            if (to.getX() >= minX && to.getX() <= maxX && to.getZ() >= minZ && to.getZ() <= maxZ) {
+                isWithinBorder = true;
+                break;
+            }
+        }
+
+        if (!isWithinBorder) {
+
+            event.setCancelled(true);
+
+        }
+
+
+    }
+
+
 
 }

@@ -13,6 +13,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -130,6 +131,9 @@ public class PlayerListener implements Listener {
             if (!config.contains("IslandLevel")) {
                 config.set("IslandLevel", 1);
             }
+            if (!config.contains("Durchgespielt")) {
+                config.set("Durchgespielt", false);
+            }
 
             if (!config.contains("OneBlock-x") || !config.contains("OneBlock-z")) {
                 if (!config.contains("OneBlock-x")) {
@@ -144,11 +148,6 @@ public class PlayerListener implements Listener {
 
             World world = Bukkit.getWorld(WORLD_NAME);
             if (world != null && player.getWorld().getName().equals(WORLD_NAME)) {
-                int x = config.getInt("OneBlock-x", 0);
-                int z = config.getInt("OneBlock-z", 0);
-                int size = config.getInt("WorldBorderSize", 50);
-
-
                 Location spawn = new Location(world, config.getInt("x-position"), 100, config.getInt("z-position"));
                 player.teleport(spawn);
 
@@ -231,6 +230,8 @@ public class PlayerListener implements Listener {
         int islandLevel = config.getInt("IslandLevel");
         boolean durchgespielt = config.getBoolean("Durchgespielt");
         World world = Bukkit.getWorld("OneBlock");
+
+
 
         if (world != null &&
                 blockLocation.getWorld().equals(world) &&
@@ -355,7 +356,7 @@ public class PlayerListener implements Listener {
                     inv.addItem(new ItemStack(mat, amount));
                 }
             }
-        }, 1L); // dieser Delay bleibt
+        }, 1L);
     }
     @EventHandler
     public void onChestBreak (BlockBreakEvent event){
@@ -368,20 +369,19 @@ public class PlayerListener implements Listener {
         Chest chest = (Chest) block.getState();
         String chestName = chest.getCustomName();
 
-        // Wenn kein CustomName, abbrechen
+
         if (chestName == null) return;
 
-        // Insel-Level holen (deine Methode)
         int islandLevel = getIslandLevelForLocation(block.getLocation());
-        if (islandLevel == -1) return; // keine Insel
+        if (islandLevel == -1) return;
 
-        // Config laden
+
         FileConfiguration config = Main.getInstance().getConfig();
         ConfigurationSection chestsSection = config.getConfigurationSection("oneblockblocks." + islandLevel + ".chests");
 
         if (chestsSection == null) return;
 
-        // Prüfen, ob Truhe in Config konfiguriert ist
+
         boolean isConfiguredChest = false;
 
         for (String chestKey : chestsSection.getKeys(false)) {
@@ -394,7 +394,7 @@ public class PlayerListener implements Listener {
 
         if (!isConfiguredChest) return;
 
-        // Items aus Truhe droppen lassen
+
         Inventory inv = chest.getBlockInventory();
         for (ItemStack item : inv.getContents()) {
             if (item != null && item.getType() != Material.AIR) {
@@ -402,12 +402,11 @@ public class PlayerListener implements Listener {
             }
         }
 
-        // Truhe leeren
         inv.clear();
     }
 
     private int getIslandLevelForLocation (Location location){
-        File folder = Main.islandDataFolder; // Ordner mit Insel-YMLs
+        File folder = Main.islandDataFolder;
         if (!folder.exists() || !folder.isDirectory()) return -1;
 
         File[] files = folder.listFiles((dir, name) -> name.endsWith(".yml"));
@@ -429,7 +428,7 @@ public class PlayerListener implements Listener {
             }
         }
 
-        return -1; // Keine Insel gefunden
+        return -1;
     }
 
 
@@ -442,20 +441,19 @@ public class PlayerListener implements Listener {
 
         Random random = new Random();
 
-        // hier wird die prozent chance berechntet
+
         int totalChance = 0;
         for (Map<?, ?> monsterData : monstersList) {
             totalChance += (int) monsterData.get("chance");
         }
 
-        int roll = random.nextInt(100) + 1;  // 1-100
+        int roll = random.nextInt(100) + 1;
 
         if (roll > totalChance) {
-            //also wenn die % chance nd erreicht ist kein mobser gespawnt
             return;
         }
 
-        // Monster anhand roll auswählen
+
         int cumulativeChance = 0;
         for (Map<?, ?> monsterData : monstersList) {
             int chance = (int) monsterData.get("chance");
@@ -470,18 +468,18 @@ public class PlayerListener implements Listener {
                     return;
                 }
                 spawnLocation.getWorld().spawnEntity(spawnLocation, entityType);
-                break; // Nur 1 Monster spawn, danach raus aus der Schleife
+                break;
             }
         }
 
     }
 
     private void sendActionbarProgress (Player player,int currentLevel, int missingBlocks){
-        // Max-Level mit pulsierendem Block, der hoch und runter wandert
+
         if (missingBlocks == Integer.MIN_VALUE) {
             StringBuilder barBuilder = new StringBuilder("§7[");
 
-            // Animation: frame läuft hoch und runter von 0 bis 9
+
             if (forward) {
                 frame++;
                 if (frame >= 9) forward = false;
@@ -492,9 +490,9 @@ public class PlayerListener implements Listener {
 
             for (int i = 0; i < 10; i++) {
                 if (i == frame) {
-                    barBuilder.append("§a█");  // Hellgrün pulsierender Block
+                    barBuilder.append("§a█");
                 } else {
-                    barBuilder.append("§2█");  // Dunkelgrün andere Blöcke
+                    barBuilder.append("§2█");
                 }
             }
 
@@ -506,31 +504,31 @@ public class PlayerListener implements Listener {
             return;
         }
 
-        // Normaler Fortschritt + Wellen-Highlight
+
         YamlConfiguration cfg = getIslandConfig(player.getUniqueId());
         int total = cfg.getInt("TotalBlocks");
         double prog = (double) (total - missingBlocks) / total;
         int filled = (int) (prog * 10);
 
-        // Sinus-Welle [0..9]
-        double radians = frame * 0.3; // Geschwindigkeit
+
+        double radians = frame * 0.3;
         int wavePos = (int) ((Math.sin(radians) + 1) * 4.5);
 
         StringBuilder bar = new StringBuilder("§7[");
         for (int i = 0; i < 10; i++) {
             if (i < filled) {
-                // bereits freigeschaltet
+
                 if (i == wavePos) {
-                    bar.append("§7█");  //Wellen-Highlight gelb
+                    bar.append("§7█");
                 } else {
-                    bar.append("§7█");        // Grün für normalen Fortschritt
+                    bar.append("§7█");
                 }
             } else {
-                // noch nicht geschafft
+
                 if (i == wavePos) {
-                    bar.append("§7█");       // Halber gelber Block als Wave
+                    bar.append("§7█");
                 } else {
-                    bar.append("§7█");      // Grau für leer
+                    bar.append("§7█");
                 }
             }
         }
@@ -566,10 +564,46 @@ public class PlayerListener implements Listener {
             }
         }
     }
+    @EventHandler
+    public void onBlockPistonExtend(BlockPistonExtendEvent event) {
+        handlePistonMovement(event.getBlocks(), event);
+    }
+
+    @EventHandler
+    public void onBlockPistonRetract(BlockPistonRetractEvent event) {
+        handlePistonMovement(event.getBlocks(), event);
+    }
+
+    private void handlePistonMovement(List<Block> blocks, Cancellable event) {
+        for (Block block : blocks) {
+            if (block.getY() != 100) continue;
+
+            File folder = new File(USER_DATA_FOLDER);
+            if (!folder.exists() || !folder.isDirectory()) return;
+
+            for (File file : folder.listFiles()) {
+                if (!file.getName().endsWith(".yml")) continue;
+
+                YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+                int x = config.getInt("OneBlock-x");
+                int z = config.getInt("OneBlock-z");
+                World world = Bukkit.getWorld("OneBlock");
+
+                if (world != null) {
+                    Location oneBlockLocation = new Location(world, x, 100, z);
+                    if (block.getLocation().equals(oneBlockLocation)) {
+                        event.setCancelled(true);
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
 
     @EventHandler
     public void onEntityExplode(EntityExplodeEvent event) {
-        // Entferne aus der Explosionsliste alle Blöcke, die ein OneBlock von irgendeinem User sind
+
         event.blockList().removeIf(block -> isAnyUserOneBlock(block));
 
         List<String> nextBlocks = Main.config.getStringList("oneblockblocks.block");
@@ -594,25 +628,24 @@ public class PlayerListener implements Listener {
     }
 
 
-    // Hilfsmethode, die alle User-Configs durchgeht und prüft, ob der Block an der OneBlock-Position eines Users ist
+
     public boolean isAnyUserOneBlock(Block block) {
         World world = block.getWorld();
         if (world == null || !world.getName().equals(WORLD_NAME)) return false;
 
-        // Alle UUIDs der Spieler mit Inseln durchgehen
+
         for (UUID ownerUUID : Manager.getAllIslandOwners()) {
             YamlConfiguration config = Manager.getIslandConfig(ownerUUID);
             if (config == null) continue;
 
-            // Koordinaten der OneBlock-Insel aus der Config lesen
             int x = config.getInt("OneBlock-x", Integer.MIN_VALUE);
-            int y = 100; // falls fest definiert
+            int y = 100;
             int z = config.getInt("OneBlock-z", Integer.MIN_VALUE);
 
             Location oneBlockLocation = new Location(world, x, y, z);
 
             if (block.getLocation().equals(oneBlockLocation)) {
-                return true; // Das ist ein OneBlock eines Spielers
+                return true;
             }
         }
 
@@ -697,7 +730,7 @@ public class PlayerListener implements Listener {
                             try {
                                 return UUID.fromString(ownerUUIDStr);
                             } catch (IllegalArgumentException e) {
-                                // Ungültige UUID im File, ignorieren
+
                             }
                         }
                     }

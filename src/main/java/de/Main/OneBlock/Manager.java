@@ -3,23 +3,15 @@ package de.Main.OneBlock;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.block.Chest;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.InventoryOpenEvent;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.checkerframework.checker.units.qual.Prefix;
-
 import java.io.File;
 import java.io.IOException;
-import java.lang.annotation.Target;
 import java.util.*;
 
 import static de.Main.OneBlock.Main.*;
@@ -58,8 +50,13 @@ public class Manager implements Listener {
                 World world = Bukkit.getWorld("OneBlock");
                 if (world != null) {
                     Location teleportLocation = new Location(world, pos, 101, pos);
+                    Location blockLocation = new Location(world, config.getInt("OneBlock-x"), 100, config.getInt("OneBlock-z"));
+                    Block block = blockLocation.getBlock();
+                    if (block.getType() == Material.AIR) {
+                        block.setType(Material.OAK_LOG);
+                    }
                     player.teleport(teleportLocation);
-                    // Setze Border erst NACH dem Teleport
+
                 }
 
 
@@ -92,47 +89,12 @@ public class Manager implements Listener {
     public static File getIslandFile(UUID uuid) {
         return new File(Main.islandDataFolder, uuid.toString() + ".yml");
     }
-    public static File getgeneratorFile(Location genlocation) {
-        return new File(GenDataFolder, "generators.yml");
-    }
 
 
-    public static File getGeneratorFile(Location loc) {
-        File file = new File(plugin.getDataFolder(), "generator.yml");
 
-        if (!file.exists()) {
-            try {
-                file.getParentFile().mkdirs();
-                file.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
 
-        return file;
-    }
-    public static File createGeneratorFile(Location loc) {
-        // Erstelle neuen Unterordner im Plugin-Datenverzeichnis
-        File dir = new File(plugin.getDataFolder(), "GenDataFolder");
 
-        if (!dir.exists()) {
-            dir.mkdirs(); // erstellt alle fehlenden Ordner
-        }
 
-        // Optional: Dateiname z. B. nach Koordinaten benennen
-        String filename = "generator.yml"; // oder z.B. loc.getBlockX() + "_" + loc.getBlockY() + "_" + loc.getBlockZ() + ".yml"
-        File file = new File(dir, filename);
-
-        if (!file.exists()) {
-            try {
-                file.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return file;
-    }
 
 
     public static YamlConfiguration getIslandConfig(UUID uuid) {
@@ -229,11 +191,11 @@ public class Manager implements Listener {
     public static void visitIsland(Player visitor, String ownerNameOrUUID) {
         UUID ownerUUID = null;
 
-        // Versuch zuerst, ownerNameOrUUID als UUID zu parsen
+
         try {
             ownerUUID = UUID.fromString(ownerNameOrUUID);
         } catch (IllegalArgumentException e) {
-            // Kein UUID-String, versuche es als Spielername zu interpretieren
+
             OfflinePlayer ownerOffline = Bukkit.getOfflinePlayer(ownerNameOrUUID);
             if (ownerOffline != null && ownerOffline.hasPlayedBefore()) {
                 ownerUUID = ownerOffline.getUniqueId();
@@ -243,7 +205,7 @@ public class Manager implements Listener {
             }
         }
 
-        // Nun mit ownerUUID weiterarbeiten
+
         File file = getIslandFile(ownerUUID);
 
         if (!file.exists()) {
@@ -359,7 +321,7 @@ public class Manager implements Listener {
             }
 
             if (accepted) {
-                // Sicheren Player-Namen holen
+
                 OfflinePlayer ownerPlayer;
                 try {
                     UUID ownerUUID = UUID.fromString(ownerId);
@@ -395,9 +357,6 @@ public class Manager implements Listener {
         YamlConfiguration config = getIslandConfig(owner.getUniqueId());
         List<String> denied = config.getStringList("denied");
         String uuidStr = target.getUniqueId().toString();
-
-
-
 
 
         if (!denied.contains(uuidStr)) {
@@ -496,7 +455,7 @@ public class Manager implements Listener {
 
 
     public static void declineinvite(Player player, String targetName) {
-        // UUID vom Zielspieler holen
+
         OfflinePlayer targetPlayer = Bukkit.getOfflinePlayer(targetName);
         UUID targetUUID = targetPlayer.getUniqueId();
         String uuidStr = targetUUID.toString();

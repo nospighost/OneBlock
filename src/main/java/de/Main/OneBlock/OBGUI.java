@@ -96,7 +96,7 @@ public class OBGUI implements CommandExecutor, Listener {
 
         setPlayerHeadInMainGUI(player);
 
-        // Phasen-Auswahl
+
         ItemStack xpBottle = new ItemStack(EXPERIENCE_BOTTLE);
         ItemMeta meta6 = xpBottle.getItemMeta();
         if (meta6 != null) {
@@ -113,7 +113,7 @@ public class OBGUI implements CommandExecutor, Listener {
         }
         mainGUI.setItem(3, xpBottle);
 
-        // Insel-Verwaltung (Comparator)
+
         ItemStack comparator = new ItemStack(COMPARATOR);
         ItemMeta meta8 = comparator.getItemMeta();
         if (meta8 != null) {
@@ -376,7 +376,7 @@ public class OBGUI implements CommandExecutor, Listener {
             List<String> lore = new ArrayList<>();
 
             switch (slot) {
-                case 11 -> { // Löschen
+                case 11 -> { 
                     item = new ItemStack(BARRIER);
                     displayName = "§cInsel-Löschen";
                     lore.add(" ");
@@ -384,7 +384,7 @@ public class OBGUI implements CommandExecutor, Listener {
                     lore.add(" ");
                     lore.add("§7Klicke §e" + deleteRemaining + " §7Mal zum §cLöschen§7!");
                 }
-                case 13 -> { // Rebirth
+                case 13 -> { 
                     item = new ItemStack(TOTEM_OF_UNDYING);
                     displayName = "§cRebirth";
                     lore.add(" ");
@@ -393,15 +393,15 @@ public class OBGUI implements CommandExecutor, Listener {
                     lore.add(" ");
                     lore.add("§7Klicke §e" + rebirthRemaining + " §7Mal zum §cRebirth§7!");
                 }
-                case 15 -> { // WorldBorder
+                case 15 -> {
                     item = new ItemStack(STRUCTURE_VOID);
                     displayName = "§aWorldBorder Größe";
                     YamlConfiguration config = getIslandConfig(player.getUniqueId());
                     int currentSize = config.getInt("WorldBorderSize", 50);
 
                     int basePrice = 100;
-                    int upgradesDone = (currentSize - 50) / 10; // wie viele Upgrades schon gemacht wurden
-                    int price = (int) (basePrice * Math.pow(2, upgradesDone)); // Preis verdoppelt sich pro Upgrade
+                    int upgradesDone = (currentSize - 50) / 10; 
+                    int price = (int) (basePrice * Math.pow(2, upgradesDone)); 
 
                     lore.add("§7Aktuelle Größe: §e" + currentSize);
                     lore.add("§7Klicke, um die Größe zu erhöhen");
@@ -536,7 +536,7 @@ public class OBGUI implements CommandExecutor, Listener {
                     player.openInventory(mainGUI);
                 }
                 default -> {
-                    // Nichts tun bei anderen Items
+                  
                 }
             }
         }
@@ -555,7 +555,7 @@ public class OBGUI implements CommandExecutor, Listener {
                     player.openInventory(Verwaltung);
                 }
                 default -> {
-                    // Kein Itemhandling sonst
+                  
                 }
             }
         }
@@ -855,7 +855,7 @@ public class OBGUI implements CommandExecutor, Listener {
         }
 
         if (title.equalsIgnoreCase("§aOneBlock-Menü")) {
-            // WICHTIG: Kopf aktualisieren, damit Daten immer aktuell sinda
+          
             setPlayerHeadInMainGUI(player);
             updateVerwaltungGUI(player);
         }
@@ -864,7 +864,7 @@ public class OBGUI implements CommandExecutor, Listener {
 
         UUID uuid = player.getUniqueId();
 
-        int currentSize = config.getInt("WorldBorderSize", 50); // Startgröße 50
+        int currentSize = config.getInt("WorldBorderSize", 50); 
         int maxSize = 200;
 
         if (currentSize >= maxSize) {
@@ -874,8 +874,8 @@ public class OBGUI implements CommandExecutor, Listener {
         }
 
         int basePrice = 20000;
-        int upgradesDone = (currentSize - 50) / 10; // Anzahl der Upgrades, bei 50 = 0
-        int price = (int) (basePrice * Math.pow(2, upgradesDone)); // Preis verdoppelt sich pro Upgrade
+        int upgradesDone = (currentSize - 50) / 10; 
+        int price = (int) (basePrice * Math.pow(2, upgradesDone)); 
 
         if (economy.getBalance(player) < price) {
             player.sendMessage("§cDu hast nicht genug Geld! Benötigt: §e" + price + " Coins");
@@ -883,10 +883,10 @@ public class OBGUI implements CommandExecutor, Listener {
             return;
         }
 
-        // Geld abziehen
+   
         economy.withdrawPlayer(player, price);
 
-        // Upgrade durchführen
+      
         currentSize += 10;
         config.set("WorldBorderSize", currentSize);
         saveIslandConfig(uuid, config);
@@ -895,8 +895,7 @@ public class OBGUI implements CommandExecutor, Listener {
         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
         player.closeInventory();
 
-        // Optional: Hier kannst du die Item-Lore vom Upgrade-Item updaten,
-        // damit der neue Preis für das nächste Upgrade angezeigt wird.
+      
     }
 
 }
