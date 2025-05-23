@@ -8,12 +8,14 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -171,7 +173,7 @@ public class OBItems implements CommandExecutor, Listener {
     @EventHandler(ignoreCancelled = true)
     public void onShiftRightClick(PlayerInteractEvent event) {
         Player player = event.getPlayer();
-        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK || player.isSneaking()) return;
         Block clicked = event.getClickedBlock();
         if (clicked.getType() == Material.BEDROCK) {
             player.openInventory(globalTrashInventory);
@@ -181,13 +183,27 @@ public class OBItems implements CommandExecutor, Listener {
 
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockPlace(BlockPlaceEvent event) {
+        Player player = event.getPlayer();
+        ItemStack mainhand = event.getItemInHand();
+        int enchantmentlevel = event.getItemInHand().getEnchantmentLevel(Enchantment.FORTUNE);
+       if(mainhand.containsEnchantment(Enchantment.FORTUNE)){
+           if(enchantmentlevel == 5){
+               player.sendMessage("Hier das was du machen willst");
+           }
+       }
+
+    }
+
+
     public static YamlConfiguration getCustomItemsConfig(JavaPlugin plugin) {
         File folder = new File(plugin.getDataFolder(), "CustomItems");
         if (!folder.exists()) {
             folder.mkdirs(); // Ordner erstellenfalls nicht vorhanden
         }
 
-        configFile = new File(folder, "CustomItems.yml");
+        configFile = new File(folder, "customItems.yml");
 
         if (!configFile.exists()) {
             try {
@@ -209,7 +225,9 @@ public class OBItems implements CommandExecutor, Listener {
         config.set("Magnet", "Magnet");
         config.set("Magnet.lore", Collections.singletonList("§7§lEffekt §f§l>> §c§lSammelt Alle Items auf"));
         config.set("Magnet.material", "SADDLE");
-
+        config.set("WoodCutter", "WoodCutter");
+        config.set("WoodCutter.lore", Collections.singletonList("§7§lEffekt §f§l>> §c§lBaut den ganzen Baumstamm ab"));
+        config.set("WoodCutter.material", "NETHERITE_AXE");
         ItemStack magnet = config.getItemStack("Magnet.material");
         if (magnet != null && magnet.getType() != Material.AIR) {
             ItemMeta meta = magnet.getItemMeta();
