@@ -16,17 +16,27 @@ public class MoneyManager implements Listener {
         String playerUUID = event.getPlayer().getUniqueId().toString();
         SQLTabel.Condition condition = new SQLTabel.Condition("owner", playerUUID);
 
-        if (!islandTable.exits(condition)) {
-            islandTable.set("owner", playerUUID, condition);
-            islandTable.set("WorldBorderSize", 50, condition);
-            islandTable.set("TotalBlocks", 0, condition);
-            islandTable.set("EigeneInsel", true, condition);
-            islandTable.set("IslandLevel", 1, condition);
-            islandTable.set("Durchgespielt", false, condition);
-            // ... weitere Standardwerte setzen
+        // Prüfen, ob Insel-Daten für diesen Spieler existieren
+        if (!tabel.exits(condition)) {
+
+            tabel.set("owner", playerUUID, condition);
+            tabel.set("owner_uuid", playerUUID, condition);
+            tabel.set("WorldBorderSize", 50, condition);
+            tabel.set("TotalBlocks", 200, condition);
+            tabel.set("trusted", playerUUID, condition);
+            tabel.set("EigeneInsel", false, condition);
+            tabel.set("MissingBlocksToLevelUp", 200, condition);
+            tabel.set("IslandLevel", 1, condition);
+            tabel.set("Durchgespielt", false, condition);
+            tabel.set("OneBlock_x", 0, condition);
+            tabel.set("OneBlock_z", 0, condition);
+            tabel.set("IslandSpawn_x", 0, condition);
+            tabel.set("IslandSpawn_z", 0, condition);
+            tabel.set("z_position", 0, condition);
+            tabel.set("x_position", 0, condition);
+
         }
     }
-
 
 
     private static SQLTabel tabel;

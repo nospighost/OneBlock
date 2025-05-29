@@ -1,3 +1,11 @@
+scoreboard:
+  title: '&6&lMein Scoreboard'
+  lines:
+  - '&ePunkte: &a%points%'
+  - '&eKills: &c%kills%'
+  - '&eTode: &7%deaths%'
+
+
 islandjoinmessage:
   join: §a Du wurdest zu deiner Insel teleportiert
   notowned: §aDeine Insel wurde Erstellt
@@ -5,22 +13,26 @@ islandjoinmessage:
 defaultworldbordersize:
   size: 200
 InselPadding:
-  value: 1200
+  value: 800
 DeniedMessage: §aDu wurdest von dieser Insel gebannt! Bitte den Besitzer dich zu entbannen
   wenn du die Insel besuchen möchtest.
 denymessagealreadydenied: §a Dieser Spieler ist bereits gebannt.
 addmessagealreadyadded: §cDieser Spieler wurde bereits eingeladen
-trustmessage: §aDu hast %player% auf deine Insel eingeladen
 unbanmessage: §a Du hast %player% von deiner Insel entbannt
 banmessage: §a Du hast %player% von deiner Insel gebannt
-playergetdeniedmessage: §cDer Spieler %player% hat dich von seiner Insel gebannt!
+playergetdeniedmessage: '&cDer Spieler %player% hat dich von seiner Insel gebannt!'
 notbannedmessage: §aDer Spieler ist nicht gebannt!
 removemessage: §a Du hast %player% von deiner Insel entfernt
 removeplayernotinlist: §cDer Spieler ist nicht auf deiner Insel hinzugefügt
 rebirthinventoryfull: §cDein Inventar ist voll bitte leere es um zu den Rebirth durchzuführen
 rebirthhigherlevel: '§cDein Level ist nicht hoch genug um den rebirth durchzuführen.
   Du brauchst das level %level% um zu rebirthen '
-trustmessagealready: §cDieser Spieler ist bereits getrustet
+trust:
+  trustmessagealready: §cDieser Spieler ist bereits getrustet
+  trustmessage: §aDu hast %player% auf deine Insel eingeladen
+  declinetrust: §6%player% §ahat deine Einladung abgelehnt
+  declinetrustself: §aDu hast die Einladung von §6%player% §a abgelehnt
+  declinetrustnotrust: §cDu hast keine Einladung von %player% erhalten
 RebirthLevel: 10
 maxlevel: 10
 Server: '§6§lBlockhive >> '
@@ -34,7 +46,6 @@ oneblockblocks:
     - COARSE_DIRT
     - PODZOL
     - CLAY
-    - CHEST
     monsters:
     - monster: ZOMBIE
       chance: 3
@@ -42,17 +53,6 @@ oneblockblocks:
       chance: 3
     - monster: SPIDER
       chance: 3
-    chests:
-      firstchest:
-        name: §6Erste Kiste
-        contents:
-        - WOODEN_PICKAXE:1
-        - APPLE:3
-      secondchest:
-        name: §aZweite Kiste
-        contents:
-        - DIRT:32
-        - SEEDS:10
   
   '2':
     name: Bäume
@@ -79,23 +79,11 @@ oneblockblocks:
     - DARK_OAK_LEAVES
     - MOSS_BLOCK
     - MOSSY_COBBLESTONE
-    - CHEST
     monsters:
     - monster: CREEPER
       chance: 5
     - monster: ZOMBIE_VILLAGER
       chance: 6
-    chests:
-      firstchest:
-        name: §6Erste Kiste
-        contents:
-        - OAK_SAPLING:5
-        - WOODEN_AXE:1
-      secondchest:
-        name: §aZweite Kiste
-        contents:
-        - APPLE:7
-        - STICK:10
   
   '3':
     name: Stein & Gestein
@@ -109,23 +97,11 @@ oneblockblocks:
     - TUFF
     - STONE_BRICKS
     - CRACKED_STONE_BRICKS
-    - CHEST
     monsters:
     - monster: ZOMBIE
       chance: 5
     - monster: SKELETON
       chance: 5
-    chests:
-      firstchest:
-        name: §6Erste Kiste
-        contents:
-        - STONE_PICKAXE:1
-        - COBBLESTONE:64
-      secondchest:
-        name: §aZweite Kiste
-        contents:
-        - TORCH:32
-        - COAL:10
   
   '4':
     name: Unterirdische Materialien
@@ -139,23 +115,11 @@ oneblockblocks:
     - POLISHED_DEEPSLATE
     - DEEPSLATE_BRICKS
     - DEEPSLATE_TILES
-    - CHEST
     monsters:
     - monster: CAVE_SPIDER
       chance: 3
     - monster: SILVERFISH
       chance: 3
-    chests:
-      firstchest:
-        name: §6Erste Kiste
-        contents:
-        - IRON_INGOT:5
-        - TORCH:20
-      secondchest:
-        name: §aZweite Kiste
-        contents:
-        - COAL:15
-        - STONE_PICKAXE:1
   
   '5':
     name: Edelmetalle & Seltenes
@@ -167,23 +131,11 @@ oneblockblocks:
     - EMERALD_BLOCK
     - DIAMOND_BLOCK
     - OBSIDIAN
-    - CHEST
     monsters:
     - monster: ENDERMAN
       chance: 8
     - monster: ZOMBIE_VILLAGER
       chance: 2
-    chests:
-      firstchest:
-        name: §6Erste Kiste
-        contents:
-        - GOLD_INGOT:10
-        - REDSTONE:20
-      secondchest:
-        name: §aZweite Kiste
-        contents:
-        - DIAMOND:3
-        - LAPIS_LAZULI:15
   
   '6':
     name: Nether-Biomaterialien
@@ -198,23 +150,11 @@ oneblockblocks:
     - POLISHED_BLACKSTONE
     - NETHER_BRICKS
     - RED_NETHER_BRICKS
-    - CHEST
     monsters:
     - monster: BLAZE
       chance: 3
     - monster: GHAST
       chance: 3
-    chests:
-      firstchest:
-        name: §6Erste Kiste
-        contents:
-        - NETHER_BRICK:32
-        - GOLD_INGOT:5
-      secondchest:
-        name: §aZweite Kiste
-        contents:
-        - SOUL_SAND:64
-        - BLAZE_ROD:2
   
   '7':
     name: Nether-Wald
@@ -229,23 +169,11 @@ oneblockblocks:
     - CRIMSON_HYPHAE
     - WARPED_HYPHAE
     - SHROOMLIGHT
-    - CHEST
     monsters:
     - monster: PIGLIN
       chance: 4
     - monster: ZOMBIFIED_PIGLIN
       chance: 5
-    chests:
-      firstchest:
-        name: §6Erste Kiste
-        contents:
-        - CRIMSON_FUNGUS:5
-        - WARPED_FUNGUS:5
-      secondchest:
-        name: §aZweite Kiste
-        contents:
-        - SHROOMLIGHT:10
-        - NETHER_WART:8
   
   '8':
     name: End-Stufe
@@ -257,23 +185,11 @@ oneblockblocks:
     - END_STONE_BRICKS
     - OBSIDIAN
     - CHISELED_PURPUR_BLOCK
-    - CHEST
     monsters:
     - monster: ENDERMAN
       chance: 5
     - monster: SHULKER
       chance: 1
-    chests:
-      firstchest:
-        name: §6Erste Kiste
-        contents:
-        - ENDER_PEARL:3
-        - PURPUR_BLOCK:16
-      secondchest:
-        name: §aZweite Kiste
-        contents:
-        - SHULKER_SHELL:1
-        - END_STONE_BRICKS:32
   
   '9':
     name: Magie & Reichtum
@@ -287,23 +203,11 @@ oneblockblocks:
     - GILDED_BLACKSTONE
     - ANCIENT_DEBRIS
     - NETHERITE_BLOCK
-    - CHEST
     monsters:
     - monster: WITCH
       chance: 3
     - monster: SLIME
       chance: 4
-    chests:
-      firstchest:
-        name: §6Erste Kiste
-        contents:
-        - HONEY_BOTTLE:3
-        - SLIME_BALL:10
-      secondchest:
-        name: §aZweite Kiste
-        contents:
-        - NETHERITE_SCRAP:2
-        - ANCIENT_DEBRIS:1
   
   '10':
     name: Dekor & Luxus
@@ -332,3 +236,4 @@ oneblockblocks:
       chance: 3
     - monster: ELDER_GUARDIAN
       chance: 1
+
