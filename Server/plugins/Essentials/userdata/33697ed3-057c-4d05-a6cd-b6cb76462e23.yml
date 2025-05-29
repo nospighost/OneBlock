@@ -1,0 +1,30 @@
+teleportenabled: true
+teleportauto: false
+godmode: false
+muted: false
+jailed: false
+ip-address: 127.0.0.1
+afk: false
+socialspy: false
+npc: false
+powertoolsenabled: true
+accepting-pay: true
+baltop-exempt: false
+timestamps:
+  lastteleport: 0
+  lastheal: 0
+  mute: 0
+  jail: 0
+  onlinejail: 0
+  logout: 1747925640243
+  login: 1747923358191
+money: '999995020000.0'
+last-account-name: Fabian260108
+logoutlocation:
+  world: e708d4b7-74b1-48b2-8770-79e4a5f60aff
+  world-name: OneBlock
+  x: 797.6434057045531
+  y: 101.0
+  z: 802.1479472443879
+  yaw: 130.6302032470703
+  pitch: 50.24958038330078
