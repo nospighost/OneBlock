@@ -13,7 +13,7 @@ islandjoinmessage:
 defaultworldbordersize:
   size: 200
 InselPadding:
-  value: 800
+  value: 1200
 DeniedMessage: §aDu wurdest von dieser Insel gebannt! Bitte den Besitzer dich zu entbannen
   wenn du die Insel besuchen möchtest.
 denymessagealreadydenied: §a Dieser Spieler ist bereits gebannt.
