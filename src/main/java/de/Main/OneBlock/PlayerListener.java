@@ -256,6 +256,7 @@ public class PlayerListener implements Listener {
                 config.set("MissingBlocksToLevelUp", newTotal);
             }
 
+
             if (islandLevel == 10 && !durchgespielt) {
                 config.set("Durchgespielt", true);
             }

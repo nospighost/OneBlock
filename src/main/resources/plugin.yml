@@ -20,6 +20,9 @@ commands:
     description: Öffnet das OneBlock GUI
     usage: /globaltrash
     permission: oneblock.gui
+  stonegenerator:
+    description: Bekommst du den Stein Generator
+    usage: /stonegenerator
 
 permissions:
   oneblock.use:

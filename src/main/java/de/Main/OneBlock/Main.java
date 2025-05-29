@@ -48,18 +48,16 @@ public class Main extends JavaPlugin implements Listener {
 
 
         setupEconomy();
-        OBItems.createCustomItemsConfig(this);
+
 
         // Listener registrieren
+        Bukkit.getPluginManager().registerEvents(this, this);
         OBItems obItems = new OBItems(this);
         getServer().getPluginManager().registerEvents(obItems, this);
         getCommand("globaltrash").setExecutor(obItems);
         obItems.start();
 
 
-        // Bukkit.getPluginManager().registerEvents(new Generator(this), this);
-
-        Bukkit.getPluginManager().registerEvents(new Test(), this);
 
 
         Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
@@ -101,7 +99,7 @@ public class Main extends JavaPlugin implements Listener {
 
         getServer().getPluginManager().registerEvents(new OBGUI(), this);
 
-        // Void Gen für OneBlock-Weltaa
+        // Void Gen für OneBlock-Welt
         WorldCreator worldCreator = new WorldCreator(WORLD_NAME);
         worldCreator.environment(World.Environment.NORMAL);
         worldCreator.type(WorldType.FLAT);
@@ -184,6 +182,3 @@ public class Main extends JavaPlugin implements Listener {
 
 
 }
-
-
-

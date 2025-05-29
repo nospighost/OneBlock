@@ -120,7 +120,6 @@ public class OBGUI implements CommandExecutor, Listener {
             meta8.setDisplayName("§cInsel-Verwaltung");
             List<String> lore = new ArrayList<>();
 
-
             lore.add(" ");
             lore.add("§fKlicke um in das Insel-Verwaltung-Menü zu gelangen!");
             lore.add(" ");

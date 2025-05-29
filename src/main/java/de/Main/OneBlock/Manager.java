@@ -115,6 +115,7 @@ public class Manager implements Listener {
         // Erstelle neuen Unterordner im Plugin-Datenverzeichnis
         File dir = new File(plugin.getDataFolder(), "GenDataFolder");
 
+
         if (!dir.exists()) {
             dir.mkdirs(); // erstellt alle fehlenden Ordner
         }
