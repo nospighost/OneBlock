@@ -23,9 +23,9 @@ public class MoneyManager implements Listener {
             tabel.set("owner_uuid", playerUUID, condition);
             tabel.set("WorldBorderSize", 50, condition);
             tabel.set("TotalBlocks", 200, condition);
+            tabel.set("MissingBlocksToLevelUp", 200, condition);
             tabel.set("trusted", playerUUID, condition);
             tabel.set("EigeneInsel", false, condition);
-            tabel.set("MissingBlocksToLevelUp", 200, condition);
             tabel.set("IslandLevel", 1, condition);
             tabel.set("Durchgespielt", false, condition);
             tabel.set("OneBlock_x", 0, condition);
