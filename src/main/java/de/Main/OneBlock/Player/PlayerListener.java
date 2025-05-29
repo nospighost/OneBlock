@@ -153,30 +153,7 @@ public class PlayerListener implements Listener {
 
             }
 
-            String host = "localhost";
-            int port = 3306;
-            String database = "minecraft";
-            String user = "minecraft";
-            String password = "2692";
 
-
-            SQLConnection connection = new SQLConnection(host, port, database, user, password);
-
-            HashMap<String, SQLDataType> userdata = new HashMap<>();
-            userdata.put("uuid", SQLDataType.CHAR);
-            userdata.put("value", SQLDataType.INT);
-            userdata.put("Durchgespielt", SQLDataType.BOOLEAN);
-
-
-            SQLTabel.createUserTable(uuid, userdata, connection);
-
-
-            MoneyManager.setString("uuid", UUID.fromString(uuid.toString()));
-            MoneyManager.setBoolean("uuid", false);
-            MoneyManager.setInt(uuid, 100);
-
-
-            MoneyManager.setInt(player.getUniqueId(), 100);
 
         }
     }

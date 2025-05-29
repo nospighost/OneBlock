@@ -1,0 +1,8 @@
+growth:
+  OneBlock:
+    '1199_100_1201':
+      stage: AMETHYST_CLUSTER
+      nextGrowth: 0
+      owner: 5430d87b-cb41-4327-bb95-f66ac7d27c77
+      isFullyGrown: true
+      Level: 0

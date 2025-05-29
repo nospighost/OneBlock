@@ -4,5 +4,7 @@
 # Check out https://bStats.org/ to learn more :)
 
 enabled: true
-serverUuid: 1e1f08d3-cb76-4a46-b52f-0b1e94593ac9
+serverUuid: 630a25c2-baae-4852-b9d1-614b68399e7f
 logFailedRequests: false
+logSentData: false
+logResponseStatusText: false
