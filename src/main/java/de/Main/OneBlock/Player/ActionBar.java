@@ -6,7 +6,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
 import static de.Main.OneBlock.Manager.Manager.getIslandConfig;
-//Baum keine Ahnung
+
 public class ActionBar {
     public static int frame = 0;
     public static boolean forward = true;
