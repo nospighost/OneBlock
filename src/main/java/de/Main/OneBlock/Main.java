@@ -1,17 +1,23 @@
 package de.Main.OneBlock;
 
+import de.Main.OneBlock.Commands.OneBlockCommands;
+import de.Main.OneBlock.Commands.TabCompleter;
+import de.Main.OneBlock.GUI.OBGUI;
+import de.Main.OneBlock.Manager.Manager;
+import de.Main.OneBlock.Player.OneBlockManager;
+import de.Main.OneBlock.Player.PlayerListener;
+import de.Main.OneBlock.WorldManager.VoidGen;
+import de.Main.OneBlock.WorldManager.WorldBorderManager;
+import de.Main.OneBlock.database.MoneyManager;
+import de.Main.OneBlock.database.SQLConnection;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.WorldBorder;
 import org.bukkit.WorldCreator;
 import org.bukkit.WorldType;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -30,6 +36,8 @@ public class Main extends JavaPlugin implements Listener {
     public static File GenDataFolder;
     private static Economy economy = null;
     public File CustomItems;
+    SQLConnection connection;
+    MoneyManager moneyManager;
 
     public static Main getInstance() {
         return instance;
@@ -40,6 +48,9 @@ public class Main extends JavaPlugin implements Listener {
     public void onEnable() {
         instance = this;
 
+        //SQL
+        connection = new SQLConnection("localhost", 3306, "minecraft", "minecraft", "2692");
+        moneyManager = new MoneyManager(this);
 
         //config
         saveDefaultConfig();
@@ -50,7 +61,7 @@ public class Main extends JavaPlugin implements Listener {
         }
         setupEconomy();
 
-
+        //Listener
         Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
         if (economy != null) {
             Bukkit.getPluginManager().registerEvents(new Manager(economy, this), this);
@@ -60,7 +71,7 @@ public class Main extends JavaPlugin implements Listener {
         }
         Bukkit.getPluginManager().registerEvents(new WorldBorderManager(), this);
         getCommand("ob").setTabCompleter(new TabCompleter());
-
+        Bukkit.getPluginManager().registerEvents(new OneBlockManager(), this);
 
         getLogger().info("OneBlockPlugin aktiviert!");
 
@@ -70,9 +81,8 @@ public class Main extends JavaPlugin implements Listener {
             islandDataFolder.mkdirs();
         }
 
-
         // Befehle
-        getCommand("ob").setExecutor(new de.Main.OneBlock.OneBlockCommands());
+        getCommand("ob").setExecutor(new OneBlockCommands());
         getCommand("obgui").setExecutor(new OBGUI());
 
         getServer().getPluginManager().registerEvents(new OBGUI(), this);
@@ -127,7 +137,9 @@ public class Main extends JavaPlugin implements Listener {
         return JavaPlugin.getPlugin(Main.class);
     }
 
-
+    public SQLConnection getConnection() {
+        return connection;
+    }
 }
 
 

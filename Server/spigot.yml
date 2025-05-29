@@ -147,6 +147,8 @@ world-settings:
       hopper-check: 1
     hopper-amount: 1
     hopper-can-load-chunks: false
+  worldeditregentempworld:
+    verbose: false
 config-version: 12
 stats:
   disable-saving: false
