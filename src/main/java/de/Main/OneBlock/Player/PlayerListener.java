@@ -3,6 +3,7 @@ package de.Main.OneBlock.Player;
 import de.Main.OneBlock.Main;
 import de.Main.OneBlock.Manager.Manager;
 import de.Main.OneBlock.database.MoneyManager;
+import de.Main.OneBlock.database.SQLConnection;
 import de.Main.OneBlock.database.SQLDataType;
 import de.Main.OneBlock.database.SQLTabel;
 import net.md_5.bungee.api.ChatMessageType;
@@ -46,9 +47,6 @@ public class PlayerListener implements Listener {
     String prefix = Main.config.getString("Server");
 
 
-
-
-
     public PlayerListener(JavaPlugin plugin) {
         this.plugin = plugin;
     }
@@ -57,7 +55,7 @@ public class PlayerListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         YamlConfiguration config = getIslandConfig(player.getUniqueId());
-
+        UUID uuid = player.getUniqueId();
         File islandFolder = Main.islandDataFolder;
         if (islandFolder.exists() && islandFolder.isDirectory()) {
             File[] files = islandFolder.listFiles((dir, name) -> name.endsWith(".yml"));
@@ -155,7 +153,30 @@ public class PlayerListener implements Listener {
 
             }
 
-            MoneyManager.set(player.getUniqueId(), 100);
+            String host = "localhost";
+            int port = 3306;
+            String database = "minecraft";
+            String user = "minecraft";
+            String password = "2692";
+
+
+            SQLConnection connection = new SQLConnection(host, port, database, user, password);
+
+            HashMap<String, SQLDataType> userdata = new HashMap<>();
+            userdata.put("uuid", SQLDataType.CHAR);
+            userdata.put("value", SQLDataType.INT);
+            userdata.put("Durchgespielt", SQLDataType.BOOLEAN);
+
+
+            SQLTabel.createUserTable(uuid, userdata, connection);
+
+
+            MoneyManager.setString("uuid", UUID.fromString(uuid.toString()));
+            MoneyManager.setBoolean("uuid", false);
+            MoneyManager.setInt(uuid, 100);
+
+
+            MoneyManager.setInt(player.getUniqueId(), 100);
 
         }
     }
@@ -171,12 +192,8 @@ public class PlayerListener implements Listener {
     }
 
 
-
-
-
-
     @EventHandler
-    public void onChestBreak (BlockBreakEvent event){
+    public void onChestBreak(BlockBreakEvent event) {
         Block block = event.getBlock();
 
 
@@ -222,7 +239,7 @@ public class PlayerListener implements Listener {
         inv.clear();
     }
 
-    private int getIslandLevelForLocation (Location location){
+    private int getIslandLevelForLocation(Location location) {
         File folder = Main.islandDataFolder;
         if (!folder.exists() || !folder.isDirectory()) return -1;
 
@@ -249,11 +266,8 @@ public class PlayerListener implements Listener {
     }
 
 
-
-
-
     @EventHandler
-    public void onBlockPiston (BlockPistonExtendEvent event){
+    public void onBlockPiston(BlockPistonExtendEvent event) {
         for (Block block : event.getBlocks()) {
             if (block.getY() != 100) continue;
 
@@ -276,6 +290,7 @@ public class PlayerListener implements Listener {
             }
         }
     }
+
     @EventHandler
     public void onBlockPistonExtend(BlockPistonExtendEvent event) {
         handlePistonMovement(event.getBlocks(), event);
@@ -340,7 +355,6 @@ public class PlayerListener implements Listener {
     }
 
 
-
     public boolean isAnyUserOneBlock(Block block) {
         World world = block.getWorld();
         if (world == null || !world.getName().equals(WORLD_NAME)) return false;
@@ -365,13 +379,13 @@ public class PlayerListener implements Listener {
     }
 
 
-    private boolean isPlayerAllowed (Location loc, Player player){
+    private boolean isPlayerAllowed(Location loc, Player player) {
         String islandOwner = Manager.getIslandOwnerByLocation(loc);
         if (islandOwner == null) return false;
         return isPlayerAllowedOnIsland(player, UUID.fromString(islandOwner));
     }
 
-    public static boolean isPlayerAllowedOnIsland (Player player, UUID islandOwnerUUID){
+    public static boolean isPlayerAllowedOnIsland(Player player, UUID islandOwnerUUID) {
         YamlConfiguration config = getIslandConfig(islandOwnerUUID);
         List<String> added = config.getStringList("added");
         List<String> trusted = config.getStringList("trusted");
@@ -384,9 +398,8 @@ public class PlayerListener implements Listener {
     }
 
 
-
     @EventHandler
-    public void onPlayerInteract (PlayerInteractEvent event){
+    public void onPlayerInteract(PlayerInteractEvent event) {
         if (event.getClickedBlock() == null) return;
         Material type = event.getClickedBlock().getType();
         if (!(type == Material.CHEST || type == Material.TRAPPED_CHEST || type == Material.HOPPER || type == Material.SHULKER_BOX))
@@ -400,11 +413,8 @@ public class PlayerListener implements Listener {
     }
 
 
-
-
-
     @EventHandler
-    public void onBlockPlace (BlockPlaceEvent event){
+    public void onBlockPlace(BlockPlaceEvent event) {
 
         Player player = event.getPlayer();
 
