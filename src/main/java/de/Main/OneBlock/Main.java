@@ -1,15 +1,17 @@
 package de.Main.OneBlock;
 
-import de.Main.OneBlock.Commands.OneBlockCommands;
-import de.Main.OneBlock.Commands.TabCompleter;
-import de.Main.OneBlock.GUI.Kristall.KristallGUI;
-import de.Main.OneBlock.GUI.Kristall.PickaxeShop.PickaxeShop;
-import de.Main.OneBlock.GUI.OBGUI;
-import de.Main.OneBlock.Manager.Manager;
-import de.Main.OneBlock.Player.OneBlockManager;
-import de.Main.OneBlock.Player.PlayerListener;
-import de.Main.OneBlock.WorldManager.VoidGen;
-import de.Main.OneBlock.WorldManager.WorldBorderManager;
+import de.Main.OneBlock.Oneblock.Commands.OneBlockCommands;
+import de.Main.OneBlock.Oneblock.Commands.TabCompleter;
+import de.Main.OneBlock.Kristall.GUI.KristallGUI;
+import de.Main.OneBlock.Kristall.GUI.PickaxeShop.PickaxeShop;
+import de.Main.OneBlock.Oneblock.GUI.Listener.InventoryClickManager;
+import de.Main.OneBlock.Oneblock.GUI.OneBlockGUI.OBGUI;
+import de.Main.OneBlock.Kristall.Listener.KristallePlayerListener;
+import de.Main.OneBlock.Oneblock.Manager.Manager;
+import de.Main.OneBlock.Oneblock.Player.OneBlockManager;
+import de.Main.OneBlock.Oneblock.Player.PlayerListener;
+import de.Main.OneBlock.Oneblock.WorldManager.VoidGen;
+import de.Main.OneBlock.Oneblock.WorldManager.WorldBorderManager;
 import de.Main.OneBlock.database.MoneyManager;
 import de.Main.OneBlock.database.SQLConnection;
 import net.milkbowl.vault.economy.Economy;
@@ -69,6 +71,7 @@ public class Main extends JavaPlugin implements Listener {
         setupEconomy();
 
         //Listener
+        Bukkit.getPluginManager().registerEvents(new InventoryClickManager(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
         if (economy != null) {
             Bukkit.getPluginManager().registerEvents(new Manager(economy, this), this);
@@ -121,8 +124,8 @@ public class Main extends JavaPlugin implements Listener {
         //Kristall
         setupEconomy();
         setupGrowthFile();
-        getServer().getPluginManager().registerEvents(new de.Main.OneBlock.Kristalle.PlayerListener(this, growthConfig, growthFile), this);
-        de.Main.OneBlock.Kristalle.PlayerListener.startGrowthTasks(this, growthConfig);
+        getServer().getPluginManager().registerEvents(new KristallePlayerListener(this, growthConfig, growthFile), this);
+        KristallePlayerListener.startGrowthTasks(this, growthConfig);
         //Commands
         getCommand("pickaxeshop").setExecutor(new PickaxeShop());
         Bukkit.getPluginManager().registerEvents(new PickaxeShop(), this);
