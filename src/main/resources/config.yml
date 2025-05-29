@@ -1,10 +1,3 @@
-scoreboard:
-  title: "&6&lMein Scoreboard"
-  lines:
-    - "&ePunkte: &a%points%"
-    - "&eKills: &c%kills%"
-    - "&eTode: &7%deaths%"
-
 
 islandjoinmessage:
   join: "§a Du wurdest zu deiner Insel teleportiert"
@@ -27,7 +20,8 @@ removeplayernotinlist: "§cDer Spieler ist nicht auf deiner Insel hinzugefügt"
 rebirthinventoryfull: "§cDein Inventar ist voll bitte leere es um zu den Rebirth durchzuführen"
 rebirthhigherlevel: "§cDein Level ist nicht hoch genug um den rebirth durchzuführen. Du brauchst das level %level% um zu rebirthen "
 trustmessagealready: "§cDieser Spieler ist bereits getrustet"
-RebirthLevel: 12
+RebirthLevel: 10
+maxlevel: 10
 Server: "§6§lBlockhive >> "
 oneblockblocks:
   '1':

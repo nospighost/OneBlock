@@ -20,9 +20,12 @@ commands:
     description: Öffnet das OneBlock GUI
     usage: /globaltrash
     permission: oneblock.gui
-  stonegenerator:
-    description: Bekommst du den Stein Generator
-    usage: /stonegenerator
+  kristallshop:
+    description: Öffnet den Kristall-Shop
+    usage: /kristallshop
+  pickaxeshop:
+    description: Öffnet den Spitzhacken-Shop
+    usage: /pickaxeshop
 
 permissions:
   oneblock.use:

@@ -1,22 +1,33 @@
 package de.Main.OneBlock;
 
+import de.Main.OneBlock.Commands.OneBlockCommands;
+import de.Main.OneBlock.Commands.TabCompleter;
+import de.Main.OneBlock.GUI.Kristall.KristallGUI;
+import de.Main.OneBlock.GUI.Kristall.PickaxeShop.PickaxeShop;
+import de.Main.OneBlock.GUI.OBGUI;
+import de.Main.OneBlock.Manager.Manager;
+import de.Main.OneBlock.Player.OneBlockManager;
+import de.Main.OneBlock.Player.PlayerListener;
+import de.Main.OneBlock.WorldManager.VoidGen;
+import de.Main.OneBlock.WorldManager.WorldBorderManager;
+import de.Main.OneBlock.database.MoneyManager;
+import de.Main.OneBlock.database.SQLConnection;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.WorldBorder;
 import org.bukkit.WorldCreator;
 import org.bukkit.WorldType;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
 
 
 public class Main extends JavaPlugin implements Listener {
@@ -30,6 +41,10 @@ public class Main extends JavaPlugin implements Listener {
     public static File GenDataFolder;
     private static Economy economy = null;
     public File CustomItems;
+    SQLConnection connection;
+    MoneyManager moneyManager;
+    private File growthFile;
+    private FileConfiguration growthConfig;
 
     public static Main getInstance() {
         return instance;
@@ -40,26 +55,20 @@ public class Main extends JavaPlugin implements Listener {
     public void onEnable() {
         instance = this;
 
+        //SQL
+        connection = new SQLConnection("localhost", 3306, "minecraft", "minecraft", "2692");
+        moneyManager = new MoneyManager(this);
 
         //config
         saveDefaultConfig();
         config = getConfig();
         instance = this;
-
-
+        if (!config.contains("maxlevel")) {
+            config.set("maxlevel", 10);
+        }
         setupEconomy();
 
-
-        // Listener registrieren
-        Bukkit.getPluginManager().registerEvents(this, this);
-        OBItems obItems = new OBItems(this);
-        getServer().getPluginManager().registerEvents(obItems, this);
-        getCommand("globaltrash").setExecutor(obItems);
-        obItems.start();
-
-
-
-
+        //Listener
         Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
         if (economy != null) {
             Bukkit.getPluginManager().registerEvents(new Manager(economy, this), this);
@@ -69,7 +78,7 @@ public class Main extends JavaPlugin implements Listener {
         }
         Bukkit.getPluginManager().registerEvents(new WorldBorderManager(), this);
         getCommand("ob").setTabCompleter(new TabCompleter());
-
+        Bukkit.getPluginManager().registerEvents(new OneBlockManager(), this);
 
         getLogger().info("OneBlockPlugin aktiviert!");
 
@@ -78,24 +87,10 @@ public class Main extends JavaPlugin implements Listener {
         if (!islandDataFolder.exists()) {
             islandDataFolder.mkdirs();
         }
-        GenDataFolder = new File(getDataFolder(), "GenDataFolder");
-        if (!GenDataFolder.exists()) {
-            GenDataFolder.mkdirs();
-        } else {
-            getLogger().info("GenDataFolder wurde NICHT erfolgreich erstellt!");
-        }
-        CustomItems = new File(getDataFolder(), "CustomItems");
-        if (!CustomItems.exists()) {
-            CustomItems.mkdirs();
-        } else {
-            getLogger().info("CustomItems folder wurde nicht  erstellt!");
-        }
-
 
         // Befehle
-        getCommand("ob").setExecutor(new de.Main.OneBlock.OneBlockCommands());
+        getCommand("ob").setExecutor(new OneBlockCommands());
         getCommand("obgui").setExecutor(new OBGUI());
-        getCommand("globaltrash").setExecutor(new OBItems(this));
 
         getServer().getPluginManager().registerEvents(new OBGUI(), this);
 
@@ -123,6 +118,17 @@ public class Main extends JavaPlugin implements Listener {
             getLogger().warning("Fehler beim Erstellen der OneBlock-Welt");
         }
 
+        //Kristall
+        setupEconomy();
+        setupGrowthFile();
+        getServer().getPluginManager().registerEvents(new de.Main.OneBlock.Kristalle.PlayerListener(this, growthConfig, growthFile), this);
+        de.Main.OneBlock.Kristalle.PlayerListener.startGrowthTasks(this, growthConfig);
+        //Commands
+        getCommand("pickaxeshop").setExecutor(new PickaxeShop());
+        Bukkit.getPluginManager().registerEvents(new PickaxeShop(), this);
+        getCommand("kristallshop").setExecutor(new KristallGUI());
+        //Listener
+        Bukkit.getPluginManager().registerEvents(new KristallGUI(), this);
 
     }
 
@@ -136,33 +142,6 @@ public class Main extends JavaPlugin implements Listener {
 
     }
 
-
-    public static void setWorldBorder(Player player) {
-        YamlConfiguration config = Manager.getIslandConfig(player.getUniqueId());
-        int x = config.getInt("OneBlock-x");
-        int z = config.getInt("OneBlock-z");
-        int size = config.getInt("WorldBorderSize");
-        WorldBorder border = player.getWorld().getWorldBorder();
-        border.setCenter(x, z);
-        border.setSize(size);
-        border.setDamageBuffer(0);
-        border.setDamageAmount(0.5);
-        border.setWarningDistance(5);
-        border.setWarningTime(15);
-
-        player.setWorldBorder(border);
-
-        if (oneBlockWorld != null) {
-            Location blockLocation = new Location(oneBlockWorld, x, 100, z);
-            if (blockLocation.getBlock().getType() == Material.AIR) {
-                oneBlockWorld.setType(blockLocation, Material.OAK_LOG);
-            } else {
-                oneBlockWorld.getBlockAt(blockLocation).setType(blockLocation.getBlock().getType());
-            }
-
-        }
-    }
-
     private boolean setupEconomy() {
         RegisteredServiceProvider<Economy> rsp = Bukkit.getServicesManager().getRegistration(Economy.class);
         if (rsp != null) {
@@ -171,14 +150,33 @@ public class Main extends JavaPlugin implements Listener {
         return economy != null;
     }
 
-    public static Economy getEconomy() {
-        return economy;
-    }
-
 
     public static Plugin getPlugin() {
         return JavaPlugin.getPlugin(Main.class);
     }
 
+    public SQLConnection getConnection() {
+        return connection;
+    }
 
+    public void setupGrowthFile() {
+        growthFile = new File(getDataFolder(), "growth/growth.yml");
+
+        if (!growthFile.getParentFile().exists()) {
+            growthFile.getParentFile().mkdirs();
+        }
+        if (!growthFile.exists()) {
+            try {
+                growthFile.createNewFile();
+                getLogger().info("growth.yml erstellt.");
+            } catch (IOException e) {
+                getLogger().log(Level.SEVERE, "Konnte growth.yml nicht erstellen.", e);
+            }
+        }
+
+        growthConfig = YamlConfiguration.loadConfiguration(growthFile);
+    }
 }
+
+
+
