@@ -1,0 +1,334 @@
+islandjoinmessage:
+  join: §a Du wurdest zu deiner Insel teleportiert
+  notowned: §aDeine Insel wurde Erstellt
+  create: §a Insel wird erstellt bitte habe Geduld
+defaultworldbordersize:
+  size: 200
+InselPadding:
+  value: 1200
+DeniedMessage: §aDu wurdest von dieser Insel gebannt! Bitte den Besitzer dich zu entbannen
+  wenn du die Insel besuchen möchtest.
+denymessagealreadydenied: §a Dieser Spieler ist bereits gebannt.
+addmessagealreadyadded: §cDieser Spieler wurde bereits eingeladen
+trustmessage: §aDu hast %player% auf deine Insel eingeladen
+unbanmessage: §a Du hast %player% von deiner Insel entbannt
+banmessage: §a Du hast %player% von deiner Insel gebannt
+playergetdeniedmessage: §cDer Spieler %player% hat dich von seiner Insel gebannt!
+notbannedmessage: §aDer Spieler ist nicht gebannt!
+removemessage: §a Du hast %player% von deiner Insel entfernt
+removeplayernotinlist: §cDer Spieler ist nicht auf deiner Insel hinzugefügt
+rebirthinventoryfull: §cDein Inventar ist voll bitte leere es um zu den Rebirth durchzuführen
+rebirthhigherlevel: '§cDein Level ist nicht hoch genug um den rebirth durchzuführen.
+  Du brauchst das level %level% um zu rebirthen '
+trustmessagealready: §cDieser Spieler ist bereits getrustet
+RebirthLevel: 10
+maxlevel: 10
+Server: '§6§lBlockhive >> '
+oneblockblocks:
+  '1':
+    name: Natur & Erde
+    blockcount: 100
+    blocks:
+    - DIRT
+    - GRASS_BLOCK
+    - COARSE_DIRT
+    - PODZOL
+    - CLAY
+    - CHEST
+    monsters:
+    - monster: ZOMBIE
+      chance: 3
+    - monster: SKELETON
+      chance: 3
+    - monster: SPIDER
+      chance: 3
+    chests:
+      firstchest:
+        name: §6Erste Kiste
+        contents:
+        - WOODEN_PICKAXE:1
+        - APPLE:3
+      secondchest:
+        name: §aZweite Kiste
+        contents:
+        - DIRT:32
+        - SEEDS:10
+  
+  '2':
+    name: Bäume
+    blockcount: 100
+    blocks:
+    - OAK_LOG
+    - SPRUCE_LOG
+    - BIRCH_LOG
+    - JUNGLE_LOG
+    - ACACIA_LOG
+    - DARK_OAK_LOG
+    - OAK_WOOD
+    - SPRUCE_WOOD
+    - BIRCH_WOOD
+    - STRIPPED_OAK_LOG
+    - STRIPPED_SPRUCE_LOG
+    - STRIPPED_BIRCH_LOG
+    - STRIPPED_JUNGLE_LOG
+    - OAK_LEAVES
+    - SPRUCE_LEAVES
+    - BIRCH_LEAVES
+    - JUNGLE_LEAVES
+    - ACACIA_LEAVES
+    - DARK_OAK_LEAVES
+    - MOSS_BLOCK
+    - MOSSY_COBBLESTONE
+    - CHEST
+    monsters:
+    - monster: CREEPER
+      chance: 5
+    - monster: ZOMBIE_VILLAGER
+      chance: 6
+    chests:
+      firstchest:
+        name: §6Erste Kiste
+        contents:
+        - OAK_SAPLING:5
+        - WOODEN_AXE:1
+      secondchest:
+        name: §aZweite Kiste
+        contents:
+        - APPLE:7
+        - STICK:10
+  
+  '3':
+    name: Stein & Gestein
+    blockcount: 1001
+    blocks:
+    - STONE
+    - COBBLESTONE
+    - ANDESITE
+    - DIORITE
+    - GRANITE
+    - TUFF
+    - STONE_BRICKS
+    - CRACKED_STONE_BRICKS
+    - CHEST
+    monsters:
+    - monster: ZOMBIE
+      chance: 5
+    - monster: SKELETON
+      chance: 5
+    chests:
+      firstchest:
+        name: §6Erste Kiste
+        contents:
+        - STONE_PICKAXE:1
+        - COBBLESTONE:64
+      secondchest:
+        name: §aZweite Kiste
+        contents:
+        - TORCH:32
+        - COAL:10
+  
+  '4':
+    name: Unterirdische Materialien
+    blockcount: 100
+    blocks:
+    - COAL_BLOCK
+    - IRON_BLOCK
+    - COPPER_BLOCK
+    - DEEPSLATE
+    - COBBLED_DEEPSLATE
+    - POLISHED_DEEPSLATE
+    - DEEPSLATE_BRICKS
+    - DEEPSLATE_TILES
+    - CHEST
+    monsters:
+    - monster: CAVE_SPIDER
+      chance: 3
+    - monster: SILVERFISH
+      chance: 3
+    chests:
+      firstchest:
+        name: §6Erste Kiste
+        contents:
+        - IRON_INGOT:5
+        - TORCH:20
+      secondchest:
+        name: §aZweite Kiste
+        contents:
+        - COAL:15
+        - STONE_PICKAXE:1
+  
+  '5':
+    name: Edelmetalle & Seltenes
+    blockcount: 100
+    blocks:
+    - GOLD_BLOCK
+    - REDSTONE_BLOCK
+    - LAPIS_BLOCK
+    - EMERALD_BLOCK
+    - DIAMOND_BLOCK
+    - OBSIDIAN
+    - CHEST
+    monsters:
+    - monster: ENDERMAN
+      chance: 8
+    - monster: ZOMBIE_VILLAGER
+      chance: 2
+    chests:
+      firstchest:
+        name: §6Erste Kiste
+        contents:
+        - GOLD_INGOT:10
+        - REDSTONE:20
+      secondchest:
+        name: §aZweite Kiste
+        contents:
+        - DIAMOND:3
+        - LAPIS_LAZULI:15
+  
+  '6':
+    name: Nether-Biomaterialien
+    blockcount: 100
+    blocks:
+    - NETHERRACK
+    - SOUL_SAND
+    - SOUL_SOIL
+    - BASALT
+    - POLISHED_BASALT
+    - BLACKSTONE
+    - POLISHED_BLACKSTONE
+    - NETHER_BRICKS
+    - RED_NETHER_BRICKS
+    - CHEST
+    monsters:
+    - monster: BLAZE
+      chance: 3
+    - monster: GHAST
+      chance: 3
+    chests:
+      firstchest:
+        name: §6Erste Kiste
+        contents:
+        - NETHER_BRICK:32
+        - GOLD_INGOT:5
+      secondchest:
+        name: §aZweite Kiste
+        contents:
+        - SOUL_SAND:64
+        - BLAZE_ROD:2
+  
+  '7':
+    name: Nether-Wald
+    blockcount: 100
+    blocks:
+    - CRIMSON_NYLIUM
+    - WARPED_NYLIUM
+    - CRIMSON_STEM
+    - WARPED_STEM
+    - STRIPPED_CRIMSON_STEM
+    - STRIPPED_WARPED_STEM
+    - CRIMSON_HYPHAE
+    - WARPED_HYPHAE
+    - SHROOMLIGHT
+    - CHEST
+    monsters:
+    - monster: PIGLIN
+      chance: 4
+    - monster: ZOMBIFIED_PIGLIN
+      chance: 5
+    chests:
+      firstchest:
+        name: §6Erste Kiste
+        contents:
+        - CRIMSON_FUNGUS:5
+        - WARPED_FUNGUS:5
+      secondchest:
+        name: §aZweite Kiste
+        contents:
+        - SHROOMLIGHT:10
+        - NETHER_WART:8
+  
+  '8':
+    name: End-Stufe
+    blockcount: 100
+    blocks:
+    - END_STONE
+    - PURPUR_BLOCK
+    - PURPUR_PILLAR
+    - END_STONE_BRICKS
+    - OBSIDIAN
+    - CHISELED_PURPUR_BLOCK
+    - CHEST
+    monsters:
+    - monster: ENDERMAN
+      chance: 5
+    - monster: SHULKER
+      chance: 1
+    chests:
+      firstchest:
+        name: §6Erste Kiste
+        contents:
+        - ENDER_PEARL:3
+        - PURPUR_BLOCK:16
+      secondchest:
+        name: §aZweite Kiste
+        contents:
+        - SHULKER_SHELL:1
+        - END_STONE_BRICKS:32
+  
+  '9':
+    name: Magie & Reichtum
+    blockcount: 100
+    blocks:
+    - QUARTZ_BLOCK
+    - CHISELED_QUARTZ_BLOCK
+    - SMOOTH_QUARTZ
+    - HONEY_BLOCK
+    - SLIME_BLOCK
+    - GILDED_BLACKSTONE
+    - ANCIENT_DEBRIS
+    - NETHERITE_BLOCK
+    - CHEST
+    monsters:
+    - monster: WITCH
+      chance: 3
+    - monster: SLIME
+      chance: 4
+    chests:
+      firstchest:
+        name: §6Erste Kiste
+        contents:
+        - HONEY_BOTTLE:3
+        - SLIME_BALL:10
+      secondchest:
+        name: §aZweite Kiste
+        contents:
+        - NETHERITE_SCRAP:2
+        - ANCIENT_DEBRIS:1
+  
+  '10':
+    name: Dekor & Luxus
+    chests:
+      onechest:
+        name: §6Erste Kiste
+        contents:
+        - DIAMOND_SWORD:1
+        - APPLE:5
+      twochest:
+        name: §aZweite Kiste
+        contents:
+        - IRON_INGOT:10
+        - BREAD:3
+    blockcount: 100
+    blocks:
+    - GLOWSTONE
+    - SEA_LANTERN
+    - PRISMARINE
+    - PRISMARINE_BRICKS
+    - DARK_PRISMARINE
+    - CHEST
+    - LODESTONE
+    monsters:
+    - monster: GUARDIAN
+      chance: 3
+    - monster: ELDER_GUARDIAN
+      chance: 1

@@ -1,0 +1,38 @@
+teleportenabled: true
+teleportauto: false
+godmode: false
+muted: false
+jailed: false
+ip-address: 127.0.0.1
+afk: false
+socialspy: false
+npc: false
+powertoolsenabled: true
+accepting-pay: true
+baltop-exempt: false
+timestamps:
+  lastteleport: 0
+  lastheal: 0
+  mute: 0
+  jail: 0
+  onlinejail: 0
+  logout: 1748537717783
+  login: 1748538237836
+money: '25000'
+last-account-name: nospighost
+logoutlocation:
+  world: c98b8e4c-f217-4f8b-9e23-c7441fd95d3d
+  world-name: world
+  x: 1210.9418949696885
+  y: 100.0
+  z: 1214.4836341833836
+  yaw: -169.5395050048828
+  pitch: 34.33382034301758
+lastlocation:
+  world: e708d4b7-74b1-48b2-8770-79e4a5f60aff
+  world-name: OneBlock
+  x: 799.9754226278468
+  y: 101.0
+  z: 774.4768746481005
+  yaw: 0.245330810546875
+  pitch: 20.264820098876953
