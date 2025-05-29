@@ -2,6 +2,9 @@ package de.Main.OneBlock.Player;
 
 import de.Main.OneBlock.Main;
 import de.Main.OneBlock.Manager.Manager;
+import de.Main.OneBlock.database.MoneyManager;
+import de.Main.OneBlock.database.SQLDataType;
+import de.Main.OneBlock.database.SQLTabel;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
@@ -152,6 +155,7 @@ public class PlayerListener implements Listener {
 
             }
 
+            MoneyManager.set(player.getUniqueId(), 100);
 
         }
     }

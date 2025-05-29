@@ -20,6 +20,12 @@ commands:
     description: Öffnet das OneBlock GUI
     usage: /globaltrash
     permission: oneblock.gui
+  kristallshop:
+    description: Öffnet den Kristall-Shop
+    usage: /kristallshop
+  pickaxeshop:
+    description: Öffnet den Spitzhacken-Shop
+    usage: /pickaxeshop
 
 permissions:
   oneblock.use:

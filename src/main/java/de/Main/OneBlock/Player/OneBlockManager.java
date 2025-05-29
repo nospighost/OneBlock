@@ -20,10 +20,8 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
-
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
-
 import static de.Main.OneBlock.Manager.Manager.getIslandConfig;
 
 public class OneBlockManager implements Listener {

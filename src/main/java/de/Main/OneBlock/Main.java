@@ -2,6 +2,8 @@ package de.Main.OneBlock;
 
 import de.Main.OneBlock.Commands.OneBlockCommands;
 import de.Main.OneBlock.Commands.TabCompleter;
+import de.Main.OneBlock.GUI.Kristall.KristallGUI;
+import de.Main.OneBlock.GUI.Kristall.PickaxeShop.PickaxeShop;
 import de.Main.OneBlock.GUI.OBGUI;
 import de.Main.OneBlock.Manager.Manager;
 import de.Main.OneBlock.Player.OneBlockManager;
@@ -16,6 +18,7 @@ import org.bukkit.World;
 import org.bukkit.WorldBorder;
 import org.bukkit.WorldCreator;
 import org.bukkit.WorldType;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.Listener;
@@ -23,6 +26,8 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
 
 
 public class Main extends JavaPlugin implements Listener {
@@ -38,6 +43,8 @@ public class Main extends JavaPlugin implements Listener {
     public File CustomItems;
     SQLConnection connection;
     MoneyManager moneyManager;
+    private File growthFile;
+    private FileConfiguration growthConfig;
 
     public static Main getInstance() {
         return instance;
@@ -111,6 +118,17 @@ public class Main extends JavaPlugin implements Listener {
             getLogger().warning("Fehler beim Erstellen der OneBlock-Welt");
         }
 
+        //Kristall
+        setupEconomy();
+        setupGrowthFile();
+        getServer().getPluginManager().registerEvents(new de.Main.OneBlock.Kristalle.PlayerListener(this, growthConfig, growthFile), this);
+        de.Main.OneBlock.Kristalle.PlayerListener.startGrowthTasks(this, growthConfig);
+        //Commands
+        getCommand("pickaxeshop").setExecutor(new PickaxeShop());
+        Bukkit.getPluginManager().registerEvents(new PickaxeShop(), this);
+        getCommand("kristallshop").setExecutor(new KristallGUI());
+        //Listener
+        Bukkit.getPluginManager().registerEvents(new KristallGUI(), this);
 
     }
 
@@ -139,6 +157,24 @@ public class Main extends JavaPlugin implements Listener {
 
     public SQLConnection getConnection() {
         return connection;
+    }
+
+    public void setupGrowthFile() {
+        growthFile = new File(getDataFolder(), "growth/growth.yml");
+
+        if (!growthFile.getParentFile().exists()) {
+            growthFile.getParentFile().mkdirs();
+        }
+        if (!growthFile.exists()) {
+            try {
+                growthFile.createNewFile();
+                getLogger().info("growth.yml erstellt.");
+            } catch (IOException e) {
+                getLogger().log(Level.SEVERE, "Konnte growth.yml nicht erstellen.", e);
+            }
+        }
+
+        growthConfig = YamlConfiguration.loadConfiguration(growthFile);
     }
 }
 
