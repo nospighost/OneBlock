@@ -1,0 +1,25 @@
+Generators:
+  OneBlock:
+    '796_101_816':
+      type: STONE
+      level: 1
+      amount: 2
+    '797_101_813':
+      type: STONE
+      level: 1
+      amount: 4
+    '799_100_812':
+      type: STONE
+      level: 1
+    '798_101_808':
+      type: STONE
+      level: 1
+    '798_101_801':
+      type: STONE
+      amount: 5
+    '799_101_798':
+      type: STONE
+      amount: 9
+    '795_101_800':
+      type: STONE
+      amount: 1
