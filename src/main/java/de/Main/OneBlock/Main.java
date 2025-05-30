@@ -14,6 +14,8 @@ import de.Main.OneBlock.Oneblock.WorldManager.VoidGen;
 import de.Main.OneBlock.Oneblock.WorldManager.WorldBorderManager;
 import de.Main.OneBlock.database.MoneyManager;
 import de.Main.OneBlock.database.SQLConnection;
+import de.Main.OneBlock.database.SQLDataType;
+import de.Main.OneBlock.database.SQLTabel;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -29,6 +31,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 
@@ -40,14 +43,12 @@ public class Main extends JavaPlugin implements Listener {
 
     public static FileConfiguration config;
     public static File islandDataFolder;
-    public static File GenDataFolder;
     private static Economy economy = null;
-    public File CustomItems;
-    SQLConnection connection;
     MoneyManager moneyManager;
     private File growthFile;
     private FileConfiguration growthConfig;
-
+    SQLConnection connection;
+    public HashMap<String, SQLDataType> colums; //Spalten, Datentypen
     public static Main getInstance() {
         return instance;
     }
@@ -56,10 +57,14 @@ public class Main extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         instance = this;
+        colums = new HashMap<>();
+        colums.put("balance", SQLDataType.CHAR);
 
         //SQL
-        connection = new SQLConnection("localhost", 3306, "minecraft", "minecraft", "2692");
+        connection = new SQLConnection("localhost", 3306, "admin", "Admin", "1234");
         moneyManager = new MoneyManager(this);
+        Bukkit.getPluginManager().registerEvents(new MoneyManager(this), this);
+        Bukkit.getPluginManager().registerEvents(new SQLTabel(connection, "admin", colums), this);
 
         //config
         saveDefaultConfig();
