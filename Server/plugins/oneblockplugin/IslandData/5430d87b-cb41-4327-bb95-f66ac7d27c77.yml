@@ -1,6 +1,6 @@
 created: 406506133439300
 WorldBorderSize: 50
-TotalBlocks: 100
+TotalBlocks: 200
 owner: nospighost
 owner-uuid: 5430d87b-cb41-4327-bb95-f66ac7d27c77
 EigeneInsel: true
@@ -8,13 +8,13 @@ trusted: []
 invited: []
 invitedtrust: []
 denied: []
-MissingBlocksToLevelUp: 100
+MissingBlocksToLevelUp: 200
 IslandLevel: 1
-Durchgespielt: true
+Durchgespielt: false
+added: []
 OneBlock-x: 1200
 OneBlock-z: 1200
-x-position: 1200 # die noch in db
-z-position: 1200 # die
+x-position: 1200
+z-position: 1200
 IslandSpawn-x: 1200
 IslandSpawn-z: 1200
-added: []

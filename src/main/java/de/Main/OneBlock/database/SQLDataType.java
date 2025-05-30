@@ -2,7 +2,8 @@ package de.Main.OneBlock.database;
 
 public enum SQLDataType {
     CHAR(255), //Datentypen
-    BOOLEAN,       //Datentypen
+    BOOLEAN,
+    TEXT(255),//Datentypen
     INT(255); //Datentypen
     private final long size;
 
