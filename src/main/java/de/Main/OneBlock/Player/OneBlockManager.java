@@ -34,7 +34,8 @@ public class OneBlockManager implements Listener {
         Block block = event.getBlock();
         Location blockLocation = block.getLocation();
 
-        UUID ownerUUID = Manager.getIslandOwnerUUIDByLocation(blockLocation);
+        UUID ownerUUID = UUID.fromString(MoneyManager.getString(uuid, "owner_uuid", ""));
+
         if (ownerUUID == null) {
             player.sendMessage(prefix + "§cDu darfst hier nichts abbauen!");
             event.setCancelled(true);
@@ -42,18 +43,16 @@ public class OneBlockManager implements Listener {
         }
 
         YamlConfiguration config = getIslandConfig(ownerUUID);
-        List<String> Trusted = new ArrayList<>();
-        List<String> defaultTrustedList = MoneyManager.getList(uuid, "trusted", Trusted);
+        List<String> trusted = MoneyManager.getList(uuid, "trusted", new ArrayList<>());
 
         String playerUUID = player.getUniqueId().toString();
 
         if (!ownerUUID.equals(player.getUniqueId())
-                && !Trusted.contains(playerUUID)) {
+                && !trusted.contains(playerUUID)) {
             player.sendMessage(prefix + "§cDu darfst hier nichts abbauen!");
             event.setCancelled(true);
             return;
         }
-
 
         if (block.getType() == Material.CHEST) {
             Chest chest = (Chest) block.getState();

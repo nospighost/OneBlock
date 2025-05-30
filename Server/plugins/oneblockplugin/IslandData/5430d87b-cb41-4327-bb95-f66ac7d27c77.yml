@@ -8,13 +8,13 @@ trusted: []
 invited: []
 invitedtrust: []
 denied: []
-MissingBlocksToLevelUp: 200
-IslandLevel: 1
-Durchgespielt: false
-added: []
+MissingBlocksToLevelUp: 170
+IslandLevel: 10
+Durchgespielt: true
 OneBlock-x: 1200
 OneBlock-z: 1200
-x-position: 1200
-z-position: 1200
+x-position: 1200 # die noch in db
+z-position: 1200 # die
 IslandSpawn-x: 1200
 IslandSpawn-z: 1200
+added: []

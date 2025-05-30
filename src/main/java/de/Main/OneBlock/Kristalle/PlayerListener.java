@@ -44,9 +44,9 @@ public class PlayerListener implements Listener {
             public void run() {
                 for (Player player : Bukkit.getOnlinePlayers()) {
                     if (hasLevel10Crystal(player.getUniqueId())) {
-                        int beforeaddmoney = MoneyManager.get(player.getUniqueId());
-                        int moneyToAdd = beforeaddmoney + 10;
-                        MoneyManager.setInt(player.getUniqueId(), moneyToAdd);
+                     //   int beforeaddmoney = MoneyManager.getInt(player.getUniqueId(), "");
+                     //   int moneyToAdd = beforeaddmoney + 10;
+                     //   MoneyManager.setInt(player.getUniqueId(), moneyToAdd);
                         player.sendMessage("§aDu hast 100 Dollar für deinen Level 10 Kristall erhalten!");
                     }
                 }
@@ -252,7 +252,7 @@ public class PlayerListener implements Listener {
     }
 
     @EventHandler
-        public void onInventoryClick(InventoryClickEvent event) throws IOException {
+    public void onInventoryClick(InventoryClickEvent event) throws IOException {
         if (!(event.getWhoClicked() instanceof Player)) return;
         Player player = (Player) event.getWhoClicked();
 
@@ -273,20 +273,20 @@ public class PlayerListener implements Listener {
             int newLevel = level + 1;
             int price = (int) (1000 * Math.pow(2, newLevel));
 
-            if (MoneyManager.get(player.getUniqueId()) >= price) {
-                int moneybefore = MoneyManager.get(player.getUniqueId());
-                int toremove = (int) (moneybefore - price);
-                MoneyManager.setInt(player.getUniqueId(), price);
-                growthConfig.set(path + ".Level", newLevel);
-                growthConfig.save(growthFile);
-                player.sendMessage("§aUpgrade erfolgreich! Neuer Verdienst: §e" + (1 + newLevel) + "§a$ pro Kristall.");
-            } else {
-                player.sendMessage("§cNicht genug Geld! Du brauchst §e" + price + "$");
-            }
-
-            upgradeOpenLocations.remove(player.getUniqueId());
-            player.closeInventory();
-        }
+   //        if (MoneyManager.get(player.getUniqueId()) >= price) {
+   //            int moneybefore = MoneyManager.get(player.getUniqueId());
+   //            int toremove = (int) (moneybefore - price);
+   //            MoneyManager.setInt(player.getUniqueId(), price);
+   //            growthConfig.set(path + ".Level", newLevel);
+   //            growthConfig.save(growthFile);
+   //            player.sendMessage("§aUpgrade erfolgreich! Neuer Verdienst: §e" + (1 + newLevel) + "§a$ pro Kristall.");
+   //         } else {
+   //             player.sendMessage("§cNicht genug Geld! Du brauchst §e" + price + "$");
+   //         }
+   //
+   //         upgradeOpenLocations.remove(player.getUniqueId());
+   //         player.closeInventory();
+      }
     }
 
     // ----------------------------
