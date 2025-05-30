@@ -1,8 +1,9 @@
 package de.Main.OneBlock.OneBlock.Player;
 
 import de.Main.OneBlock.Main;
-import de.Main.OneBlock.Manager.Manager;
-import de.Main.OneBlock.database.MoneyManager;
+
+import de.Main.OneBlock.OneBlock.Manager.Manager;
+import de.Main.OneBlock.database.DatenBankManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -23,7 +24,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
-import static de.Main.OneBlock.Manager.Manager.getIslandConfig;
+
+import static de.Main.OneBlock.OneBlock.Manager.Manager.getIslandConfig;
 
 public class OneBlockManager implements Listener {
     String prefix = Main.config.getString("Server");
@@ -34,7 +36,7 @@ public class OneBlockManager implements Listener {
         Block block = event.getBlock();
         Location blockLocation = block.getLocation();
 
-        UUID ownerUUID = UUID.fromString(MoneyManager.getString(uuid, "owner_uuid", ""));
+        UUID ownerUUID = UUID.fromString(DatenBankManager.getString(uuid, "owner_uuid", ""));
 
         if (ownerUUID == null) {
             player.sendMessage(prefix + "§cDu darfst hier nichts abbauen!");
@@ -43,7 +45,7 @@ public class OneBlockManager implements Listener {
         }
 
         YamlConfiguration config = getIslandConfig(ownerUUID);
-        List<String> trusted = MoneyManager.getList(uuid, "trusted", new ArrayList<>());
+        List<String> trusted = DatenBankManager.getList(uuid, "trusted", new ArrayList<>());
 
         String playerUUID = player.getUniqueId().toString();
 
@@ -149,7 +151,7 @@ public class OneBlockManager implements Listener {
     }
     private void regenerateOneBlock(Location blockLocation, Material blockMaterial, Integer IslandLevel) {
         Bukkit.getScheduler().runTaskLater(JavaPlugin.getPlugin(Main.class), () -> {
-            Block newBlock = Bukkit.getWorld(de.Main.OneBlock.Player.PlayerListener.WORLD_NAME).getBlockAt(blockLocation);
+            Block newBlock = Bukkit.getWorld(de.Main.OneBlock.OneBlock.Player.PlayerListener.WORLD_NAME).getBlockAt(blockLocation);
             newBlock.setType(blockMaterial);
 
             if (blockMaterial == Material.CHEST) {

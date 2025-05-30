@@ -2,11 +2,10 @@ package de.Main.OneBlock.OneBlock.Manager;
 
 import de.Main.OneBlock.Main;
 import de.Main.OneBlock.OneBlock.Player.PlayerListener;
-import de.Main.OneBlock.database.MoneyManager;
+import de.Main.OneBlock.database.DatenBankManager;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.configuration.MemoryConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -37,19 +36,19 @@ public class Manager implements Listener {
 
         if (args.length == 1 && args[0].equalsIgnoreCase("join")) {
 
-            if (MoneyManager.getBoolean(uuid, "EigeneInsel", false) != true) {
+            if (DatenBankManager.getBoolean(uuid, "EigeneInsel", false) != true) {
                 player.sendMessage(prefix + Main.config.getString("islandjoinmessage.create"));
                 int padding = Main.config.getInt("value");
                 int pos = getIslandCords(padding);
-                MoneyManager.setInt(uuid, "OneBlock_x", pos);
-                MoneyManager.setInt(uuid, "OneBlock_z", pos);
-                MoneyManager.setInt(uuid, "x_position", pos);
-                MoneyManager.setInt(uuid, "z_position", pos);
-                MoneyManager.setInt(uuid, "IslandSpawn_x", pos);
-                MoneyManager.setInt(uuid, "IslandSpawn_z", pos);
-                MoneyManager.setInt(uuid, "WorldBorderSize", 50);
-                MoneyManager.setBoolean(uuid, "EigeneInsel", true);
-                MoneyManager.setString(uuid, "owner", player.getName());
+                DatenBankManager.setInt(uuid, "OneBlock_x", pos);
+                DatenBankManager.setInt(uuid, "OneBlock_z", pos);
+                DatenBankManager.setInt(uuid, "x_position", pos);
+                DatenBankManager.setInt(uuid, "z_position", pos);
+                DatenBankManager.setInt(uuid, "IslandSpawn_x", pos);
+                DatenBankManager.setInt(uuid, "IslandSpawn_z", pos);
+                DatenBankManager.setInt(uuid, "WorldBorderSize", 50);
+                DatenBankManager.setBoolean(uuid, "EigeneInsel", true);
+                DatenBankManager.setString(uuid, "owner", player.getName());
 
 
                 World world = Bukkit.getWorld("OneBlock");
@@ -57,9 +56,9 @@ public class Manager implements Listener {
                     Location tp = new Location(world, pos, 101, pos);
                     Location blockLoc = new Location(
                             world,
-                            MoneyManager.getInt(uuid, "OneBlock_x", pos),
+                            DatenBankManager.getInt(uuid, "OneBlock_x", pos),
                             100,
-                            MoneyManager.getInt(uuid, "OneBlock_z", pos)
+                            DatenBankManager.getInt(uuid, "OneBlock_z", pos)
                     );
                     Block block = blockLoc.getBlock();
                     if (block.getType() == Material.AIR) {
@@ -77,14 +76,14 @@ public class Manager implements Listener {
 
             World world = Bukkit.getWorld("OneBlock");
             if (world != null) {
-                int spawnX = MoneyManager.getInt(uuid, "IslandSpawn_x", 0);
-                int spawnZ = MoneyManager.getInt(uuid, "IslandSpawn_z", 0);
+                int spawnX = DatenBankManager.getInt(uuid, "IslandSpawn_x", 0);
+                int spawnZ = DatenBankManager.getInt(uuid, "IslandSpawn_z", 0);
                 Location tp = new Location(world, spawnX, 101, spawnZ);
                 Location blockLoc = new Location(
                         world,
-                        MoneyManager.getInt(uuid, "OneBlock_x", 0),
+                        DatenBankManager.getInt(uuid, "OneBlock_x", 0),
                         100,
-                        MoneyManager.getInt(uuid, "OneBlock_z", 0)
+                        DatenBankManager.getInt(uuid, "OneBlock_z", 0)
                 );
                 Block block = blockLoc.getBlock();
                 if (block.getType() == Material.AIR) {
@@ -100,6 +99,7 @@ public class Manager implements Listener {
         }
         return false;
     }
+
     public static File getIslandFile(UUID uuid) {
         return new File(Main.islandDataFolder, uuid.toString() + ".yml");
     }
@@ -176,49 +176,53 @@ public class Manager implements Listener {
     }
 
     public static void deleteIsland(Player player) {
-        YamlConfiguration config = getIslandConfig(player.getUniqueId());
+        UUID uuid = player.getUniqueId();
         World world = Bukkit.getWorld("OneBlock");
-
         if (world == null) {
             player.sendMessage(prefix + "§4OneBlock-Welt nicht gefunden.");
             return;
         }
 
-        if (!config.getBoolean("EigeneInsel", false)) {
+        // Nutze hier DatenbankManager, nicht DatenBankManager!
+        boolean hasIsland = DatenBankManager.getBoolean(uuid, "EigeneInsel", false);
+        if (!hasIsland) {
             player.sendMessage(prefix + "§aDu besitzt keine Insel.");
             return;
         }
 
-        int x = config.getInt("OneBlock-x");
-        int z = config.getInt("OneBlock-z");
-        int size = config.getInt("WorldBorderSize", 50);
+        int x    = DatenBankManager.getInt    (uuid, "OneBlock_x",               0);
+        int z    = DatenBankManager.getInt    (uuid, "OneBlock_z",               0);
+        int size = DatenBankManager.getInt    (uuid, "WorldBorderSize",       50);
 
+        // Spieler wegteleportieren
         player.teleport(new Location(world, 0, 100, 0));
 
-        for (int dx = -size / 2; dx <= size / 2; dx++) {
-            for (int dz = -size / 2; dz <= size / 2; dz++) {
+        // Insel-Blöcke löschen
+        for (int dx = -size/2; dx <= size/2; dx++) {
+            for (int dz = -size/2; dz <= size/2; dz++) {
                 for (int dy = 90; dy <= 110; dy++) {
                     world.getBlockAt(x + dx, dy, z + dz).setType(Material.AIR);
                 }
             }
         }
 
-        config.set("EigeneInsel", false);
-        config.set("IslandLevel", 1);
-        config.set("MissingBlocksToLevelUp", 200);
-        config.set("TotalBlocks", 200);
-        config.set("IslandSpawn-x", null);
-        config.set("IslandSpawn-z", null);
-        config.set("x-position", null);
-        config.set("z-position", null);
-        config.set("OneBlock-x", null);
-        config.set("OneBlock-z", null);
-        config.set("WorldBorderSize", 50);
-        config.set("Durchgespielt", false);
+        // Felder zurücksetzen
+        DatenBankManager.setBoolean(uuid, "EigeneInsel", false);
+        DatenBankManager.setInt (uuid, "IslandLevel",             1);
+        DatenBankManager.setInt (uuid, "MissingBlocksToLevelUp", 200);
+        DatenBankManager.setInt (uuid, "TotalBlocks",            200);
+        DatenBankManager.setInt (uuid, "IslandSpawn_x",            0);
+        DatenBankManager.setInt (uuid, "IslandSpawn_z",            0);
+        DatenBankManager.setInt (uuid, "x_position",               0);
+        DatenBankManager.setInt (uuid, "z_position",               0);
+        DatenBankManager.setInt (uuid, "OneBlock_x",               0);
+        DatenBankManager.setInt (uuid, "OneBlock_z",               0);
+        DatenBankManager.setInt (uuid, "WorldBorderSize",       50);
+        DatenBankManager.setBoolean(uuid, "Durchgespielt",         false);
 
-        saveIslandConfig(player.getUniqueId(), config);
         player.sendMessage(prefix + "§aDeine Insel wurde vollständig gelöscht.");
     }
+
 
     public static void visitIsland(Player visitor, String ownerNameOrUUID) {
         UUID ownerUUID = null;

@@ -5,7 +5,8 @@ import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
-import static de.Main.OneBlock.Manager.Manager.getIslandConfig;
+import static de.Main.OneBlock.OneBlock.Manager.Manager.getIslandConfig;
+
 
 public class ActionBar {
     public static int frame = 0;

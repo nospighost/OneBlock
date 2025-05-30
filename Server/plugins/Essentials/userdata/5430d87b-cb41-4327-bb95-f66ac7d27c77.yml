@@ -16,18 +16,18 @@ timestamps:
   mute: 0
   jail: 0
   onlinejail: 0
-  logout: 1748606225001
-  login: 1748611260285
+  logout: 1748612724079
+  login: 1748613562334
 money: '25000'
 last-account-name: nospighost
 logoutlocation:
   world: e708d4b7-74b1-48b2-8770-79e4a5f60aff
   world-name: OneBlock
-  x: 1198.7197439523286
-  y: 100.0
-  z: 1200.0
-  yaw: 0.0
-  pitch: 0.0
+  x: 0.0
+  y: 101.0
+  z: 0.0
+  yaw: -1.2262083292007446
+  pitch: -0.4517608880996704
 lastlocation:
   world: e708d4b7-74b1-48b2-8770-79e4a5f60aff
   world-name: OneBlock

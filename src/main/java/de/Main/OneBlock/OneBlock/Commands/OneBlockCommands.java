@@ -1,7 +1,8 @@
 package de.Main.OneBlock.OneBlock.Commands;
 
 import de.Main.OneBlock.Main;
-import de.Main.OneBlock.Manager.Manager;
+
+import de.Main.OneBlock.OneBlock.Manager.Manager;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
@@ -43,7 +44,7 @@ public class OneBlockCommands implements Listener, CommandExecutor {
                 player.sendMessage(prefix + "§cNur der Inselbesitzer kann die Insel löschen.");
                 return true;
             }
-            Manager.deleteIsland(player);
+            de.Main.OneBlock.OneBlock.Manager.Manager.deleteIsland(player);
 
         } else if (args.length == 2 && args[0].equalsIgnoreCase("visit")) {
             if (!hasPermissionOrOp(player, "oneblock.visit")) {

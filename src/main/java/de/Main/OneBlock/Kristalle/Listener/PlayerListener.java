@@ -1,6 +1,7 @@
 package de.Main.OneBlock.Kristalle.Listener;
 
-import de.Main.OneBlock.database.MoneyManager;
+import de.Main.OneBlock.database.DatenBankManager;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -29,12 +30,13 @@ public class PlayerListener implements Listener {
     private final JavaPlugin plugin;
     private static FileConfiguration growthConfig;
     private static File growthFile;
-
+    private static Economy eco;
     // Hier speichern wir die Block-Locations für Spieler, die gerade das Upgrade-Menü offen haben
     private final Map<UUID, Location> upgradeOpenLocations = new HashMap<>();
 
-    public PlayerListener(JavaPlugin plugin, FileConfiguration growthConfig, File growthFile) {
+    public PlayerListener(JavaPlugin plugin, FileConfiguration growthConfig, File growthFile, Economy eco) {
         this.plugin = plugin;
+        this.eco = eco;
         PlayerListener.growthConfig = growthConfig;
         PlayerListener.growthFile = growthFile;
 
@@ -103,7 +105,7 @@ public class PlayerListener implements Listener {
             String path = getPath(location);
             int upgradeLevel = growthConfig.getInt(path + ".Level", 0);
             int payout = 1 + upgradeLevel;
-            MoneyManager.setInt(player.getUniqueId(), "payut", 10);
+            DatenBankManager.setInt(player.getUniqueId(), "payut", 10);
             player.sendMessage("§a+§e" + payout + "§a$ verdient!");
 
             long now = System.currentTimeMillis();
@@ -285,11 +287,11 @@ public class PlayerListener implements Listener {
             int newLevel = level + 1;
             int price = (int) (1000 * Math.pow(2, newLevel));
 
-            if (player.getFoodLevel() >=price){
+            if (player.getFoodLevel() >= price) {
                 growthConfig.set(path + ".Level", newLevel);
                 growthConfig.save(growthFile);
                 player.sendMessage("§aUpgrade erfolgreich! Neuer Verdienst: §e" + (1 + newLevel) + "§a$ pro Kristall.");
-            } else{
+            } else {
                 player.sendMessage("§cNicht genug Geld! Du brauchst §e" + price + "$");
             }
 

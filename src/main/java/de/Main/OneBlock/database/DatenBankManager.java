@@ -4,6 +4,7 @@ package de.Main.OneBlock.database;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import de.Main.OneBlock.Main;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -13,19 +14,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
-public class MoneyManager implements Listener {
+public class DatenBankManager implements Listener {
     private static final Gson gson = new Gson();
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
         String playerUUID = event.getPlayer().getUniqueId().toString();
-        SQLTabel.Condition condition = new SQLTabel.Condition("owner", playerUUID);
+        SQLTabel.Condition condition = new SQLTabel.Condition("owner", player.getName());
 
         if (!tabel.exits(condition)) {
-            tabel.set("owner", playerUUID, condition);
+            tabel.set("owner", player.getName(), condition);
             tabel.set("WorldBorderSize", 50, condition);
             tabel.set("TotalBlocks", 0, condition);
-            tabel.set("EigeneInsel", true, condition);
+            tabel.set("EigeneInsel", false, condition);
             tabel.set("IslandLevel", 1, condition);
             tabel.set("Durchgespielt", false, condition);
             tabel.set("owner_uuid", playerUUID, condition);
@@ -50,7 +52,7 @@ public class MoneyManager implements Listener {
 
     private static SQLTabel tabel;
 
-    public MoneyManager(Main pl) {
+    public DatenBankManager(Main pl) {
         HashMap<String, SQLDataType> columns = new HashMap<>();
         columns.put("owner", SQLDataType.CHAR);
         columns.put("WorldBorderSize", SQLDataType.INT);

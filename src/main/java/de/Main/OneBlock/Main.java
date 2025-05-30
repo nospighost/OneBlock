@@ -2,11 +2,11 @@ package de.Main.OneBlock;
 
 import de.Main.OneBlock.Kristalle.GUI.KristallGUI;
 import de.Main.OneBlock.Kristalle.GUI.PickaxeShop.PickaxeShop;
-import de.Main.OneBlock.Manager.Manager;
+import de.Main.OneBlock.OneBlock.Manager.Manager;
 import de.Main.OneBlock.OneBlock.Player.OneBlockManager;
-import de.Main.OneBlock.Player.PlayerListener;
+import de.Main.OneBlock.OneBlock.Player.PlayerListener;
 import de.Main.OneBlock.WorldManager.VoidGen;
-import de.Main.OneBlock.database.MoneyManager;
+import de.Main.OneBlock.database.DatenBankManager;
 import de.Main.OneBlock.database.SQLConnection;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
@@ -38,7 +38,7 @@ public class Main extends JavaPlugin implements Listener {
     private static Economy economy = null;
     public File CustomItems;
     SQLConnection connection;
-    MoneyManager moneyManager;
+    DatenBankManager moneyManager;
     private File growthFile;
     private FileConfiguration growthConfig;
 
@@ -53,7 +53,7 @@ public class Main extends JavaPlugin implements Listener {
 
         //SQL
         connection = new SQLConnection("localhost", 3306, "admin", "admin", "1234");
-        moneyManager = new MoneyManager(this);
+        moneyManager = new DatenBankManager(this);
 
         //config
         saveDefaultConfig();
@@ -117,7 +117,7 @@ public class Main extends JavaPlugin implements Listener {
         //Kristall
         setupEconomy();
         setupGrowthFile();
-        getServer().getPluginManager().registerEvents(new de.Main.OneBlock.Kristalle.Listener.PlayerListener(this, growthConfig, growthFile), this);
+        getServer().getPluginManager().registerEvents(new de.Main.OneBlock.Kristalle.Listener.PlayerListener(this, growthConfig, growthFile, economy), this);
         de.Main.OneBlock.Kristalle.Listener.PlayerListener.startGrowthTasks(this, growthConfig);
         //Commands
         getCommand("pickaxeshop").setExecutor(new PickaxeShop());
