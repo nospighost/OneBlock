@@ -185,6 +185,7 @@ public class PlayerListener implements Listener {
         growthConfig.set(path + ".nextGrowth", nextGrowthMillis);
         growthConfig.set(path + ".owner", owner != null ? owner.toString() : null);
         growthConfig.set(path + ".isFullyGrown", stage.equals(AMETHYST_CLUSTER.name()));
+        growthConfig.set(path + ".Prestige", 1);
 
         if (!growthConfig.contains(path + ".Level")) {
             growthConfig.set(path + ".Level", 0);
@@ -242,7 +243,19 @@ public class PlayerListener implements Listener {
         meta.setLore(lore);
         upgrade.setItemMeta(meta);
 
-        gui.setItem(4, upgrade);
+        gui.setItem(3, upgrade);
+
+        ItemStack prestige = new ItemStack(EXPERIENCE_BOTTLE);
+        ItemMeta prestigeMeta = prestige.getItemMeta();
+        if (prestigeMeta != null) {
+            prestigeMeta.setDisplayName("§aPRestige");
+            List<String> lore1 = new ArrayList<>();
+            lore1.add("§bDurch den §aPrestige §bwerden §cwerden die Upgrades des Kristalls zurückgesetzt!");
+
+            prestigeMeta.setLore(lore1);
+            prestige.setItemMeta(prestigeMeta);
+            gui.setItem(5, prestige);
+        }
 
         // Location speichern, damit wir im InventoryClickEvent wissen, welcher Block upgegradet wird
         upgradeOpenLocations.put(player.getUniqueId(), blockLocation);
