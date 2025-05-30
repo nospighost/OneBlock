@@ -1,4 +1,4 @@
-package de.Main.OneBlock.Player;
+package de.Main.OneBlock.OneBlock.Player;
 
 import de.Main.OneBlock.Main;
 import de.Main.OneBlock.Manager.Manager;
@@ -101,9 +101,9 @@ public class OneBlockManager implements Listener {
             int maxlevel = Main.config.getInt("maxlevel");
             if (islandLevel != maxlevel) {
                 blocksToLevelUp -= 1;
-                ActionBar.sendActionbarProgress(player, islandLevel, blocksToLevelUp);
+                de.Main.OneBlock.OneBlock.Player.ActionBar.sendActionbarProgress(player, islandLevel, blocksToLevelUp);
             } else {
-                ActionBar.sendActionbarProgress(player, islandLevel, Integer.MIN_VALUE);
+                de.Main.OneBlock.OneBlock.Player.ActionBar.sendActionbarProgress(player, islandLevel, Integer.MIN_VALUE);
             }
 
             config.set("MissingBlocksToLevelUp", blocksToLevelUp);
@@ -149,7 +149,7 @@ public class OneBlockManager implements Listener {
     }
     private void regenerateOneBlock(Location blockLocation, Material blockMaterial, Integer IslandLevel) {
         Bukkit.getScheduler().runTaskLater(JavaPlugin.getPlugin(Main.class), () -> {
-            Block newBlock = Bukkit.getWorld(PlayerListener.WORLD_NAME).getBlockAt(blockLocation);
+            Block newBlock = Bukkit.getWorld(de.Main.OneBlock.Player.PlayerListener.WORLD_NAME).getBlockAt(blockLocation);
             newBlock.setType(blockMaterial);
 
             if (blockMaterial == Material.CHEST) {

@@ -1,15 +1,11 @@
 package de.Main.OneBlock;
 
-import de.Main.OneBlock.Commands.OneBlockCommands;
-import de.Main.OneBlock.Commands.TabCompleter;
-import de.Main.OneBlock.GUI.Kristall.KristallGUI;
-import de.Main.OneBlock.GUI.Kristall.PickaxeShop.PickaxeShop;
-import de.Main.OneBlock.GUI.OBGUI;
+import de.Main.OneBlock.Kristalle.GUI.KristallGUI;
+import de.Main.OneBlock.Kristalle.GUI.PickaxeShop.PickaxeShop;
 import de.Main.OneBlock.Manager.Manager;
-import de.Main.OneBlock.Player.OneBlockManager;
+import de.Main.OneBlock.OneBlock.Player.OneBlockManager;
 import de.Main.OneBlock.Player.PlayerListener;
 import de.Main.OneBlock.WorldManager.VoidGen;
-import de.Main.OneBlock.WorldManager.WorldBorderManager;
 import de.Main.OneBlock.database.MoneyManager;
 import de.Main.OneBlock.database.SQLConnection;
 import net.milkbowl.vault.economy.Economy;
@@ -77,7 +73,7 @@ public class Main extends JavaPlugin implements Listener {
             getLogger().warning("Vault wurde nicht gefunden – Economy wird deaktiviert.");
         }
       //  Bukkit.getPluginManager().registerEvents(new WorldBorderManager(), this); //rrrrrrrrrrrrrrrrrrrrrrrrrrrrr
-        getCommand("ob").setTabCompleter(new TabCompleter());
+        getCommand("ob").setTabCompleter(new de.Main.OneBlock.OneBlock.Commands.TabCompleter());
         Bukkit.getPluginManager().registerEvents(new OneBlockManager(), this);
 
         getLogger().info("OneBlockPlugin aktiviert!");
@@ -89,10 +85,10 @@ public class Main extends JavaPlugin implements Listener {
         }
 
         // Befehle
-        getCommand("ob").setExecutor(new OneBlockCommands());
-        getCommand("obgui").setExecutor(new OBGUI());
+        getCommand("ob").setExecutor(new de.Main.OneBlock.OneBlock.Commands.OneBlockCommands());
+        getCommand("obgui").setExecutor(new de.Main.OneBlock.OneBlock.GUI.OneBlock.OBGUI());
 
-        getServer().getPluginManager().registerEvents(new OBGUI(), this);
+        getServer().getPluginManager().registerEvents(new de.Main.OneBlock.OneBlock.GUI.OneBlock.OBGUI(), this);
 
         // Void Gen für OneBlock-Welt
         WorldCreator worldCreator = new WorldCreator(WORLD_NAME);
@@ -121,8 +117,8 @@ public class Main extends JavaPlugin implements Listener {
         //Kristall
         setupEconomy();
         setupGrowthFile();
-        getServer().getPluginManager().registerEvents(new de.Main.OneBlock.Kristalle.PlayerListener(this, growthConfig, growthFile), this);
-        de.Main.OneBlock.Kristalle.PlayerListener.startGrowthTasks(this, growthConfig);
+        getServer().getPluginManager().registerEvents(new de.Main.OneBlock.Kristalle.Listener.PlayerListener(this, growthConfig, growthFile), this);
+        de.Main.OneBlock.Kristalle.Listener.PlayerListener.startGrowthTasks(this, growthConfig);
         //Commands
         getCommand("pickaxeshop").setExecutor(new PickaxeShop());
         Bukkit.getPluginManager().registerEvents(new PickaxeShop(), this);

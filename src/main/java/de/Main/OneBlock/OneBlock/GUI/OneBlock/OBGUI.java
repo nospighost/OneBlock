@@ -1,7 +1,7 @@
-package de.Main.OneBlock.GUI;
+package de.Main.OneBlock.OneBlock.GUI.OneBlock;
 
 import de.Main.OneBlock.Main;
-import de.Main.OneBlock.Manager.Manager;
+import de.Main.OneBlock.OneBlock.Manager.Manager;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
@@ -21,10 +21,8 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
-
 import java.util.*;
-
-import static de.Main.OneBlock.Manager.Manager.*;
+import static de.Main.OneBlock.OneBlock.Manager.Manager.*;
 import static org.bukkit.Material.*;
 
 public class OBGUI implements CommandExecutor, Listener {

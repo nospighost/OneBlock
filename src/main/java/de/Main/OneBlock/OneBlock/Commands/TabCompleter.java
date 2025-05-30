@@ -1,4 +1,4 @@
-package de.Main.OneBlock.Commands;
+package de.Main.OneBlock.OneBlock.Commands;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;

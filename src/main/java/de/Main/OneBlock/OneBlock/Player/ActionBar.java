@@ -1,4 +1,4 @@
-package de.Main.OneBlock.Player;
+package de.Main.OneBlock.OneBlock.Player;
 
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;

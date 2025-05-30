@@ -1,8 +1,6 @@
-package de.Main.OneBlock.GUI.Kristall;
+package de.Main.OneBlock.Kristalle.GUI;
 
 
-import de.Main.OneBlock.database.MoneyManager;
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.Command;

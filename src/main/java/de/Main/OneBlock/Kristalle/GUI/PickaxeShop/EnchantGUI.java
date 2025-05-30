@@ -1,9 +1,7 @@
-package de.Main.OneBlock.GUI.Kristall.PickaxeShop;
+package de.Main.OneBlock.Kristalle.GUI.PickaxeShop;
 
 
 
-import de.Main.OneBlock.database.MoneyManager;
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;

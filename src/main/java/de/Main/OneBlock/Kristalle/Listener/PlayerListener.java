@@ -1,7 +1,6 @@
-package de.Main.OneBlock.Kristalle;
+package de.Main.OneBlock.Kristalle.Listener;
 
 import de.Main.OneBlock.database.MoneyManager;
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -14,7 +13,6 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -22,7 +20,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-import static org.bukkit.Bukkit.getServer;
 import static org.bukkit.Material.*;
 import static org.bukkit.enchantments.Enchantment.EFFICIENCY;
 import static org.bukkit.enchantments.Enchantment.LOYALTY;
@@ -306,9 +303,6 @@ public class PlayerListener implements Listener {
                         block.getType() != LARGE_AMETHYST_BUD)) {
             return;
         }
-
-        Location location = block.getLocation();
-
 
         // Falls Level 10 hier weitere Aktionen erwünscht sind, hier hinzufügen
 

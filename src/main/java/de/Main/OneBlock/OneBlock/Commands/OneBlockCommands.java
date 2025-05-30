@@ -1,4 +1,4 @@
-package de.Main.OneBlock.Commands;
+package de.Main.OneBlock.OneBlock.Commands;
 
 import de.Main.OneBlock.Main;
 import de.Main.OneBlock.Manager.Manager;

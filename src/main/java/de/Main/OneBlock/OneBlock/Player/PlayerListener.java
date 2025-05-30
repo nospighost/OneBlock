@@ -1,4 +1,4 @@
-package de.Main.OneBlock.Player;
+package de.Main.OneBlock.OneBlock.Player;
 
 import de.Main.OneBlock.Main;
 import de.Main.OneBlock.Manager.Manager;
