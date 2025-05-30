@@ -85,15 +85,15 @@ public class EnchantGUI implements Listener {
         int price = prices[effiLevel - 1];
 
 
-        if (MoneyManager.get(player.getUniqueId()) >= price) {
-            int moneybefore = MoneyManager.get(player.getUniqueId());
-            int toremove = (int) (moneybefore - price);
-            MoneyManager.setInt(player.getUniqueId(), price);
-            player.getInventory().addItem(clicked.clone());
-            player.sendMessage("§aGekauft für §6" + price + " Kristalle§a!");
-        } else {
-            player.sendMessage("§cNicht genug Kristalle!");
-        }
-        player.closeInventory();
-    }
+ //      if (MoneyManager.get(player.getUniqueId()) >= price) {
+ //          int moneybefore = MoneyManager.get(player.getUniqueId());
+ //          int toremove = (int) (moneybefore - price);
+ //          MoneyManager.setInt(player.getUniqueId(), price);
+ //          player.getInventory().addItem(clicked.clone());
+ //          player.sendMessage("§aGekauft für §6" + price + " Kristalle§a!");
+ //      } else {
+ //          player.sendMessage("§cNicht genug Kristalle!");
+ //      }
+ //      player.closeInventory();
+  }
 }

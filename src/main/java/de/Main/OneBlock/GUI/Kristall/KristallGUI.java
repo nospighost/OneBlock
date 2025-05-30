@@ -71,14 +71,14 @@ public class KristallGUI implements Listener, CommandExecutor {
         int anzahl = clicked.getAmount();
         int kosten = KRISTALL_PREIS * anzahl;
 
-        if (MoneyManager.get(player.getUniqueId()) < kosten) {
-            player.sendMessage("§cDu hast nicht genug Geld. Du brauchst §f" + kosten + "§c$.");
-            return;
-        }
+      //if (MoneyManager.get(player.getUniqueId()) < kosten) {
+      //    player.sendMessage("§cDu hast nicht genug Geld. Du brauchst §f" + kosten + "§c$.");
+      //    return;
+      //}
 
-        int moneybefore = MoneyManager.get(player.getUniqueId());
-        int toremove = (int) (moneybefore - kosten);
-        MoneyManager.setInt(player.getUniqueId(), kosten);
+     //  int moneybefore = MoneyManager.get(player.getUniqueId());
+     //  int toremove = (int) (moneybefore - kosten);
+     //  MoneyManager.setInt(player.getUniqueId(), kosten);
 
         ItemStack kristall = new ItemStack(Material.AMETHYST_CLUSTER, anzahl);
         ItemMeta meta = kristall.getItemMeta();
