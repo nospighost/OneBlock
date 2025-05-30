@@ -1,4 +1,4 @@
-package de.Main.OneBlock.Oneblock.WorldManager;
+package de.Main.OneBlock.WorldManager;
 
 import de.Main.OneBlock.Main;
 import org.bukkit.*;

@@ -1,29 +1,63 @@
 package de.Main.OneBlock.database;
 
 
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
 import de.Main.OneBlock.Main;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 
 public class MoneyManager implements Listener {
-    private Main pl;
+    private static final Gson gson = new Gson();
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent event) {
-        String playerUUID = event.getPlayer().getUniqueId().toString();  // z.B. "3f1a2b4c-..."
-        Player player = event.getPlayer();
+        String playerUUID = event.getPlayer().getUniqueId().toString();
+        SQLTabel.Condition condition = new SQLTabel.Condition("owner", playerUUID);
 
-        // Erstelle HashMap der Spalten mit Typen (muss genau zu deiner Tabellenstruktur passen)
+        if (!tabel.exits(condition)) {
+            tabel.set("owner", playerUUID, condition);
+            tabel.set("WorldBorderSize", 50, condition);
+            tabel.set("TotalBlocks", 0, condition);
+            tabel.set("EigeneInsel", true, condition);
+            tabel.set("IslandLevel", 1, condition);
+            tabel.set("Durchgespielt", false, condition);
+            tabel.set("owner_uuid", playerUUID, condition);
+            tabel.set("MissingBlocksToLevelUp", 0, condition);
+            tabel.set("OneBlock_x", 0, condition);
+            tabel.set("OneBlock_z", 0, condition);
+            tabel.set("IslandSpawn_x", 0, condition);
+            tabel.set("IslandSpawn_z", 0, condition);
+            tabel.set("x_position", 0, condition);
+            tabel.set("z_position", 0, condition);
+            List<String> trustedList = new ArrayList<>();
+            tabel.set("trusted", String.join(",", trustedList), condition);
+            List<String> deniedList = new ArrayList<>();
+            tabel.set("denied", String.join(",", deniedList), condition);
+
+            List<String> invitedList = new ArrayList<>();
+            tabel.set("invited", String.join(",", invitedList), condition);
+
+        }
+    }
+
+
+    private static SQLTabel tabel;
+
+    public MoneyManager(Main pl) {
         HashMap<String, SQLDataType> columns = new HashMap<>();
         columns.put("owner", SQLDataType.CHAR);
         columns.put("WorldBorderSize", SQLDataType.INT);
         columns.put("TotalBlocks", SQLDataType.INT);
-        columns.put("trusted", SQLDataType.CHAR);
+        columns.put("denied", SQLDataType.TEXT);
+        columns.put("invited", SQLDataType.TEXT);
+        columns.put("trusted", SQLDataType.TEXT);
         columns.put("owner_uuid", SQLDataType.CHAR);
         columns.put("EigeneInsel", SQLDataType.BOOLEAN);
         columns.put("MissingBlocksToLevelUp", SQLDataType.INT);
@@ -35,47 +69,7 @@ public class MoneyManager implements Listener {
         columns.put("IslandSpawn_z", SQLDataType.INT);
         columns.put("z_position", SQLDataType.INT);
         columns.put("x_position", SQLDataType.INT);
-
-
-        SQLTabel userTable = new SQLTabel(pl.getConnection(), playerUUID, columns);
-
-
-        userTable.createUserTable(UUID.fromString(playerUUID));
-
-
-        SQLTabel.Condition condition = new SQLTabel.Condition("owner", player.getName());
-        if (!userTable.exits(condition)) {
-            player.sendMessage("Tabelle für Spieler wird erstellt.");
-
-            HashMap<String, Object> values = new HashMap<>();
-            values.put("owner", player.getName());
-            values.put("WorldBorderSize", 50);
-            values.put("TotalBlocks", 200);
-            values.put("MissingBlocksToLevelUp", 200);
-            values.put("trusted", playerUUID);
-            values.put("EigeneInsel", false);
-            values.put("IslandLevel", 1);
-            values.put("Durchgespielt", false);
-            values.put("OneBlock_x", 0);
-            values.put("OneBlock_z", 0);
-            values.put("IslandSpawn_x", 0);
-            values.put("owner_uuid", playerUUID);
-            values.put("IslandSpawn_z", 0);
-            values.put("z_position", 0);
-            values.put("x_position", 0);
-
-            userTable.insert(values);
-        } else {
-            player.sendMessage("Tabelle existiert bereits.");
-        }
-    }
-
-
-
-    private static SQLTabel tabel;
-
-    public MoneyManager(Main pl) {
-        this.pl = pl;  // Plugin-Instanz
+        tabel = new SQLTabel(pl.getConnection(), "userdata", columns);
         pl.getServer().getPluginManager().registerEvents(this, pl);
     }
 
@@ -115,12 +109,45 @@ public class MoneyManager implements Listener {
     }
 
 
-    public static int get(UUID uuid) {
+    public static String getString(UUID uuid, String columnName, String defaultValue) {
         SQLTabel.Condition condition = new SQLTabel.Condition("uuid", uuid.toString());
-        if (tabel.exits(condition))
-            return tabel.getInt("value", condition);
-        setInt(uuid, 0);
-        return 0;
+        if (tabel.exits(condition)) {
+            return tabel.getString(columnName, condition);
+        }
+        tabel.set(columnName, defaultValue, condition);
+        return defaultValue;
     }
+
+
+    public static int getInt(UUID uuid, String columnName, int defaultValue) {
+        SQLTabel.Condition condition = new SQLTabel.Condition("uuid", uuid.toString());
+        if (tabel.exits(condition)) {
+            return tabel.getInt(columnName, condition);
+        }
+        tabel.set(columnName, defaultValue, condition);
+        return defaultValue;
+    }
+
+    public static boolean getBoolean(UUID uuid, String columnName, boolean defaultValue) {
+        SQLTabel.Condition condition = new SQLTabel.Condition("uuid", uuid.toString());
+        if (tabel.exits(condition)) {
+            return tabel.getBoolean(columnName, condition);
+        }
+        tabel.set(columnName, defaultValue, condition);
+        return defaultValue;
+    }
+
+    public static List<String> getList(UUID uuid, String columnName, List<String> defaultValue) {
+        SQLTabel.Condition condition = new SQLTabel.Condition("uuid", uuid.toString());
+        if (tabel.exits(condition)) {
+            String json = tabel.getString(columnName, condition);
+            if (json != null && !json.isEmpty()) {
+                return gson.fromJson(json, new TypeToken<List<String>>() {}.getType());
+            }
+        }
+        tabel.set(columnName, gson.toJson(defaultValue), condition);
+        return defaultValue;
+    }
+
 
 }

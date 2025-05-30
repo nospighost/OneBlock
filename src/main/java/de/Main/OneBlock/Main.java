@@ -1,21 +1,17 @@
 package de.Main.OneBlock;
 
-import de.Main.OneBlock.Oneblock.Commands.OneBlockCommands;
-import de.Main.OneBlock.Oneblock.Commands.TabCompleter;
-import de.Main.OneBlock.Kristall.GUI.KristallGUI;
-import de.Main.OneBlock.Kristall.GUI.PickaxeShop.PickaxeShop;
-import de.Main.OneBlock.Oneblock.GUI.Listener.InventoryClickManager;
-import de.Main.OneBlock.Oneblock.GUI.OneBlockGUI.OBGUI;
-import de.Main.OneBlock.Kristall.Listener.KristallePlayerListener;
-import de.Main.OneBlock.Oneblock.Manager.Manager;
-import de.Main.OneBlock.Oneblock.Player.OneBlockManager;
-import de.Main.OneBlock.Oneblock.Player.PlayerListener;
-import de.Main.OneBlock.Oneblock.WorldManager.VoidGen;
-import de.Main.OneBlock.Oneblock.WorldManager.WorldBorderManager;
+import de.Main.OneBlock.Commands.OneBlockCommands;
+import de.Main.OneBlock.Commands.TabCompleter;
+import de.Main.OneBlock.GUI.Kristall.KristallGUI;
+import de.Main.OneBlock.GUI.Kristall.PickaxeShop.PickaxeShop;
+import de.Main.OneBlock.GUI.OBGUI;
+import de.Main.OneBlock.Manager.Manager;
+import de.Main.OneBlock.Player.OneBlockManager;
+import de.Main.OneBlock.Player.PlayerListener;
+import de.Main.OneBlock.WorldManager.VoidGen;
+import de.Main.OneBlock.WorldManager.WorldBorderManager;
 import de.Main.OneBlock.database.MoneyManager;
 import de.Main.OneBlock.database.SQLConnection;
-import de.Main.OneBlock.database.SQLDataType;
-import de.Main.OneBlock.database.SQLTabel;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -31,7 +27,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.logging.Level;
 
 
@@ -43,12 +38,14 @@ public class Main extends JavaPlugin implements Listener {
 
     public static FileConfiguration config;
     public static File islandDataFolder;
+    public static File GenDataFolder;
     private static Economy economy = null;
+    public File CustomItems;
+    SQLConnection connection;
     MoneyManager moneyManager;
     private File growthFile;
     private FileConfiguration growthConfig;
-    SQLConnection connection;
-    public HashMap<String, SQLDataType> colums; //Spalten, Datentypen
+
     public static Main getInstance() {
         return instance;
     }
@@ -57,14 +54,10 @@ public class Main extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         instance = this;
-        colums = new HashMap<>();
-        colums.put("balance", SQLDataType.CHAR);
 
         //SQL
         connection = new SQLConnection("localhost", 3306, "admin", "Admin", "1234");
         moneyManager = new MoneyManager(this);
-        Bukkit.getPluginManager().registerEvents(new MoneyManager(this), this);
-        Bukkit.getPluginManager().registerEvents(new SQLTabel(connection, "admin", colums), this);
 
         //config
         saveDefaultConfig();
@@ -76,7 +69,6 @@ public class Main extends JavaPlugin implements Listener {
         setupEconomy();
 
         //Listener
-        Bukkit.getPluginManager().registerEvents(new InventoryClickManager(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
         if (economy != null) {
             Bukkit.getPluginManager().registerEvents(new Manager(economy, this), this);
@@ -129,8 +121,8 @@ public class Main extends JavaPlugin implements Listener {
         //Kristall
         setupEconomy();
         setupGrowthFile();
-        getServer().getPluginManager().registerEvents(new KristallePlayerListener(this, growthConfig, growthFile), this);
-        KristallePlayerListener.startGrowthTasks(this, growthConfig);
+        getServer().getPluginManager().registerEvents(new de.Main.OneBlock.Kristalle.PlayerListener(this, growthConfig, growthFile), this);
+        de.Main.OneBlock.Kristalle.PlayerListener.startGrowthTasks(this, growthConfig);
         //Commands
         getCommand("pickaxeshop").setExecutor(new PickaxeShop());
         Bukkit.getPluginManager().registerEvents(new PickaxeShop(), this);

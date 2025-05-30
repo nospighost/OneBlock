@@ -1,7 +1,8 @@
-package de.Main.OneBlock.Oneblock.Player;
+package de.Main.OneBlock.Player;
 
 import de.Main.OneBlock.Main;
-import de.Main.OneBlock.Oneblock.Manager.Manager;
+import de.Main.OneBlock.Manager.Manager;
+import de.Main.OneBlock.database.MoneyManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -22,13 +23,14 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
-import static de.Main.OneBlock.Oneblock.Manager.Manager.getIslandConfig;
+import static de.Main.OneBlock.Manager.Manager.getIslandConfig;
 
 public class OneBlockManager implements Listener {
     String prefix = Main.config.getString("Server");
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
+        UUID uuid = player.getUniqueId();
         Block block = event.getBlock();
         Location blockLocation = block.getLocation();
 
@@ -40,14 +42,13 @@ public class OneBlockManager implements Listener {
         }
 
         YamlConfiguration config = getIslandConfig(ownerUUID);
-        List<String> addedUUIDs = config.getStringList("added");
-        List<String> trustedUUIDs = config.getStringList("trusted");
+        List<String> Trusted = new ArrayList<>();
+        List<String> defaultTrustedList = MoneyManager.getList(uuid, "trusted", Trusted);
 
         String playerUUID = player.getUniqueId().toString();
 
         if (!ownerUUID.equals(player.getUniqueId())
-                && !addedUUIDs.contains(playerUUID)
-                && !trustedUUIDs.contains(playerUUID)) {
+                && !Trusted.contains(playerUUID)) {
             player.sendMessage(prefix + "§cDu darfst hier nichts abbauen!");
             event.setCancelled(true);
             return;
@@ -99,7 +100,7 @@ public class OneBlockManager implements Listener {
                 blockLocation.getBlockZ() == config.getInt("OneBlock-z")) {
 
             int maxlevel = Main.config.getInt("maxlevel");
-            if (islandLevel != maxlevel && config.getBoolean("Durchgespielt") != true) {
+            if (islandLevel != maxlevel) {
                 blocksToLevelUp -= 1;
                 ActionBar.sendActionbarProgress(player, islandLevel, blocksToLevelUp);
             } else {

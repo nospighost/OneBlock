@@ -1,5 +1,6 @@
-package de.Main.OneBlock.Kristall.GUI.PickaxeShop;
+package de.Main.OneBlock.GUI.Kristall.PickaxeShop;
 
+import de.Main.OneBlock.GUI.Kristall.PickaxeShop.EnchantGUI;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.Command;

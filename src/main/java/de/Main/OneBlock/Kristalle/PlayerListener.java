@@ -1,4 +1,4 @@
-package de.Main.OneBlock.Kristall.Listener;
+package de.Main.OneBlock.Kristalle;
 
 import de.Main.OneBlock.database.MoneyManager;
 import org.bukkit.*;
@@ -24,7 +24,7 @@ import static org.bukkit.Material.*;
 import static org.bukkit.enchantments.Enchantment.EFFICIENCY;
 import static org.bukkit.enchantments.Enchantment.LOYALTY;
 
-public class KristallePlayerListener implements Listener {
+public class PlayerListener implements Listener {
 
     private final JavaPlugin plugin;
     private static FileConfiguration growthConfig;
@@ -33,10 +33,10 @@ public class KristallePlayerListener implements Listener {
     // Hier speichern wir die Block-Locations für Spieler, die gerade das Upgrade-Menü offen haben
     private final Map<UUID, Location> upgradeOpenLocations = new HashMap<>();
 
-    public KristallePlayerListener(JavaPlugin plugin, FileConfiguration growthConfig, File growthFile) {
+    public PlayerListener(JavaPlugin plugin, FileConfiguration growthConfig, File growthFile) {
         this.plugin = plugin;
-        KristallePlayerListener.growthConfig = growthConfig;
-        KristallePlayerListener.growthFile = growthFile;
+        PlayerListener.growthConfig = growthConfig;
+        PlayerListener.growthFile = growthFile;
 
         // Scheduler für Belohnungen alle 5 Minuten starten
         new BukkitRunnable() {

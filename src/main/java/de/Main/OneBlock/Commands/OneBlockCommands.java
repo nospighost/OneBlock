@@ -1,7 +1,7 @@
-package de.Main.OneBlock.Oneblock.Commands;
+package de.Main.OneBlock.Commands;
 
 import de.Main.OneBlock.Main;
-import de.Main.OneBlock.Oneblock.Manager.Manager;
+import de.Main.OneBlock.Manager.Manager;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;

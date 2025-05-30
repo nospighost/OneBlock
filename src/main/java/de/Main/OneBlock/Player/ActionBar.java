@@ -1,11 +1,11 @@
-package de.Main.OneBlock.Oneblock.Player;
+package de.Main.OneBlock.Player;
 
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
-import static de.Main.OneBlock.Oneblock.Manager.Manager.getIslandConfig;
+import static de.Main.OneBlock.Manager.Manager.getIslandConfig;
 
 public class ActionBar {
     public static int frame = 0;
@@ -35,7 +35,7 @@ public class ActionBar {
             barBuilder.append("§7]");
 
             String bar = barBuilder.toString();
-            String msg = "§bLevel: §e" + currentLevel + " §8| " + " §6§l∞ " + bar;
+            String msg = "§bLevel: §eMaximal §8| " + " §6§l∞ " + bar;
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(msg));
             return;
         }

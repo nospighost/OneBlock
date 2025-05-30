@@ -1,7 +1,7 @@
-package de.Main.OneBlock.Oneblock.Manager;
+package de.Main.OneBlock.Manager;
 
 import de.Main.OneBlock.Main;
-import de.Main.OneBlock.Oneblock.Player.PlayerListener;
+import de.Main.OneBlock.Player.PlayerListener;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.block.Block;

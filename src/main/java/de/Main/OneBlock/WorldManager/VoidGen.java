@@ -1,4 +1,4 @@
-package de.Main.OneBlock.Oneblock.WorldManager;
+package de.Main.OneBlock.WorldManager;
 
 import org.bukkit.World;
 import org.bukkit.generator.ChunkGenerator;

@@ -1,13 +1,21 @@
-package de.Main.OneBlock.Oneblock.Player;
+package de.Main.OneBlock.Player;
 
 import de.Main.OneBlock.Main;
-import de.Main.OneBlock.Oneblock.Manager.Manager;
+import de.Main.OneBlock.Manager.Manager;
+import de.Main.OneBlock.database.MoneyManager;
+import de.Main.OneBlock.database.SQLConnection;
+import de.Main.OneBlock.database.SQLDataType;
+import de.Main.OneBlock.database.SQLTabel;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
@@ -20,12 +28,13 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.Vector;
 
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static de.Main.OneBlock.Oneblock.Manager.Manager.getIslandConfig;
+import static de.Main.OneBlock.Manager.Manager.getIslandConfig;
 
 
 public class PlayerListener implements Listener {
