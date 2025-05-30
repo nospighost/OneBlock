@@ -1,6 +1,7 @@
 package de.Main.OneBlock.Kristalle;
 
 import de.Main.OneBlock.database.MoneyManager;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -13,6 +14,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -20,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+import static org.bukkit.Bukkit.getServer;
 import static org.bukkit.Material.*;
 import static org.bukkit.enchantments.Enchantment.EFFICIENCY;
 import static org.bukkit.enchantments.Enchantment.LOYALTY;
@@ -38,21 +41,20 @@ public class PlayerListener implements Listener {
         PlayerListener.growthConfig = growthConfig;
         PlayerListener.growthFile = growthFile;
 
+
         // Scheduler für Belohnungen alle 5 Minuten starten
         new BukkitRunnable() {
             @Override
             public void run() {
                 for (Player player : Bukkit.getOnlinePlayers()) {
                     if (hasLevel10Crystal(player.getUniqueId())) {
-                     //   int beforeaddmoney = MoneyManager.getInt(player.getUniqueId(), "");
-                     //   int moneyToAdd = beforeaddmoney + 10;
-                     //   MoneyManager.setInt(player.getUniqueId(), moneyToAdd);
                         player.sendMessage("§aDu hast 100 Dollar für deinen Level 10 Kristall erhalten!");
                     }
                 }
             }
         }.runTaskTimer(plugin, 0L, 20L * 60 * 5); // 5 Minuten in Ticks
     }
+
 
     // Prüft, ob der Spieler mindestens einen Kristall mit Level 10 besitzt
     private boolean hasLevel10Crystal(UUID playerUUID) {
@@ -104,7 +106,7 @@ public class PlayerListener implements Listener {
             String path = getPath(location);
             int upgradeLevel = growthConfig.getInt(path + ".Level", 0);
             int payout = 1 + upgradeLevel;
-            MoneyManager.setInt(player.getUniqueId(), payout);
+            MoneyManager.setInt(player.getUniqueId(), "payut", 10);
             player.sendMessage("§a+§e" + payout + "§a$ verdient!");
 
             long now = System.currentTimeMillis();
@@ -286,20 +288,17 @@ public class PlayerListener implements Listener {
             int newLevel = level + 1;
             int price = (int) (1000 * Math.pow(2, newLevel));
 
-   //        if (MoneyManager.get(player.getUniqueId()) >= price) {
-   //            int moneybefore = MoneyManager.get(player.getUniqueId());
-   //            int toremove = (int) (moneybefore - price);
-   //            MoneyManager.setInt(player.getUniqueId(), price);
-   //            growthConfig.set(path + ".Level", newLevel);
-   //            growthConfig.save(growthFile);
-   //            player.sendMessage("§aUpgrade erfolgreich! Neuer Verdienst: §e" + (1 + newLevel) + "§a$ pro Kristall.");
-   //         } else {
-   //             player.sendMessage("§cNicht genug Geld! Du brauchst §e" + price + "$");
-   //         }
-   //
-   //         upgradeOpenLocations.remove(player.getUniqueId());
-   //         player.closeInventory();
-      }
+            if (player.getFoodLevel() >=price){
+                growthConfig.set(path + ".Level", newLevel);
+                growthConfig.save(growthFile);
+                player.sendMessage("§aUpgrade erfolgreich! Neuer Verdienst: §e" + (1 + newLevel) + "§a$ pro Kristall.");
+            } else{
+                player.sendMessage("§cNicht genug Geld! Du brauchst §e" + price + "$");
+            }
+
+            upgradeOpenLocations.remove(player.getUniqueId());
+            player.closeInventory();
+        }
     }
 
     // ----------------------------
@@ -323,8 +322,6 @@ public class PlayerListener implements Listener {
 
         Location location = block.getLocation();
 
-        String path = getPath(location);
-        int level = growthConfig.getInt(path + ".Level", 0);
 
         // Falls Level 10 hier weitere Aktionen erwünscht sind, hier hinzufügen
 

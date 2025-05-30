@@ -76,7 +76,7 @@ public class Main extends JavaPlugin implements Listener {
         } else {
             getLogger().warning("Vault wurde nicht gefunden – Economy wird deaktiviert.");
         }
-        Bukkit.getPluginManager().registerEvents(new WorldBorderManager(), this);
+      //  Bukkit.getPluginManager().registerEvents(new WorldBorderManager(), this); //rrrrrrrrrrrrrrrrrrrrrrrrrrrrr
         getCommand("ob").setTabCompleter(new TabCompleter());
         Bukkit.getPluginManager().registerEvents(new OneBlockManager(), this);
 

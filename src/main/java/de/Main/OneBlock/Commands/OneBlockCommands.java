@@ -31,7 +31,6 @@ public class OneBlockCommands implements Listener, CommandExecutor {
                 player.sendMessage("§cDazu hast du keine Berechtigung.");
                 return true;
             }
-            player.sendMessage(prefix + Main.config.getString("islandjoinmessage.create"));
             Manager.createOrJoinIsland(player, args);
 
         } else if (args.length == 1 && args[0].equalsIgnoreCase("delete")) {
