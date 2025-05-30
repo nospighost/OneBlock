@@ -73,44 +73,33 @@ public class MoneyManager implements Listener {
         pl.getServer().getPluginManager().registerEvents(this, pl);
     }
 
-    public static void setInt(UUID uuid, int value) {
-        SQLTabel.Condition condition = new SQLTabel.Condition("uuid", uuid.toString());
-        if (tabel.exits(condition)) {
-            tabel.set("value", value, condition);
-        } else {
-            tabel.set("uuid", uuid.toString(), condition);
-            tabel.set("value", value, condition);
-        }
-    }
-
-    public static void setString(String value, UUID uuid) {
-        SQLTabel.Condition condition = new SQLTabel.Condition("uuid", uuid.toString());
-        if (tabel.exits(condition)) {
-            tabel.set("value", value, condition);
-        } else {
-            tabel.set("uuid", uuid.toString(), condition);
-            tabel.set("value", value, condition);
-        }
+    public static void setInt(UUID uuid, String columnName, int value) {
+        SQLTabel.Condition cond = new SQLTabel.Condition("owner_uuid", uuid.toString());
+        tabel.set(columnName, value, cond);
     }
 
 
-    public static void setBoolean(String value, Boolean boolValue) {
+    public static void setString(UUID uuid, String columnName, String value) {
+        SQLTabel.Condition cond = new SQLTabel.Condition("owner_uuid", uuid.toString());
+        tabel.set(columnName, value, cond);
+    }
 
-        SQLTabel.Condition condition = new SQLTabel.Condition("uuid", value);
 
-        if (tabel.exits(condition)) {
+    public static void setBoolean(UUID uuid, String columnName, boolean value) {
+        SQLTabel.Condition cond = new SQLTabel.Condition("owner_uuid", uuid.toString());
+        tabel.set(columnName, value, cond);
+    }
 
-            tabel.set("value", boolValue, condition);
-        } else {
 
-            tabel.set("uuid", value, condition);
-            tabel.set("value", boolValue, condition);
-        }
+    public static void setList(UUID uuid, String columnName, List<String> list) {
+        SQLTabel.Condition cond = new SQLTabel.Condition("owner_uuid", uuid.toString());
+        String csv = String.join(",", list);
+        tabel.set(columnName, csv, cond);
     }
 
 
     public static String getString(UUID uuid, String columnName, String defaultValue) {
-        SQLTabel.Condition condition = new SQLTabel.Condition("uuid", uuid.toString());
+        SQLTabel.Condition condition = new SQLTabel.Condition("owner_uuid", uuid.toString());
         if (tabel.exits(condition)) {
             return tabel.getString(columnName, condition);
         }
@@ -120,7 +109,7 @@ public class MoneyManager implements Listener {
 
 
     public static int getInt(UUID uuid, String columnName, int defaultValue) {
-        SQLTabel.Condition condition = new SQLTabel.Condition("uuid", uuid.toString());
+        SQLTabel.Condition condition = new SQLTabel.Condition("owner_uuid", uuid.toString());
         if (tabel.exits(condition)) {
             return tabel.getInt(columnName, condition);
         }
@@ -129,7 +118,7 @@ public class MoneyManager implements Listener {
     }
 
     public static boolean getBoolean(UUID uuid, String columnName, boolean defaultValue) {
-        SQLTabel.Condition condition = new SQLTabel.Condition("uuid", uuid.toString());
+        SQLTabel.Condition condition = new SQLTabel.Condition("owner_uuid", uuid.toString());
         if (tabel.exits(condition)) {
             return tabel.getBoolean(columnName, condition);
         }
@@ -138,7 +127,7 @@ public class MoneyManager implements Listener {
     }
 
     public static List<String> getList(UUID uuid, String columnName, List<String> defaultValue) {
-        SQLTabel.Condition condition = new SQLTabel.Condition("uuid", uuid.toString());
+        SQLTabel.Condition condition = new SQLTabel.Condition("owner_uuid", uuid.toString());
         if (tabel.exits(condition)) {
             String json = tabel.getString(columnName, condition);
             if (json != null && !json.isEmpty()) {

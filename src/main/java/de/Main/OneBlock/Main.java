@@ -56,7 +56,7 @@ public class Main extends JavaPlugin implements Listener {
         instance = this;
 
         //SQL
-        connection = new SQLConnection("localhost", 3306, "admin", "Admin", "1234");
+        connection = new SQLConnection("localhost", 3306, "admin", "admin", "1234");
         moneyManager = new MoneyManager(this);
 
         //config
@@ -76,7 +76,7 @@ public class Main extends JavaPlugin implements Listener {
         } else {
             getLogger().warning("Vault wurde nicht gefunden – Economy wird deaktiviert.");
         }
-        Bukkit.getPluginManager().registerEvents(new WorldBorderManager(), this);
+      //  Bukkit.getPluginManager().registerEvents(new WorldBorderManager(), this); //rrrrrrrrrrrrrrrrrrrrrrrrrrrrr
         getCommand("ob").setTabCompleter(new TabCompleter());
         Bukkit.getPluginManager().registerEvents(new OneBlockManager(), this);
 
