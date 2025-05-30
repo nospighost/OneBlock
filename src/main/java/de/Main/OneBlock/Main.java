@@ -56,7 +56,7 @@ public class Main extends JavaPlugin implements Listener {
         instance = this;
 
         //SQL
-        connection = new SQLConnection("localhost", 3306, "admin", "Admin", "1234");
+        connection = new SQLConnection("localhost", 3306, "admin", "admin", "1234");
         moneyManager = new MoneyManager(this);
 
         //config
