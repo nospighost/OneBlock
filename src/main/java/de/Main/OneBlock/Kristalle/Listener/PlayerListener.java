@@ -1,6 +1,6 @@
 package de.Main.OneBlock.Kristalle.Listener;
 
-import de.Main.OneBlock.database.DatenBankManager;
+
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -105,7 +105,7 @@ public class PlayerListener implements Listener {
             String path = getPath(location);
             int upgradeLevel = growthConfig.getInt(path + ".Level", 0);
             int payout = 1 + upgradeLevel;
-            DatenBankManager.setInt(player.getUniqueId(), "payut", 10);
+            eco.depositPlayer(player, payout);
             player.sendMessage("§a+§e" + payout + "§a$ verdient!");
 
             long now = System.currentTimeMillis();
@@ -287,10 +287,11 @@ public class PlayerListener implements Listener {
             int newLevel = level + 1;
             int price = (int) (1000 * Math.pow(2, newLevel));
 
-            if (player.getFoodLevel() >= price) {
+            if (eco.getBalance(player) >= price) {
                 growthConfig.set(path + ".Level", newLevel);
                 growthConfig.save(growthFile);
                 player.sendMessage("§aUpgrade erfolgreich! Neuer Verdienst: §e" + (1 + newLevel) + "§a$ pro Kristall.");
+                eco.withdrawPlayer(player, price);
             } else {
                 player.sendMessage("§cNicht genug Geld! Du brauchst §e" + price + "$");
             }
