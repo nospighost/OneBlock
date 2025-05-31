@@ -1,8 +1,8 @@
-package de.Main.OneBlock.OneBlock.Player;
+package de.Main.OneBlock.OneBlock.Manager;
 
 import de.Main.OneBlock.Main;
 
-import de.Main.OneBlock.OneBlock.Manager.Manager;
+import de.Main.OneBlock.OneBlock.Player.ActionBar;
 import de.Main.OneBlock.database.DatenBankManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -13,7 +13,6 @@ import org.bukkit.block.Chest;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -21,36 +20,39 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.util.Vector;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.logging.Level;
 
-import static de.Main.OneBlock.OneBlock.Manager.Manager.getIslandConfig;
+import static de.Main.OneBlock.database.DatenBankManager.getInt;
+
 
 public class OneBlockManager implements Listener {
     String prefix = Main.config.getString("Server");
+
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
-        UUID uuid = player.getUniqueId();
+        UUID playerUUID = player.getUniqueId();
         Block block = event.getBlock();
         Location blockLocation = block.getLocation();
 
-        UUID ownerUUID = UUID.fromString(DatenBankManager.getString(uuid, "owner_uuid", ""));
+        UUID ownerUUID = getUUIDFromLocation(blockLocation);
 
         if (ownerUUID == null) {
-            player.sendMessage(prefix + "§cDu darfst hier nichts abbauen!");
+            player.sendMessage(prefix + "§cDu darfst hier nichts abbauen! UUID NULL");
             event.setCancelled(true);
             return;
         }
 
-        YamlConfiguration config = getIslandConfig(ownerUUID);
-        List<String> trusted = DatenBankManager.getList(uuid, "trusted", new ArrayList<>());
+        List<String> trusted = DatenBankManager.getList(ownerUUID, "trusted", new ArrayList<>());
 
-        String playerUUID = player.getUniqueId().toString();
-
-        if (!ownerUUID.equals(player.getUniqueId())
-                && !trusted.contains(playerUUID)) {
+        if (!ownerUUID.equals(playerUUID) && !trusted.contains(playerUUID.toString())) {
             player.sendMessage(prefix + "§cDu darfst hier nichts abbauen!");
             event.setCancelled(true);
             return;
@@ -61,17 +63,14 @@ public class OneBlockManager implements Listener {
             String chestName = chest.getCustomName();
 
             if (chestName != null) {
-                int islandLevel = config.getInt("IslandLevel");
-
-                ConfigurationSection chestsSection = Main.getInstance().getConfig()
-                        .getConfigurationSection("oneblockblocks." + islandLevel + ".chests");
+                int islandLevel = getInt(ownerUUID, "IslandLevel", 1);
+                YamlConfiguration config = (YamlConfiguration) Main.config;
+                ConfigurationSection chestsSection = config.getConfigurationSection("oneblockblocks." + islandLevel + ".chests");
 
                 if (chestsSection != null) {
-                    for (String chestKey : chestsSection.getKeys(false)) {
-                        String configuredName = Main.getInstance().getConfig()
-                                .getString("oneblockblocks." + islandLevel + ".chests." + chestKey + ".name", "§7Kiste");
-
-                        if (configuredName.equals(chestName)) {
+                    List<String> chestKeys = new ArrayList<>(chestsSection.getKeys(false));
+                    for (String key : chestKeys) {
+                        if (chestName.equalsIgnoreCase(config.getString("oneblockblocks." + islandLevel + ".chests." + key + ".name"))) {
                             Inventory inv = chest.getBlockInventory();
                             for (ItemStack item : inv.getContents()) {
                                 if (item != null && item.getType() != Material.AIR) {
@@ -79,6 +78,9 @@ public class OneBlockManager implements Listener {
                                 }
                             }
                             inv.clear();
+
+                            // Spawne eine neue Chest mit zufälliger Config
+                            spawnChestWithConfig(blockLocation, key, islandLevel);
                             break;
                         }
                     }
@@ -86,74 +88,69 @@ public class OneBlockManager implements Listener {
             }
         }
 
+        int blocksToLevelUp = getInt(ownerUUID, "MissingBlocksToLevelUp", 100);
+        int islandLevel = getInt(ownerUUID, "IslandLevel", 1);
+        boolean durchgespielt = DatenBankManager.getBoolean(ownerUUID, "Durchgespielt", false);
 
-        int blocksToLevelUp = config.getInt("MissingBlocksToLevelUp");
-        int islandLevel = config.getInt("IslandLevel");
-        boolean durchgespielt = config.getBoolean("Durchgespielt");
-        World world = Bukkit.getWorld("OneBlock");
-
-
-
-        if (world != null &&
-                blockLocation.getWorld().equals(world) &&
-                blockLocation.getBlockX() == config.getInt("OneBlock-x") &&
+        World oneBlockWorld = Bukkit.getWorld("OneBlock");
+        if (oneBlockWorld != null &&
+                blockLocation.getWorld().equals(oneBlockWorld) &&
+                blockLocation.getBlockX() == getInt(ownerUUID, "OneBlock_x", 0) &&
                 blockLocation.getBlockY() == 100 &&
-                blockLocation.getBlockZ() == config.getInt("OneBlock-z")) {
+                blockLocation.getBlockZ() == getInt(ownerUUID, "OneBlock_z", 0)) {
 
-            int maxlevel = Main.config.getInt("maxlevel");
-            if (islandLevel != maxlevel) {
-                blocksToLevelUp -= 1;
-                de.Main.OneBlock.OneBlock.Player.ActionBar.sendActionbarProgress(player, islandLevel, blocksToLevelUp);
+            int maxLevel = Main.config.getInt("maxlevel");
+            if (islandLevel != maxLevel) {
+                blocksToLevelUp--;
+                int totalBlocks = DatenBankManager.getTotalBlocks();  // z.B. aus DB oder Config holen
+                ActionBar.sendActionbarProgress(player, islandLevel, blocksToLevelUp, totalBlocks);
+
             } else {
-                de.Main.OneBlock.OneBlock.Player.ActionBar.sendActionbarProgress(player, islandLevel, Integer.MIN_VALUE);
+                int totalBlocks = DatenBankManager.getTotalBlocks();  // z.B. aus DB oder Config holen
+                ActionBar.sendActionbarProgress(player, islandLevel, blocksToLevelUp, totalBlocks);
+
             }
 
-            config.set("MissingBlocksToLevelUp", blocksToLevelUp);
+            DatenBankManager.setInt(ownerUUID, "MissingBlocksToLevelUp", blocksToLevelUp);
 
-            if (blocksToLevelUp <= 0 && islandLevel != maxlevel) {
-                islandLevel += 1;
-                config.set("IslandLevel", islandLevel);
-                int newTotal = Main.config.getInt("oneblockblocks." + islandLevel + ".blockcount");
-                config.set("TotalBlocks", newTotal);
-                config.set("MissingBlocksToLevelUp", newTotal);
+            if (blocksToLevelUp <= 0 && islandLevel != maxLevel) {
+                islandLevel++;
+                DatenBankManager.setInt(ownerUUID, "IslandLevel", islandLevel);
+                int newTotalBlocks = Main.config.getInt("oneblockblocks." + islandLevel + ".blockcount");
+                DatenBankManager.setInt(ownerUUID, "TotalBlocks", newTotalBlocks);
+                DatenBankManager.setInt(ownerUUID, "MissingBlocksToLevelUp", newTotalBlocks);
             }
 
             if (islandLevel == 10 && !durchgespielt) {
-                config.set("Durchgespielt", true);
+                DatenBankManager.setBoolean(ownerUUID, "durchgespielt", true);
             }
-
-            Manager.saveIslandConfig(ownerUUID, config);
 
             List<String> nextBlocks = Main.config.getStringList("oneblockblocks." + islandLevel + ".blocks");
             if (!nextBlocks.isEmpty()) {
-                int randomIndex = ThreadLocalRandom.current().nextInt(nextBlocks.size());
-                String nextBlock = nextBlocks.get(randomIndex);
+                String nextBlock = nextBlocks.get(ThreadLocalRandom.current().nextInt(nextBlocks.size()));
+                Material blockMaterial = Material.getMaterial(nextBlock);
 
-                Material blockMaterial;
-                try {
-                    blockMaterial = Material.valueOf(nextBlock);
-                } catch (IllegalArgumentException e) {
-                    Bukkit.getLogger().warning("Ungültiger Blockname in der Konfiguration: " + nextBlock);
+                if (blockMaterial == null) {
+                    Bukkit.getLogger().warning("Ungültiger Blockname: " + nextBlock);
                     blockMaterial = Material.STONE;
                 }
 
                 event.setDropItems(false);
-                ItemStack droppedItem = new ItemStack(block.getType());
-                Item item = block.getWorld().dropItem(blockLocation.clone().add(0.5, 1.0, 0.5), droppedItem);
-                item.setVelocity(new Vector(0, 0, 0));
-                item.setPickupDelay(10);
-
+                block.getWorld().dropItemNaturally(blockLocation.clone().add(0.5, 1.0, 0.5), new ItemStack(block.getType()));
                 block.setType(Material.AIR);
-                regenerateOneBlock(blockLocation, blockMaterial, islandLevel);
-                monster(ownerUUID, blockLocation.clone().add(0.5, 1.0, 0.5));
+                Location regenLocation = blockLocation.clone();
+                regenLocation.setY(100);
+                regenerateOneBlock(regenLocation, blockMaterial, islandLevel);
+                monster(ownerUUID, blockLocation.add(0.5, 1.0, 0.5), islandLevel);
             }
         }
     }
+
+
     private void regenerateOneBlock(Location blockLocation, Material blockMaterial, Integer IslandLevel) {
         Bukkit.getScheduler().runTaskLater(JavaPlugin.getPlugin(Main.class), () -> {
             Block newBlock = Bukkit.getWorld(de.Main.OneBlock.OneBlock.Player.PlayerListener.WORLD_NAME).getBlockAt(blockLocation);
             newBlock.setType(blockMaterial);
-
             if (blockMaterial == Material.CHEST) {
                 YamlConfiguration config = (YamlConfiguration) Main.config;
                 newBlock.setType(Material.CHEST);
@@ -175,7 +172,8 @@ public class OneBlockManager implements Listener {
         }, 1L);
     }
 
-    public void spawnChestWithConfig (Location location, String chestKey,int islandLevel) {
+
+    public void spawnChestWithConfig(Location location, String chestKey, int islandLevel) {
         YamlConfiguration config = (YamlConfiguration) Main.config;
 
         String path = "oneblockblocks." + islandLevel + ".chests." + chestKey;
@@ -217,15 +215,18 @@ public class OneBlockManager implements Listener {
 
     }
 
-    public void monster (UUID ownerUUID, Location spawnLocation){
-        YamlConfiguration config = getIslandConfig(ownerUUID);
-        int islandLevel = config.getInt("IslandLevel");
+    public void monster(UUID ownerUUID, Location spawnLocation, int islandLevel) {
+        if (islandLevel == -1) {
+            Bukkit.getLogger().warning("Kein IslandLevel für Spieler " + ownerUUID + " in DB gefunden.");
+            return;
+        }
 
-        List<Map<?, ?>> monstersList = (List<Map<?, ?>>) Main.config.getList("oneblockblocks." + islandLevel + ".monsters");
+        YamlConfiguration config = (YamlConfiguration) Main.config; // deine Config-Referenz
+
+        List<Map<?, ?>> monstersList = (List<Map<?, ?>>) config.getList("oneblockblocks." + islandLevel + ".monsters");
         if (monstersList == null || monstersList.isEmpty()) return;
 
         Random random = new Random();
-
 
         int totalChance = 0;
         for (Map<?, ?> monsterData : monstersList) {
@@ -233,11 +234,9 @@ public class OneBlockManager implements Listener {
         }
 
         int roll = random.nextInt(100) + 1;
-
         if (roll > totalChance) {
             return;
         }
-
 
         int cumulativeChance = 0;
         for (Map<?, ?> monsterData : monstersList) {
@@ -256,6 +255,53 @@ public class OneBlockManager implements Listener {
                 break;
             }
         }
+    }
+    public static boolean isLocationOnIsland(UUID ownerUUID, Location location) {
+        int centerX = getInt(ownerUUID, "OneBlock_x", 0);
+        int centerZ = getInt(ownerUUID, "OneBlock_z", 0);
+        int diameter = getInt(ownerUUID, "WorldBorderSize", 50);
+        int radius = diameter / 2;
+
+        // Check, ob Location in der Welt OneBlock ist
+        if (!location.getWorld().getName().equals("OneBlock")) return false;
+
+        int x = location.getBlockX();
+        int z = location.getBlockZ();
+
+        // Prüfen, ob x,z im Bereich ist
+        return x >= (centerX - radius) && x < (centerX + radius) &&
+                z >= (centerZ - radius) && z < (centerZ + radius);
 
     }
+
+    public static UUID getUUIDFromLocation(Location location) {
+        UUID ownerUUID = null;
+        Connection connection = Main.getInstance().getConnection().getConnection();
+        int x = location.getBlockX();
+        int z = location.getBlockZ();
+
+        String query = "SELECT owner_uuid, OneBlock_x, OneBlock_z, WorldBorderSize FROM userdata";
+
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    String uuidString = rs.getString("owner_uuid");
+                    int centerX = rs.getInt("OneBlock_x");
+                    int centerZ = rs.getInt("OneBlock_z");
+                    int radius = rs.getInt("WorldBorderSize");
+
+                    // Prüfe, ob der Block innerhalb des Insel Berreiches s liegt
+                    if (x >= centerX - radius && x <= centerX + radius &&
+                            z >= centerZ - radius && z <= centerZ + radius) {
+                        return UUID.fromString(uuidString);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Main.getInstance().getLogger().log(Level.SEVERE, "Fehler beim Abrufen der UUID von der Location", e);
+        }
+        return ownerUUID;
+    }
+
+
 }

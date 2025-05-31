@@ -1,11 +1,15 @@
 package de.Main.OneBlock;
 
+import de.Main.OneBlock.CustomChest.ChestGUI;
+import de.Main.OneBlock.CustomChest.ChestListener;
 import de.Main.OneBlock.Kristalle.GUI.KristallGUI;
 import de.Main.OneBlock.Kristalle.GUI.PickaxeShop.PickaxeShop;
 import de.Main.OneBlock.OneBlock.Manager.Manager;
-import de.Main.OneBlock.OneBlock.Player.OneBlockManager;
+import de.Main.OneBlock.OneBlock.Manager.OneBlockManager;
 import de.Main.OneBlock.OneBlock.Player.PlayerListener;
+import de.Main.OneBlock.OneBlock.Player.PlayerRespawnListener;
 import de.Main.OneBlock.WorldManager.VoidGen;
+import de.Main.OneBlock.WorldManager.WorldBorderManager;
 import de.Main.OneBlock.database.DatenBankManager;
 import de.Main.OneBlock.database.SQLConnection;
 import net.milkbowl.vault.economy.Economy;
@@ -23,13 +27,20 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import java.util.logging.Level;
 
 
 public class Main extends JavaPlugin implements Listener {
     private static Main instance;
 
-    private static final String WORLD_NAME = "OneBlock";
+    public static final String WORLD_NAME = "OneBlock";
     public static World oneBlockWorld;
 
     public static FileConfiguration config;
@@ -65,6 +76,7 @@ public class Main extends JavaPlugin implements Listener {
         setupEconomy();
 
         //Listener
+        Bukkit.getPluginManager().registerEvents(new PlayerRespawnListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
         if (economy != null) {
             Bukkit.getPluginManager().registerEvents(new Manager(economy, this), this);
@@ -72,7 +84,7 @@ public class Main extends JavaPlugin implements Listener {
         } else {
             getLogger().warning("Vault wurde nicht gefunden – Economy wird deaktiviert.");
         }
-      //  Bukkit.getPluginManager().registerEvents(new WorldBorderManager(), this); //rrrrrrrrrrrrrrrrrrrrrrrrrrrrr
+       Bukkit.getPluginManager().registerEvents(new WorldBorderManager(), this);
         getCommand("ob").setTabCompleter(new de.Main.OneBlock.OneBlock.Commands.TabCompleter());
         Bukkit.getPluginManager().registerEvents(new OneBlockManager(), this);
 
@@ -126,12 +138,16 @@ public class Main extends JavaPlugin implements Listener {
         //Listener
         Bukkit.getPluginManager().registerEvents(new KristallGUI(), this);
 
+
+
+        //<--------------------KISTEN-------------------->>//
+        Bukkit.getPluginManager().registerEvents(new ChestListener(), this);
     }
 
     @Override
     public void onDisable() {
 
-        Manager.saveIslandConfig(null, null);
+       // Manager.saveIslandConfig(null, null);
         saveDefaultConfig();
 
         getLogger().info("OneBlockPlugin deaktiviert.");
@@ -172,6 +188,36 @@ public class Main extends JavaPlugin implements Listener {
 
         growthConfig = YamlConfiguration.loadConfiguration(growthFile);
     }
+
+    public static List<UUID> getAllOwners() {
+        List<UUID> owners = new ArrayList<>();
+        String sql = "SELECT DISTINCT owner_uuid FROM userdata WHERE owner_uuid IS NOT NULL";
+
+        // Die Verbindung bleibt offen, nur PreparedStatement und ResultSet werden automatisch geschlossen
+        Connection conn = Main.getInstance().getConnection().getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                String ownerUUIDStr = rs.getString("owner_uuid");
+                if (ownerUUIDStr != null && !ownerUUIDStr.isEmpty()) {
+                    try {
+                        UUID ownerUUID = UUID.fromString(ownerUUIDStr);
+                        owners.add(ownerUUID);
+                    } catch (IllegalArgumentException e) {
+                        // Ungültige UUID
+                        Main.getInstance().getLogger().warning("Ungültige UUID in der Datenbank: " + ownerUUIDStr);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            Main.getInstance().getLogger().log(Level.SEVERE, "Fehler beim Abrufen der Besitzer aus der Datenbank", e);
+        }
+        // Verbindung bleibt weiterhin offen
+        return owners;
+    }
+
+
 }
 
 

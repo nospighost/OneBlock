@@ -65,7 +65,7 @@ public class OBGUI implements CommandExecutor, Listener {
     }
 
     private void createguis(Player player) {
-        YamlConfiguration config = getIslandConfig(player.getUniqueId());
+        YamlConfiguration config = null;
 
         Einstellungen = Bukkit.createInventory(null, 3 * 9, "§cInsel-Einstellungen");
         Rebirth = Bukkit.createInventory(null, 3 * 9, "§eRebirth");
@@ -313,7 +313,7 @@ public class OBGUI implements CommandExecutor, Listener {
     }
 
     private void setPlayerHeadInMainGUI(Player player) {
-        YamlConfiguration config = getIslandConfig(player.getUniqueId());
+        YamlConfiguration config = null;
         ItemStack skull = new ItemStack(PLAYER_HEAD);
         SkullMeta skullMeta = (SkullMeta) skull.getItemMeta();
         if (skullMeta != null) {
@@ -353,7 +353,7 @@ public class OBGUI implements CommandExecutor, Listener {
             skullMeta.setLore(lore);
             skull.setItemMeta(skullMeta);
 
-            saveIslandConfig(player.getUniqueId(), config);
+
         }
         mainGUI.setItem(4, skull);
     }
@@ -393,7 +393,7 @@ public class OBGUI implements CommandExecutor, Listener {
                 case 15 -> {
                     item = new ItemStack(STRUCTURE_VOID);
                     displayName = "§aWorldBorder Größe";
-                    YamlConfiguration config = getIslandConfig(player.getUniqueId());
+                    YamlConfiguration config = null;
                     int currentSize = config.getInt("WorldBorderSize", 50);
 
                     int basePrice = 100;
@@ -485,7 +485,7 @@ public class OBGUI implements CommandExecutor, Listener {
         if (event.getClickedInventory() == null || event.getCurrentItem() == null) return;
 
         UUID uuid = player.getUniqueId();
-        YamlConfiguration config = getIslandConfig(uuid);
+        YamlConfiguration config = null;
 
         String title = event.getView().getTitle();
         ItemStack clicked = event.getCurrentItem();
@@ -570,7 +570,6 @@ public class OBGUI implements CommandExecutor, Listener {
                         config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.1.blockcount"));
                         config.set("TotalBlocks", Main.config.getInt("oneblockblocks.1.blockcount"));
                         config.set("Durchgespielt", true);
-                        Manager.saveIslandConfig(player.getUniqueId(), config);
 
                         player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 1 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
@@ -588,7 +587,6 @@ public class OBGUI implements CommandExecutor, Listener {
                         config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.2.blockcount"));
                         config.set("TotalBlocks", Main.config.getInt("oneblockblocks.2.blockcount"));
                         config.set("Durchgespielt", true);
-                        Manager.saveIslandConfig(player.getUniqueId(), config);
 
                         player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 2 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
@@ -606,8 +604,6 @@ public class OBGUI implements CommandExecutor, Listener {
                         config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.3.blockcount"));
                         config.set("TotalBlocks", Main.config.getInt("oneblockblocks.3.blockcount"));
                         config.set("Durchgespielt", true);
-                        Manager.saveIslandConfig(player.getUniqueId(), config);
-
                         player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 3 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                         player.closeInventory();
@@ -624,7 +620,6 @@ public class OBGUI implements CommandExecutor, Listener {
                         config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.4.blockcount"));
                         config.set("TotalBlocks", Main.config.getInt("oneblockblocks.4.blockcount"));
                         config.set("Durchgespielt", true);
-                        Manager.saveIslandConfig(player.getUniqueId(), config);
 
                         player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 4 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
@@ -642,7 +637,6 @@ public class OBGUI implements CommandExecutor, Listener {
                         config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.5.blockcount"));
                         config.set("TotalBlocks", Main.config.getInt("oneblockblocks.5.blockcount"));
                         config.set("Durchgespielt", true);
-                        Manager.saveIslandConfig(player.getUniqueId(), config);
 
                         player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 5 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
@@ -660,7 +654,6 @@ public class OBGUI implements CommandExecutor, Listener {
                         config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.6.blockcount"));
                         config.set("TotalBlocks", Main.config.getInt("oneblockblocks.6.blockcount"));
                         config.set("Durchgespielt", true);
-                        Manager.saveIslandConfig(player.getUniqueId(), config);
 
                         player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 6 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
@@ -678,7 +671,6 @@ public class OBGUI implements CommandExecutor, Listener {
                         config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.7.blockcount"));
                         config.set("TotalBlocks", Main.config.getInt("oneblockblocks.7.blockcount"));
                         config.set("Durchgespielt", true);
-                        Manager.saveIslandConfig(player.getUniqueId(), config);
 
                         player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 7 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
@@ -696,7 +688,6 @@ public class OBGUI implements CommandExecutor, Listener {
                         config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.8.blockcount"));
                         config.set("TotalBlocks", Main.config.getInt("oneblockblocks.8.blockcount"));
                         config.set("Durchgespielt", true);
-                        Manager.saveIslandConfig(player.getUniqueId(), config);
 
                         player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 8 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
@@ -714,7 +705,6 @@ public class OBGUI implements CommandExecutor, Listener {
                         config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.9.blockcount"));
                         config.set("TotalBlocks", Main.config.getInt("oneblockblocks.9.blockcount"));
                         config.set("Durchgespielt", true);
-                        Manager.saveIslandConfig(player.getUniqueId(), config);
 
                         player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 9 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
@@ -732,7 +722,6 @@ public class OBGUI implements CommandExecutor, Listener {
                         config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.10.blockcount"));
                         config.set("TotalBlocks", Main.config.getInt("oneblockblocks.10.blockcount"));
                         config.set("Durchgespielt", true);
-                        Manager.saveIslandConfig(player.getUniqueId(), config);
 
                         player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 10 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
@@ -874,19 +863,18 @@ public class OBGUI implements CommandExecutor, Listener {
         int upgradesDone = (currentSize - 50) / 10; 
         int price = (int) (basePrice * Math.pow(2, upgradesDone)); 
 
-        if (economy.getBalance(player) < price) {
+        if (eco.getBalance(player) < price) {
             player.sendMessage("§cDu hast nicht genug Geld! Benötigt: §e" + price + " Coins");
             player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
             return;
         }
 
-   
-        economy.withdrawPlayer(player, price);
+
+        eco.withdrawPlayer(player, price);
 
       
         currentSize += 10;
         config.set("WorldBorderSize", currentSize);
-        saveIslandConfig(uuid, config);
 
         player.sendMessage("§aDeine WorldBorder wurde auf §e" + currentSize + " §avergrößert!");
         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);

@@ -3,6 +3,7 @@ package de.Main.OneBlock.OneBlock.Commands;
 import de.Main.OneBlock.Main;
 
 import de.Main.OneBlock.OneBlock.Manager.Manager;
+import de.Main.OneBlock.database.DatenBankManager;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
@@ -39,12 +40,11 @@ public class OneBlockCommands implements Listener, CommandExecutor {
                 player.sendMessage("§cDazu hast du keine Berechtigung.");
                 return true;
             }
-            YamlConfiguration config = Manager.getIslandConfig(player.getUniqueId());
-            if (!isOwnerOfIsland(player, config)) {
+            if (!isOwnerOfIsland(player)) {
                 player.sendMessage(prefix + "§cNur der Inselbesitzer kann die Insel löschen.");
                 return true;
             }
-            de.Main.OneBlock.OneBlock.Manager.Manager.deleteIsland(player);
+           Manager.deleteIsland(player);
 
         } else if (args.length == 2 && args[0].equalsIgnoreCase("visit")) {
             if (!hasPermissionOrOp(player, "oneblock.visit")) {
@@ -59,26 +59,36 @@ public class OneBlockCommands implements Listener, CommandExecutor {
                 player.sendMessage("§cDazu hast du keine Berechtigung.");
                 return true;
             }
-            YamlConfiguration config = Manager.getIslandConfig(player.getUniqueId());
-            if (!isOwnerOfIsland(player, config)) {
+
+            if (!isOwnerOfIsland(player)) {
                 player.sendMessage(prefix + "§cNur der Inselbesitzer kann rebirth ausführen.");
                 return true;
             }
-            if (config.getInt("IslandLevel") != Main.config.getInt("RebirthLevel")) {
-                player.sendMessage(prefix + Main.config.getString("rebirthhigherlevel").replace("%level%", Main.config.getInt("RebirthLevel") + ""));
-            } else if ((player.getInventory().firstEmpty() == -1)) {
-                player.sendMessage(prefix + Main.config.getString("rebirthinventoryfull"));
-            } else {
-                Manager.rebirthIsland(player);
+
+            int currentLevel = DatenBankManager.getInt(player.getUniqueId(), "IslandLevel", 0);
+            int rebirthLevel = Main.config.getInt("RebirthLevel");
+
+            if (currentLevel != rebirthLevel) {
+                String message = Main.config.getString("rebirthhigherlevel", "§cDein Insel-Level " + "muss %level% erreichen, um Rebirth auszuführen.").replace("%level%", String.valueOf(rebirthLevel));
+                player.sendMessage(prefix + message);
+                return true;
             }
+
+            if (player.getInventory().firstEmpty() == -1) {
+                String fullInventoryMsg = Main.config.getString("rebirthinventoryfull", "§cDein Inventar ist voll. Bitte räume Platz, bevor du Rebirth ausführst.");
+                player.sendMessage(prefix + fullInventoryMsg);
+                return true;
+            }
+
+            Manager.rebirthIsland(player);
+            return true;
 
         } else if (args.length == 2 && args[0].equalsIgnoreCase("trust")) {
             if (!hasPermissionOrOp(player, "oneblock.trust")) {
                 player.sendMessage("§cDazu hast du keine Berechtigung.");
                 return true;
             }
-            YamlConfiguration config = Manager.getIslandConfig(player.getUniqueId());
-            if (!isOwnerOfIsland(player, config)) {
+            if (!isOwnerOfIsland(player)) {
                 player.sendMessage(prefix + "§cNur der Inselbesitzer kann Spielern vertrauen.");
                 return true;
             }
@@ -101,8 +111,7 @@ public class OneBlockCommands implements Listener, CommandExecutor {
                 player.sendMessage("§cDazu hast du keine Berechtigung.");
                 return true;
             }
-            YamlConfiguration config = Manager.getIslandConfig(player.getUniqueId());
-            if (!isOwnerOfIsland(player, config)) {
+            if (!isOwnerOfIsland(player)) {
                 player.sendMessage(prefix + "§cNur der Inselbesitzer kann Spieler bannen.");
                 return true;
             }
@@ -118,8 +127,7 @@ public class OneBlockCommands implements Listener, CommandExecutor {
                 player.sendMessage("§cDazu hast du keine Berechtigung.");
                 return true;
             }
-            YamlConfiguration config = Manager.getIslandConfig(player.getUniqueId());
-            if (!isOwnerOfIsland(player, config)) {
+            if (!isOwnerOfIsland(player)) {
                 player.sendMessage(prefix + "§cNur der Inselbesitzer kann Spieler entbannen.");
                 return true;
             }
@@ -135,8 +143,7 @@ public class OneBlockCommands implements Listener, CommandExecutor {
                 player.sendMessage("§cDazu hast du keine Berechtigung.");
                 return true;
             }
-            YamlConfiguration config = Manager.getIslandConfig(player.getUniqueId());
-            if (!isOwnerOfIsland(player, config)) {
+            if (!isOwnerOfIsland(player)) {
                 player.sendMessage(prefix + "§cNur der Inselbesitzer kann Spieler entfernen.");
                 return true;
             }
@@ -161,27 +168,42 @@ public class OneBlockCommands implements Listener, CommandExecutor {
                 return true;
             }
             String target = args[1];
-            Manager.declineinvite(player, target);
+            if (target == null || target.isEmpty()) {
+                player.sendMessage("§cBitte gib einen gültigen Spieler an.");
+                return true;
+            }
+            Manager.declineInvite(player, target);
 
         } else {
-            player.sendMessage(prefix + "§aNutze: /ob join | /ob delete | /ob visit <Spieler> | /ob rebirth | /ob trust <Spieler> | /ob accept | /ob deny <Spieler> | /ob unban <Spieler> | /ob remove <Spieler> | /ob leave <Inselbesitzer>");
+            player.sendMessage(prefix + "§aNutze:");
+            player.sendMessage("§7/ob join - Insel erstellen oder betreten");
+            player.sendMessage("§7/ob delete - Insel löschen");
+            player.sendMessage("§7/ob visit <Spieler> - Insel eines Spielers besuchen");
+            player.sendMessage("§7/ob rebirth - Insel auf Rebirth zurücksetzen");
+            player.sendMessage("§7/ob trust <Spieler> - Spieler Vertrauen schenken");
+            player.sendMessage("§7/ob accept - Einladung annehmen");
+            player.sendMessage("§7/ob deny <Spieler> - Einladung ablehnen");
+            player.sendMessage("§7/ob unban <Spieler> - Spieler entbannen");
+            player.sendMessage("§7/ob remove <Spieler> - Spieler von der Insel entfernen");
+            player.sendMessage("§7/ob leave <Inselbesitzer> - Insel verlassen");
         }
 
         return true;
     }
 
-    private boolean isOwnerOfIsland(Player player, YamlConfiguration islandConfig) {
-        if (islandConfig == null) return false;
-        String ownerUUIDString = islandConfig.getString("owner-uuid");
-        if (ownerUUIDString == null) return false;
-
+    private boolean isOwnerOfIsland(Player player) {
+        UUID playerUUID = player.getUniqueId();
+        boolean ownsIsland = DatenBankManager.getBoolean(playerUUID, "EigeneInsel", false);
+        UUID ownerUUID;
         try {
-            UUID ownerUUID = UUID.fromString(ownerUUIDString);
-            return ownerUUID.equals(player.getUniqueId());
-        } catch (IllegalArgumentException e) {
-            return ownerUUIDString.equalsIgnoreCase(player.getName());
+            ownerUUID = DatenBankManager.getUUID(playerUUID, "owner_uuid", playerUUID);
+        } catch (Exception e) {
+            Bukkit.getLogger().warning("Fehler beim Abrufen der Besitzer-UUID: " + e.getMessage());
+            return false;
         }
+        return ownsIsland && playerUUID.equals(ownerUUID);
     }
+
 
     private boolean hasPermissionOrOp(Player player, String permission) {
         return player.hasPermission("oneblock.admin") || player.hasPermission(permission) || player.isOp();

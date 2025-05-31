@@ -2,20 +2,15 @@ package de.Main.OneBlock.OneBlock.Player;
 
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-
-import static de.Main.OneBlock.OneBlock.Manager.Manager.getIslandConfig;
-
 
 public class ActionBar {
     public static int frame = 0;
     public static boolean forward = true;
-    public static void sendActionbarProgress (Player player, int currentLevel, int missingBlocks){
 
+    public static void sendActionbarProgress(Player player, int currentLevel, int missingBlocks, int totalBlocks) {
         if (missingBlocks == Integer.MIN_VALUE) {
             StringBuilder barBuilder = new StringBuilder("§7[");
-
 
             if (forward) {
                 frame++;
@@ -36,17 +31,15 @@ public class ActionBar {
             barBuilder.append("§7]");
 
             String bar = barBuilder.toString();
-            String msg = "§bLevel: §eMaximal §8| " + " §6§l∞ " + bar;
+            String msg = "§bLevel: §eMaximal §8| §6§l∞ " + bar;
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(msg));
             return;
         }
 
+        if (totalBlocks <= 0) totalBlocks = 1; // Absicherung gegen 0 oder negative Werte
 
-        YamlConfiguration cfg = getIslandConfig(player.getUniqueId());
-        int total = cfg.getInt("TotalBlocks");
-        double prog = (double) (total - missingBlocks) / total;
-        int filled = (int) (prog * 10);
-
+        double progress = (double) (totalBlocks - missingBlocks) / totalBlocks;
+        int filled = (int) (progress * 10);
 
         double radians = frame * 0.3;
         int wavePos = (int) ((Math.sin(radians) + 1) * 4.5);
@@ -54,14 +47,12 @@ public class ActionBar {
         StringBuilder bar = new StringBuilder("§7[");
         for (int i = 0; i < 10; i++) {
             if (i < filled) {
-
                 if (i == wavePos) {
-                    bar.append("§7█");
+                    bar.append("§7█"); // Du kannst hier auch andere Farben setzen
                 } else {
                     bar.append("§7█");
                 }
             } else {
-
                 if (i == wavePos) {
                     bar.append("§7█");
                 } else {

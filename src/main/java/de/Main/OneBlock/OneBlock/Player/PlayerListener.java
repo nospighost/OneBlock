@@ -1,14 +1,13 @@
 package de.Main.OneBlock.OneBlock.Player;
 
 import de.Main.OneBlock.Main;
-import de.Main.OneBlock.OneBlock.Manager.Manager;
+import de.Main.OneBlock.OneBlock.Manager.OneBlockManager;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
@@ -22,13 +21,12 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
-
 import java.io.File;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
-
-import static de.Main.OneBlock.OneBlock.Manager.Manager.getIslandConfig;
-
 
 public class PlayerListener implements Listener {
     private final JavaPlugin plugin;
@@ -37,130 +35,11 @@ public class PlayerListener implements Listener {
 
 
     private static final String USER_DATA_FOLDER = "plugins/OneBlockPlugin/IslandData";
-    String prefix = Main.config.getString("Server");
 
 
     public PlayerListener(JavaPlugin plugin) {
         this.plugin = plugin;
     }
-
-    @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
-        YamlConfiguration config = getIslandConfig(player.getUniqueId());
-        UUID uuid = player.getUniqueId();
-        File islandFolder = Main.islandDataFolder;
-        if (islandFolder.exists() && islandFolder.isDirectory()) {
-            File[] files = islandFolder.listFiles((dir, name) -> name.endsWith(".yml"));
-            if (files != null) {
-                for (File file : files) {
-                    YamlConfiguration otherConfig = YamlConfiguration.loadConfiguration(file);
-
-
-                }
-            }
-
-            if (!config.contains("created") || !config.contains("WorldBorderSize") || !config.contains("TotalBlocks")) {
-                if (!config.contains("created")) {
-                    config.set("created", System.nanoTime());
-                }
-                if (!config.contains("WorldBorderSize")) {
-                    config.set("WorldBorderSize", 50);
-                }
-                if (!config.contains("TotalBlocks")) {
-                    config.set("TotalBlocks", Main.config.getInt("oneblockblocks.1.blockcount", 200));
-                }
-            }
-
-            if (!config.contains("owner") || !config.contains("owner-uuid") || !config.contains("EigeneInsel")) {
-                if (!config.contains("owner")) {
-                    config.set("owner", player.getName());
-                }
-                if (!config.contains("owner-uuid")) {
-                    config.set("owner-uuid", player.getUniqueId().toString());
-                }
-                if (!config.contains("EigeneInsel")) {
-                    config.set("EigeneInsel", false);
-                }
-            }
-
-            if (!config.contains("z-position") || !config.contains("x-position")) {
-                if (!config.contains("z-position")) {
-                    config.set("z-position", 0);
-                }
-                if (!config.contains("x-position")) {
-                    config.set("x-position", 0);
-                }
-            }
-
-            if (!config.contains("IslandSpawn-x") || !config.contains("IslandSpawn-z")) {
-                if (!config.contains("IslandSpawn-x")) {
-                    config.set("IslandSpawn-x", 0);
-                }
-                if (!config.contains("IslandSpawn-z")) {
-                    config.set("IslandSpawn-z", 0);
-                }
-            }
-
-            if (!config.contains("trusted") || !config.contains("invited") || !config.contains("invitedtrust") || !config.contains("denied")) {
-                if (!config.contains("trusted")) {
-                    config.set("trusted", new ArrayList<String>());
-                }
-                if (!config.contains("invited")) {
-                    config.set("invited", new ArrayList<String>());
-                }
-                if (!config.contains("invitedtrust")) {
-                    config.set("invitedtrust", new ArrayList<String>());
-                }
-                if (!config.contains("denied")) {
-                    config.set("denied", new ArrayList<String>());
-                }
-            }
-
-            if (!config.contains("MissingBlocksToLevelUp")) {
-                config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.1.blockcount", 200));
-            }
-
-            if (!config.contains("IslandLevel")) {
-                config.set("IslandLevel", 1);
-            }
-            if (!config.contains("Durchgespielt")) {
-                config.set("Durchgespielt", false);
-            }
-
-            if (!config.contains("OneBlock-x") || !config.contains("OneBlock-z")) {
-                if (!config.contains("OneBlock-x")) {
-                    config.set("OneBlock-x", 0);
-                }
-                if (!config.contains("OneBlock-z")) {
-                    config.set("OneBlock-z", 0);
-                }
-            }
-
-            Manager.saveIslandConfig(player.getUniqueId(), config);
-
-            World world = Bukkit.getWorld(WORLD_NAME);
-            if (world != null && player.getWorld().getName().equals(WORLD_NAME)) {
-                Location spawn = new Location(world, config.getInt("x-position"), 100, config.getInt("z-position"));
-                player.teleport(spawn);
-
-            }
-
-
-
-        }
-    }
-
-    @EventHandler
-    public void onPlayerRespawn(PlayerRespawnEvent event) {
-        Player player = event.getPlayer();
-        World world = Bukkit.getWorld(WORLD_NAME);
-        YamlConfiguration config = getIslandConfig(player.getUniqueId());
-        if (world != null) {
-            event.setRespawnLocation(new Location(world, config.getInt("IslandSpawn-x"), 101, config.getInt("IslandSpawn-z")));
-        }
-    }
-
 
     @EventHandler
     public void onChestBreak(BlockBreakEvent event) {
@@ -272,112 +151,100 @@ public class PlayerListener implements Listener {
     }
 
     private void handlePistonMovement(List<Block> blocks, Cancellable event) {
-        for (Block block : blocks) {
-            if (block.getY() != 100) continue;
+        Connection conn = Main.getInstance().getConnection().getConnection(); // Verbindung holen
 
-            File folder = new File(USER_DATA_FOLDER);
-            if (!folder.exists() || !folder.isDirectory()) return;
+        String query = "SELECT OneBlock_x, OneBlock_z FROM userdata";
+        PreparedStatement ps = null;
+        ResultSet rs = null;
 
-            for (File file : folder.listFiles()) {
-                if (!file.getName().endsWith(".yml")) continue;
+        try {
+            ps = conn.prepareStatement(query);
+            rs = ps.executeQuery();
 
-                YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-                int x = config.getInt("OneBlock-x");
-                int z = config.getInt("OneBlock-z");
-                World world = Bukkit.getWorld("OneBlock");
+            while (rs.next()) {
+                int oneBlockX = rs.getInt("OneBlock_x");
+                int oneBlockZ = rs.getInt("OneBlock_z");
 
-                if (world != null) {
-                    Location oneBlockLocation = new Location(world, x, 100, z);
-                    if (block.getLocation().equals(oneBlockLocation)) {
+                for (Block block : blocks) {
+                    if (block.getY() == 100 &&
+                            block.getX() == oneBlockX &&
+                            block.getZ() == oneBlockZ) {
+
                         event.setCancelled(true);
                         return;
                     }
                 }
             }
+        } catch (Exception e) {
+            Bukkit.getLogger().severe("Fehler beim Überprüfen der Piston-Bewegung: " + e.getMessage());
+        } finally {
+            // PreparedStatement und ResultSet schließen
+            try {
+                if (rs != null) rs.close();
+            } catch (Exception ignored) {
+            }
+            try {
+                if (ps != null) ps.close();
+            } catch (Exception ignored) {
+            }
+            // Connection bleibt offen!
         }
     }
-
 
     @EventHandler
     public void onEntityExplode(EntityExplodeEvent event) {
-
-        event.blockList().removeIf(block -> isAnyUserOneBlock(block));
-
-        List<String> nextBlocks = Main.config.getStringList("oneblockblocks.block");
-        if (nextBlocks.isEmpty()) return;
-
-        int randomIndex = ThreadLocalRandom.current().nextInt(nextBlocks.size());
-        String nextBlock = nextBlocks.get(randomIndex);
-
-        Material blockMaterial;
-        try {
-            blockMaterial = Material.valueOf(nextBlock);
-        } catch (IllegalArgumentException e) {
-            Bukkit.getLogger().warning("Ungültiger Blockname in der Konfiguration: " + nextBlock);
-            blockMaterial = Material.STONE;
-        }
-
-        Material finalBlockMaterial = blockMaterial;
         Bukkit.getScheduler().runTask(JavaPlugin.getPlugin(Main.class), () -> {
-            Block oneBlock = (Block) Bukkit.getWorld(WORLD_NAME);
-            oneBlock.setType(finalBlockMaterial);
-        });
-    }
+            Connection conn = Main.getInstance().getConnection().getConnection(); // Verbindung holen
+            String query = "SELECT OneBlock_x, OneBlock_z FROM userdata";
+            PreparedStatement ps = null;
+            ResultSet rs = null;
 
+            try {
+                ps = conn.prepareStatement(query);
+                rs = ps.executeQuery();
 
-    public boolean isAnyUserOneBlock(Block block) {
-        World world = block.getWorld();
-        if (world == null || !world.getName().equals(WORLD_NAME)) return false;
+                World world = Bukkit.getWorld("OneBlock");
+                if (world == null) return;
 
+                while (rs.next()) {
+                    int oneBlockX = rs.getInt("OneBlock_x");
+                    int oneBlockZ = rs.getInt("OneBlock_z");
+                    Location oneBlockLocation = new Location(world, oneBlockX, 100, oneBlockZ);
 
-        for (UUID ownerUUID : Manager.getAllIslandOwners()) {
-            YamlConfiguration config = getIslandConfig(ownerUUID);
-            if (config == null) continue;
-
-            int x = config.getInt("OneBlock-x", Integer.MIN_VALUE);
-            int y = 100;
-            int z = config.getInt("OneBlock-z", Integer.MIN_VALUE);
-
-            Location oneBlockLocation = new Location(world, x, y, z);
-
-            if (block.getLocation().equals(oneBlockLocation)) {
-                return true;
+                    // Überprüfen, ob die Explosion den OneBlock betrifft
+                    for (Block block : event.blockList()) {
+                        if (block.getLocation().equals(oneBlockLocation)) {
+                            // Explosion abbrechen
+                            event.setCancelled(true);
+                            block.setType(Material.DIRT);
+                            return; // Kein weiterer Check nötig
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                Bukkit.getLogger().severe("Fehler beim Verarbeiten von EntityExplodeEvent: " + e.getMessage());
+            } finally {
+                // Ressourcen schließen
+                try {
+                    if (rs != null) rs.close();
+                } catch (Exception ignored) {
+                }
+                try {
+                    if (ps != null) ps.close();
+                } catch (Exception ignored) {
+                }
             }
-        }
-
-        return false;
-    }
-
-
-    private boolean isPlayerAllowed(Location loc, Player player) {
-        String islandOwner = Manager.getIslandOwnerByLocation(loc);
-        if (islandOwner == null) return false;
-        return isPlayerAllowedOnIsland(player, UUID.fromString(islandOwner));
-    }
-
-    public static boolean isPlayerAllowedOnIsland(Player player, UUID islandOwnerUUID) {
-        YamlConfiguration config = getIslandConfig(islandOwnerUUID);
-        List<String> added = config.getStringList("added");
-        List<String> trusted = config.getStringList("trusted");
-
-        String playerUUID = player.getUniqueId().toString();
-
-        return player.getUniqueId().equals(islandOwnerUUID)
-                || added.contains(playerUUID)
-                || trusted.contains(playerUUID);
+        });
     }
 
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
-        if (event.getClickedBlock() == null) return;
-        Material type = event.getClickedBlock().getType();
-        if (!(type == Material.CHEST || type == Material.TRAPPED_CHEST || type == Material.HOPPER || type == Material.SHULKER_BOX))
-            return;
-
         Player player = event.getPlayer();
-        if (!isPlayerAllowed(event.getClickedBlock().getLocation(), player)) {
-            player.sendMessage(prefix + " §cDu darfst hier nichts öffnen!");
+        Location loc = event.getClickedBlock() != null ? event.getClickedBlock().getLocation() : null;
+        if (loc == null) return; // Kein Block angeklickt
+        if (!OneBlockManager.isLocationOnIsland(player.getUniqueId(), loc)) {
+            player.sendMessage("§cDu darfst hier nicht interagieren!");
             event.setCancelled(true);
         }
     }
@@ -385,14 +252,12 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
-
         Player player = event.getPlayer();
+        Location loc = event.getBlockPlaced().getLocation();
 
-        if (!isPlayerAllowed(event.getBlock().getLocation(), player)) {
-            player.sendMessage(prefix + " §cDu darfst hier nichts platzieren!");
+        if (!OneBlockManager.isLocationOnIsland(player.getUniqueId(), loc)) {
+            player.sendMessage("§cDu darfst hier keine Blöcke platzieren!");
             event.setCancelled(true);
         }
     }
-
-
 }

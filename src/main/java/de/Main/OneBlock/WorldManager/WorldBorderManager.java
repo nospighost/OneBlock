@@ -2,7 +2,6 @@ package de.Main.OneBlock.WorldManager;
 
 import de.Main.OneBlock.Main;
 import org.bukkit.*;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -11,95 +10,126 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
-
-import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.*;
 
 public class WorldBorderManager implements Listener {
 
-    private static final HashMap<UUID, IslandBorderParticles> runningTasks = new HashMap<>();
-    private static final Map<UUID, IslandBorderParticles> runningTasks1 = new HashMap<>();
+    private static final Map<UUID, IslandBorderParticles> runningTasks = new HashMap<>();
 
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
-        UUID playerUUID = player.getUniqueId();
         Location to = event.getTo();
         if (to == null) return;
 
-        File folder = new File("plugins/oneblockplugin/IslandData");
-        if (!folder.exists() || !folder.isDirectory()) return;
+        boolean insideAnyIsland = false;
 
-        boolean foundIsland = false;
+        // Alle Inseln prüfen
+        List<Island> islands = getAllIslands();
 
-        for (File file : folder.listFiles()) {
-            if (!file.getName().endsWith(".yml")) continue;
+        for (Island island : islands) {
+            if (island.contains(to.getBlockX(), to.getBlockZ())) {
+                insideAnyIsland = true;
 
-            YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+                // Optional: Spawn Partikel nur bei der aktuellen Insel, wenn du willst
 
-            int centerX = config.getInt("x-position");
-            int centerZ = config.getInt("z-position");
-            int size = config.getInt("WorldBorderSize");
-            int half = (int)(size / 2.0 - 0.5);
+                IslandBorderParticles currentTask = runningTasks.get(player.getUniqueId());
 
-            double minX = centerX - half;
-            double maxX = centerX + half;
-            double minZ = centerZ - half;
-            double maxZ = centerZ + half;
+                if (currentTask == null || !currentTask.matches(island.centerX, island.centerZ, island.halfSize)) {
+                    if (currentTask != null) currentTask.cancel();
 
-            if (to.getX() >= minX && to.getX() <= maxX && to.getZ() >= minZ && to.getZ() <= maxZ) {
-
-
-                    foundIsland = true;
-
-                    IslandBorderParticles currentTask = runningTasks.get(playerUUID);
-                    if (currentTask == null || !currentTask.matches(centerX, centerZ, half)) {
-
-                        if (currentTask != null) {
-                            currentTask.cancel();
-                        }
-
-                        IslandBorderParticles newTask = new IslandBorderParticles(player, centerX, centerZ, half);
-                        newTask.start();
-                        runningTasks.put(playerUUID, newTask);
-                    }
-
-                    break;
-
+                    IslandBorderParticles newTask = new IslandBorderParticles(player, island.centerX, island.centerZ, island.halfSize);
+                    newTask.start();
+                    runningTasks.put(player.getUniqueId(), newTask);
+                }
+                break; // Spieler ist in einer Insel, fertig
             }
         }
 
-        if (!foundIsland) {
+        if (!insideAnyIsland) {
+            // Spieler ist außerhalb aller Inseln, Bewegung abbrechen
             event.setCancelled(true);
             Location from = event.getFrom();
             if (from != null) {
                 player.teleport(from);
             }
-            IslandBorderParticles task = runningTasks.get(playerUUID);
+
+            IslandBorderParticles task = runningTasks.get(player.getUniqueId());
             if (task != null) {
                 task.cancel();
-                runningTasks.remove(playerUUID);
+                runningTasks.remove(player.getUniqueId());
             }
         }
     }
 
+    private List<Island> getAllIslands() {
+        List<Island> islands = new ArrayList<>();
+        String query = "SELECT OneBlock_x, OneBlock_z, WorldBorderSize FROM userdata";
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            conn = Main.getInstance().getConnection().getConnection();
+            ps = conn.prepareStatement(query);
+            rs = ps.executeQuery();
+
+            while (rs.next()) {
+                int centerX = rs.getInt("OneBlock_x");
+                int centerZ = rs.getInt("OneBlock_z");
+                int size = rs.getInt("WorldBorderSize");
+
+                islands.add(new Island(centerX, centerZ, size));
+            }
+        } catch (Exception e) {
+            Main.getInstance().getLogger().severe("Fehler bei getAllIslands: " + e.getMessage());
+        } finally {
+            try {
+                if (rs != null) rs.close();
+            } catch (Exception ignored) {}
+            try {
+                if (ps != null) ps.close();
+            } catch (Exception ignored) {}
+
+        }
+
+        return islands;
+    }
+
+
+
+
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         UUID uuid = event.getPlayer().getUniqueId();
-        if (runningTasks.containsKey(uuid)) {
-            runningTasks.get(uuid).cancel();
-            runningTasks.remove(uuid);
+        IslandBorderParticles task = runningTasks.remove(uuid);
+        if (task != null) {
+            task.cancel();
+        }
+    }
+
+    @EventHandler
+    public void onPlayerTeleport(PlayerTeleportEvent event) {
+        Location to = event.getTo();
+        if (to == null) return;
+
+        if (event.getCause() != PlayerTeleportEvent.TeleportCause.ENDER_PEARL) return;
+
+        Island island = getIslandAtLocation(to);
+
+        if (island == null) {
+            event.setCancelled(true);
         }
     }
 
     private static class IslandBorderParticles extends BukkitRunnable {
-
         private final Player player;
         private final World world;
         private final int centerX, centerZ, halfSize;
-        private int tick = 0;
 
         public IslandBorderParticles(Player player, int centerX, int centerZ, int halfSize) {
             this.player = player;
@@ -110,7 +140,6 @@ public class WorldBorderManager implements Listener {
         }
 
         public void start() {
-
             this.runTaskTimer(Main.getPlugin(), 0L, 3L);
         }
 
@@ -118,21 +147,16 @@ public class WorldBorderManager implements Listener {
         public void run() {
             if (!player.isOnline()) {
                 this.cancel();
-                WorldBorderManager.runningTasks.remove(player.getUniqueId());
+                runningTasks.remove(player.getUniqueId());
                 return;
             }
-            tick++;
             spawnBorderParticles();
         }
 
-
         private void spawnBorderParticles() {
             double baseY = player.getLocation().getY();
-
             double step = 1.0;
-
-
-            int[] heights = {-1, 0, 1, 2, 3, 4 };
+            int[] heights = {-1, 0, 1, 2, 3, 4};
 
             for (int h : heights) {
                 double y = Math.floor(baseY) + h;
@@ -155,67 +179,78 @@ public class WorldBorderManager implements Listener {
         private void spawnParticleAt(double x, double y, double z) {
             Location loc = new Location(world, x, y, z);
             world.spawnParticle(Particle.COMPOSTER, loc, 1);
-
         }
-
 
         @Override
         public synchronized void cancel() throws IllegalStateException {
             super.cancel();
-            WorldBorderManager.runningTasks.remove(player.getUniqueId());
+            runningTasks.remove(player.getUniqueId());
         }
 
         public boolean matches(int centerX, int centerZ, int halfSize) {
             return this.centerX == centerX && this.centerZ == centerZ && this.halfSize == halfSize;
         }
-
     }
-    @EventHandler
-    public void onPlayerTeleport(PlayerTeleportEvent event) {
-        Location to = event.getTo();
-        if (to == null) return;
 
+    private static class Island {
+        final int centerX, centerZ, size, halfSize;
 
-        if (event.getCause() != PlayerTeleportEvent.TeleportCause.ENDER_PEARL) {
-            return;
+        public Island(int centerX, int centerZ, int size) {
+            this.centerX = centerX;
+            this.centerZ = centerZ;
+            this.size = size;
+            this.halfSize = size / 2;
         }
 
-        File folder = new File("plugins/oneblockplugin/IslandData");
-        if (!folder.exists() || !folder.isDirectory()) return;
+        public boolean contains(double x, double z) {
+            int maxX = centerX + (size % 2 == 0 ? halfSize - 1 : halfSize);
+            int maxZ = centerZ + (size % 2 == 0 ? halfSize - 1 : halfSize);
 
-        boolean isWithinBorder = false;
+            return x >= centerX - halfSize && x <= maxX
+                    && z >= centerZ - halfSize && z <= maxZ;
+        }
+    }
 
-        for (File file : folder.listFiles()) {
-            if (!file.getName().endsWith(".yml")) continue;
+    private Island getIslandAtLocation(Location location) {
+        int x = location.getBlockX();
+        int z = location.getBlockZ();
 
-            YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+        String query = "SELECT OneBlock_x, OneBlock_z, WorldBorderSize FROM userdata";
 
-            int centerX = config.getInt("x-position");
-            int centerZ = config.getInt("z-position");
-            int size = config.getInt("WorldBorderSize");
-            int half = (int) (size / 2.0 - 0.5);
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
 
-            double minX = centerX - half;
-            double maxX = centerX + half;
-            double minZ = centerZ - half;
-            double maxZ = centerZ + half;
+        try {
+            conn = Main.getInstance().getConnection().getConnection();
 
+            ps = conn.prepareStatement(query);
+            rs = ps.executeQuery();
 
-            if (to.getX() >= minX && to.getX() <= maxX && to.getZ() >= minZ && to.getZ() <= maxZ) {
-                isWithinBorder = true;
-                break;
+            while (rs.next()) {
+                int centerX = rs.getInt("OneBlock_x");
+                int centerZ = rs.getInt("OneBlock_z");
+                int size = rs.getInt("WorldBorderSize");
+
+                Island island = new Island(centerX, centerZ, size);
+
+                if (island.contains(x, z)) {
+                    return island;
+                }
             }
+        } catch (Exception e) {
+            Main.getInstance().getLogger().severe("Fehler bei DB-Abfrage im WorldBorderManager: " + e.getMessage());
+        } finally {
+            try {
+                if (rs != null) rs.close();
+            } catch (Exception ignored) {
+            }
+            try {
+                if (ps != null) ps.close();
+            } catch (Exception ignored) {
+            }
+            // Verbindung wird NICHT geschlossen hier
         }
-
-        if (!isWithinBorder) {
-
-            event.setCancelled(true);
-
-        }
-
-
+        return null;
     }
-
-
-
 }
