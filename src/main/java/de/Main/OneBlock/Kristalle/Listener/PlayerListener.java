@@ -47,7 +47,8 @@ public class PlayerListener implements Listener {
             public void run() {
                 for (Player player : Bukkit.getOnlinePlayers()) {
                     if (hasLevel10Crystal(player.getUniqueId())) {
-                        player.sendMessage("§aDu hast 100 Dollar für deinen Level 10 Kristall erhalten!");
+                        player.sendMessage("§aDu hast 5000 Dollar für deinen Level 10 Kristall erhalten!");
+                        eco.depositPlayer(player, 5000);
                     }
                 }
             }
