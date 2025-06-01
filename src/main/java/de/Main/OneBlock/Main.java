@@ -132,14 +132,8 @@ public class Main extends JavaPlugin implements Listener {
         //Kristall
         setupEconomy();
         setupGrowthFile();
-        getServer().getPluginManager().registerEvents(new de.Main.OneBlock.Kristalle.Listener.PlayerListener(this, growthConfig, growthFile, economy), this);
-        de.Main.OneBlock.Kristalle.Listener.PlayerListener.startGrowthTasks(this, growthConfig);
         //Commands
-        getCommand("pickaxeshop").setExecutor(new PickaxeShop());
-        Bukkit.getPluginManager().registerEvents(new PickaxeShop(), this);
-        getCommand("kristallshop").setExecutor(new KristallGUI());
-        //Listener
-        Bukkit.getPluginManager().registerEvents(new KristallGUI(), this);
+
 
 
 
