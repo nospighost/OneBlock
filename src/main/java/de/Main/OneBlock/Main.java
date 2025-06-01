@@ -82,24 +82,19 @@ public class Main extends JavaPlugin implements Listener {
         //Listener
         Bukkit.getPluginManager().registerEvents(new PlayerRespawnListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
-        if (economy != null) {
-            Bukkit.getPluginManager().registerEvents(new Manager(economy, this), this);
-            getLogger().info("Vault Economy erfolgreich erkannt.");
+        if (economy != null) {Bukkit.getPluginManager().registerEvents(new Manager(economy, this), this);getLogger().info("Vault Economy erfolgreich erkannt.");
         } else {
             getLogger().warning("Vault wurde nicht gefunden – Economy wird deaktiviert.");
         }
         Bukkit.getPluginManager().registerEvents(new WorldBorderManager(), this);
         getCommand("ob").setTabCompleter(new de.Main.OneBlock.OneBlock.Commands.TabCompleter());
         Bukkit.getPluginManager().registerEvents(new OneBlockManager(), this);
-
         getLogger().info("OneBlockPlugin aktiviert!");
-
         // Ordner Erstellen//
         islandDataFolder = new File(getDataFolder(), "IslandData");
         if (!islandDataFolder.exists()) {
             islandDataFolder.mkdirs();
         }
-
         // Befehle
         getCommand("ob").setExecutor(new de.Main.OneBlock.OneBlock.Commands.OneBlockCommands());
         getCommand("obgui").setExecutor(new de.Main.OneBlock.OneBlock.GUI.OneBlock.OBGUI());
@@ -130,7 +125,6 @@ public class Main extends JavaPlugin implements Listener {
             getLogger().warning("Fehler beim Erstellen der OneBlock-Welt");
         }
 
-        //Kristall
         setupEconomy();
         setupGrowthFile();
         //Commands
@@ -152,7 +146,6 @@ public class Main extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
-        // Manager.saveIslandConfig(null, null);
         saveDefaultConfig();
 
         getLogger().info("OneBlockPlugin deaktiviert.");
