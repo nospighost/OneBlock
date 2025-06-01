@@ -1,16 +1,19 @@
 package de.Main.OneBlock;
 
-import de.Main.OneBlock.CustomChest.ChestGUI;
-import de.Main.OneBlock.CustomChest.ChestListener;
+
 import de.Main.OneBlock.Kristalle.GUI.KristallGUI;
 import de.Main.OneBlock.Kristalle.GUI.PickaxeShop.PickaxeShop;
+import de.Main.OneBlock.NPC.GUI.NPCGUI;
+import de.Main.OneBlock.NPC.Listener.NPCInventoryListener;
+import de.Main.OneBlock.NPC.Listener.NPCListener;
+import de.Main.OneBlock.NPC.Manager.NPCManager;
 import de.Main.OneBlock.OneBlock.Manager.Manager;
 import de.Main.OneBlock.OneBlock.Manager.OneBlockManager;
 import de.Main.OneBlock.OneBlock.Player.PlayerListener;
 import de.Main.OneBlock.OneBlock.Player.PlayerRespawnListener;
 import de.Main.OneBlock.WorldManager.VoidGen;
 import de.Main.OneBlock.WorldManager.WorldBorderManager;
-import de.Main.OneBlock.database.DatenBankManager;
+import de.Main.OneBlock.database.DBM;
 import de.Main.OneBlock.database.SQLConnection;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
@@ -49,7 +52,7 @@ public class Main extends JavaPlugin implements Listener {
     private static Economy economy = null;
     public File CustomItems;
     SQLConnection connection;
-    DatenBankManager moneyManager;
+    DBM moneyManager;
     private File growthFile;
     private FileConfiguration growthConfig;
 
@@ -64,7 +67,7 @@ public class Main extends JavaPlugin implements Listener {
 
         //SQL
         connection = new SQLConnection("localhost", 3306, "admin", "admin", "1234");
-        moneyManager = new DatenBankManager(this);
+        moneyManager = new DBM(this);
 
         //config
         saveDefaultConfig();
@@ -140,16 +143,17 @@ public class Main extends JavaPlugin implements Listener {
 
 
 
-        //<--------------------KISTEN-------------------->>//
-        Bukkit.getPluginManager().registerEvents(new ChestListener(), this);
+        //<--------------------NPC-------------------->>//
+        Bukkit.getPluginManager().registerEvents(new NPCListener(), this);
+        Bukkit.getPluginManager().registerEvents(new NPCInventoryListener(), this );
+        NPCGUI.createNPCGUI();
+
     }
 
     @Override
     public void onDisable() {
-
        // Manager.saveIslandConfig(null, null);
         saveDefaultConfig();
-
         getLogger().info("OneBlockPlugin deaktiviert.");
 
     }
