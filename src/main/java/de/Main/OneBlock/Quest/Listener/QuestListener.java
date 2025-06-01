@@ -1,5 +1,6 @@
 package de.Main.OneBlock.Quest.Listener;
 
+import de.Main.OneBlock.database.DBM;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -16,6 +17,19 @@ public class QuestListener implements Listener {
         Player player = event.getPlayer();
         UUID uuid = event.getPlayer().getUniqueId();
         Material block = event.getBlock().getType();
+
+
+       Integer breaked100stone = DBM.getInt("quest", uuid, "broken100stone", 0);
+
+       if (block == Material.STONE){
+           breaked100stone++;
+
+           DBM.setInt("quest", uuid, "broken100stone", breaked100stone);
+       }
+       if (breaked100stone == 100){
+           player.sendMessage("Broken 100 stone");
+       }
+
 
     }
 
