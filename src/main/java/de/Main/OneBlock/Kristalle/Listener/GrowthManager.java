@@ -18,10 +18,11 @@ public class GrowthManager {
     static FileConfiguration growthConfig;
     private static File growthFile;
 
+
     private static final int MAX_LEVEL = 20;
     private static final int MAX_PRESTIGE = 10;
 
-    public GrowthManager(FileConfiguration growthConfig, File growthFile) {
+    public  GrowthManager(FileConfiguration growthConfig, File growthFile) {
         this.growthConfig = growthConfig;
         this.growthFile = growthFile;
     }
@@ -31,7 +32,7 @@ public class GrowthManager {
     }
 
     public static int getLevel(Location loc) {
-        return growthConfig.getInt(getPath(loc) + ".Level", 0);
+        return  growthConfig.getInt(getPath(loc) + ".Level", 0);
     }
 
     public static int getPrestige(Location loc) {

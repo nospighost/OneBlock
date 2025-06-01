@@ -18,6 +18,10 @@ public class UpgradeGUI {
     private final GrowthManager growthManager;
     private final Economy economy;
 
+    // Kein Max-Level-Limit mehr für unendliches Leveln
+    // public static final int MAX_LEVEL = 20;
+    public static final int MAX_PRESTIGE = 10;
+
     public UpgradeGUI(GrowthManager growthManager, Economy economy) {
         this.growthManager = growthManager;
         this.economy = economy;
@@ -27,6 +31,7 @@ public class UpgradeGUI {
         Inventory gui = Bukkit.createInventory(null, 9, "§bUpgrade-Menü");
 
         int level = growthManager.getLevel(blockLocation);
+        int prestige = growthManager.getPrestige(blockLocation);
 
         // Upgrade Item
         ItemStack upgrade = new ItemStack(Material.TOTEM_OF_UNDYING);
@@ -42,26 +47,42 @@ public class UpgradeGUI {
             upgrade.setItemMeta(upgradeMeta);
         }
 
-        // Abbau Item (Barrier)
+        // Prestige Item
+        ItemStack prestigeItem = new ItemStack(Material.EXPERIENCE_BOTTLE);
+        ItemMeta prestigeMeta = prestigeItem.getItemMeta();
+        if (prestigeMeta != null) {
+            prestigeMeta.setDisplayName("§aPrestige");
+            List<String> lore = new ArrayList<>();
+            lore.add("§bSetzt Kristall-Level zurück!");
+            lore.add("§bMaximaler Prestige: §e" + MAX_PRESTIGE);
+            lore.add("§eAktueller Prestige: §b" + prestige);
+            if (prestige >= MAX_PRESTIGE) lore.add("§cMaximaler Prestige erreicht!");
+            else lore.add("§aKlicke zum Prestigen!");
+            prestigeMeta.setLore(lore);
+            prestigeItem.setItemMeta(prestigeMeta);
+            if (prestige >= MAX_PRESTIGE) prestigeItem.setAmount(0);
+        }
+
+        // Barrier als "Kristall abbauen"
         ItemStack remove = new ItemStack(Material.BARRIER);
         ItemMeta removeMeta = remove.getItemMeta();
         if (removeMeta != null) {
             removeMeta.setDisplayName("§cKristall abbauen");
             List<String> lore = new ArrayList<>();
             lore.add("§7Klicke hier, um den Kristall abzubauen.");
-            lore.add("§7Benötigt Treue (Loyalty) Stufe 5+ auf deinem Werkzeug.");
-            lore.add("§eDein aktuelles Level wird gespeichert.");
+            lore.add("§7Benötigt Treue (Loyalty) Stufe 5 im Werkzeug.");
             removeMeta.setLore(lore);
             remove.setItemMeta(removeMeta);
         }
 
         gui.setItem(3, upgrade);
-        gui.setItem(5, remove);
+        gui.setItem(4, remove);       // Barrier in die Mitte
+        gui.setItem(5, prestigeItem);
 
         player.openInventory(gui);
     }
 
     public int getUpgradePrice(int level) {
-        return (int) (1000 * Math.pow(2, level + 1)); // Preis wächst exponentiell
+        return (int) (1000 * Math.pow(2, level + 1));
     }
 }

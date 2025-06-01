@@ -3,6 +3,7 @@ package de.Main.OneBlock;
 
 import de.Main.OneBlock.Kristalle.GUI.KristallGUI;
 import de.Main.OneBlock.Kristalle.GUI.PickaxeShop.PickaxeShop;
+import de.Main.OneBlock.Kristalle.Listener.GrowthManager;
 import de.Main.OneBlock.NPC.GUI.NPCGUI;
 import de.Main.OneBlock.NPC.Listener.NPCInventoryListener;
 import de.Main.OneBlock.NPC.Listener.NPCListener;
@@ -53,8 +54,9 @@ public class Main extends JavaPlugin implements Listener {
     public File CustomItems;
     SQLConnection connection;
     DBM moneyManager;
-    private File growthFile;
-    private FileConfiguration growthConfig;
+    public File growthFile;
+    private  FileConfiguration growthConfig;
+    GrowthManager growthManager = new GrowthManager(growthConfig, growthFile);
 
     public static Main getInstance() {
         return instance;
@@ -132,8 +134,8 @@ public class Main extends JavaPlugin implements Listener {
         //Kristall
         setupEconomy();
         setupGrowthFile();
-        getServer().getPluginManager().registerEvents(new de.Main.OneBlock.Kristalle.Listener.PlayerListener(this, growthConfig, growthFile, economy), this);
-        de.Main.OneBlock.Kristalle.Listener.PlayerListener.startGrowthTasks(this, growthConfig);
+        getServer().getPluginManager().registerEvents(new de.Main.OneBlock.Kristalle.Listener.PlayerListener(this, growthManager, growthConfig, growthFile, economy), this);
+        de.Main.OneBlock.Kristalle.Listener.GrowthManager.startGrowthTasks(this, growthConfig);
         //Commands
         getCommand("pickaxeshop").setExecutor(new PickaxeShop());
         Bukkit.getPluginManager().registerEvents(new PickaxeShop(), this);

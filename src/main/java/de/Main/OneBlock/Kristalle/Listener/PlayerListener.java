@@ -4,6 +4,7 @@ import de.Main.OneBlock.Kristalle.GUI.UpgradeGUI;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -18,6 +19,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -35,7 +37,7 @@ public class PlayerListener implements Listener {
     private final Map<UUID, Long> clickCooldowns = new HashMap<>();
     private static final long CLICK_COOLDOWN_MS = 1000;
 
-    public PlayerListener(JavaPlugin plugin, GrowthManager growthManager, Economy economy) {
+    public PlayerListener(JavaPlugin plugin, GrowthManager growthManager, FileConfiguration growthConfig, File growthFile, Economy economy) {
         this.plugin = plugin;
         this.growthManager = growthManager;
         this.economy = economy;
