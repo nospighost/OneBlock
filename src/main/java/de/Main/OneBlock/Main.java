@@ -1,5 +1,7 @@
 package de.Main.OneBlock;
 
+import de.Main.OneBlock.Market.GUI.MarketGUI;
+import de.Main.OneBlock.Market.Manager.MarketManager;
 import de.Main.OneBlock.NPC.GUI.NPCGUI;
 import de.Main.OneBlock.NPC.Listener.NPCInventoryListener;
 import de.Main.OneBlock.NPC.Listener.NPCListener;
@@ -52,8 +54,8 @@ public class Main extends JavaPlugin implements Listener {
     public File CustomItems;
     SQLConnection connection;
     DBM moneyManager;
-    private File growthFile;
-    private FileConfiguration growthConfig;
+    private File marketfile;
+    private FileConfiguration marketconfig;
 
     public static Main getInstance() {
         return instance;
@@ -145,6 +147,9 @@ public class Main extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(new QuestListener(), this);
         QuestMainGUI.createQuestGUI();
         QuestRewardGUI.createQuestGUI();
+        //<--------------------Market-------------------->>//
+        Bukkit.getPluginManager().registerEvents(new MarketManager(economy, marketconfig), this);
+        Bukkit.getPluginManager().registerEvents(new MarketGUI(economy, marketconfig), this);
 
     }
 
@@ -174,21 +179,21 @@ public class Main extends JavaPlugin implements Listener {
     }
 
     public void setupGrowthFile() {
-        growthFile = new File(getDataFolder(), "growth/growth.yml");
+        marketfile = new File(getDataFolder(), "growth/growth.yml");
 
-        if (!growthFile.getParentFile().exists()) {
-            growthFile.getParentFile().mkdirs();
+        if (!marketfile.getParentFile().exists()) {
+            marketfile.getParentFile().mkdirs();
         }
-        if (!growthFile.exists()) {
+        if (!marketfile.exists()) {
             try {
-                growthFile.createNewFile();
+                marketfile.createNewFile();
                 getLogger().info("growth.yml erstellt.");
             } catch (IOException e) {
                 getLogger().log(Level.SEVERE, "Konnte growth.yml nicht erstellen.", e);
             }
         }
 
-        growthConfig = YamlConfiguration.loadConfiguration(growthFile);
+        marketconfig = YamlConfiguration.loadConfiguration(marketfile);
     }
 
     public static List<UUID> getAllOwners() {
