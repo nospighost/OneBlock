@@ -1,7 +1,7 @@
 package de.Main.OneBlock.OneBlock.Player;
 
 import de.Main.OneBlock.Main;
-import de.Main.OneBlock.database.DatenBankManager;
+import de.Main.OneBlock.database.DBM;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -14,8 +14,8 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 public class PlayerRespawnListener implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onPlayerRespawn(PlayerRespawnEvent event) {
-        int pos1 = DatenBankManager.getInt(event.getPlayer().getUniqueId(), "OneBlock_x", 0);
-        int pos2 = DatenBankManager.getInt(event.getPlayer().getUniqueId(), "OneBlock_z", 0);
+        int pos1 = DBM.getInt("userdata",event.getPlayer().getUniqueId(), "OneBlock_x", 0);
+        int pos2 = DBM.getInt("userdata",event.getPlayer().getUniqueId(), "OneBlock_z", 0);
         World world = Bukkit.getWorld(Main.WORLD_NAME);
         Location tp = new Location(world, pos1, 101, pos2);
         event.setRespawnLocation(tp);

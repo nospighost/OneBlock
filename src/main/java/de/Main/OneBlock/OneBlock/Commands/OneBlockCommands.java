@@ -3,13 +3,12 @@ package de.Main.OneBlock.OneBlock.Commands;
 import de.Main.OneBlock.Main;
 
 import de.Main.OneBlock.OneBlock.Manager.Manager;
-import de.Main.OneBlock.database.DatenBankManager;
+import de.Main.OneBlock.database.DBM;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 
@@ -65,7 +64,7 @@ public class OneBlockCommands implements Listener, CommandExecutor {
                 return true;
             }
 
-            int currentLevel = DatenBankManager.getInt(player.getUniqueId(), "IslandLevel", 0);
+            int currentLevel = DBM.getInt("userdata",player.getUniqueId(), "IslandLevel", 0);
             int rebirthLevel = Main.config.getInt("RebirthLevel");
 
             if (currentLevel != rebirthLevel) {
@@ -193,10 +192,10 @@ public class OneBlockCommands implements Listener, CommandExecutor {
 
     private boolean isOwnerOfIsland(Player player) {
         UUID playerUUID = player.getUniqueId();
-        boolean ownsIsland = DatenBankManager.getBoolean(playerUUID, "EigeneInsel", false);
+        boolean ownsIsland = DBM.getBoolean("userdata",playerUUID, "EigeneInsel", false);
         UUID ownerUUID;
         try {
-            ownerUUID = DatenBankManager.getUUID(playerUUID, "owner_uuid", playerUUID);
+            ownerUUID = DBM.getUUID("userdata",playerUUID, "owner_uuid", playerUUID);
         } catch (Exception e) {
             Bukkit.getLogger().warning("Fehler beim Abrufen der Besitzer-UUID: " + e.getMessage());
             return false;

@@ -1,7 +1,8 @@
 package de.Main.OneBlock.OneBlock.Manager;
 
 import de.Main.OneBlock.Main;
-import de.Main.OneBlock.database.DatenBankManager;
+import de.Main.OneBlock.NPC.Manager.NPCManager;
+import de.Main.OneBlock.database.DBM;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -31,29 +32,32 @@ public class Manager implements Listener {
 
         if (args.length == 1 && args[0].equalsIgnoreCase("join")) {
 
-            if (DatenBankManager.getBoolean(uuid, "EigeneInsel", false) != true) {
+            if (!DBM.getBoolean("userdata", uuid, "EigeneInsel", false)) {
                 player.sendMessage(prefix + Main.config.getString("islandjoinmessage.create"));
                 int padding = Main.config.getInt("value");
                 int pos = getIslandCords(padding);
-                DatenBankManager.setInt(uuid, "OneBlock_x", pos);
-                DatenBankManager.setInt(uuid, "OneBlock_z", pos);
-                DatenBankManager.setInt(uuid, "x_position", pos);
-                DatenBankManager.setInt(uuid, "z_position", pos);
-                DatenBankManager.setInt(uuid, "IslandSpawn_x", pos);
-                DatenBankManager.setInt(uuid, "IslandSpawn_z", pos);
-                DatenBankManager.setInt(uuid, "WorldBorderSize", 50);
-                DatenBankManager.setBoolean(uuid, "EigeneInsel", true);
-                DatenBankManager.setString(uuid, "owner", player.getName());
+                DBM.setInt("userdata",uuid, "OneBlock_x", pos);
+                DBM.setInt("userdata",uuid, "OneBlock_z", pos);
+                DBM.setInt("userdata",uuid, "x_position", pos);
+                DBM.setInt("userdata",uuid, "z_position", pos);
+                DBM.setInt("userdata",uuid, "IslandSpawn_x", pos);
+                DBM.setInt("userdata",uuid, "IslandSpawn_z", pos);
+                DBM.setInt("userdata",uuid, "WorldBorderSize", 50);
+                DBM.setBoolean("userdata",uuid, "EigeneInsel", true);
+                DBM.setString("userdata",uuid, "owner", player.getName());
+
 
 
                 World world = Bukkit.getWorld("OneBlock");
                 if (world != null) {
+                    Location NPC = new Location(world, pos, 101, pos);
+                    NPCManager.createNPC(NPC);
                     Location tp = new Location(world, pos, 101, pos);
                     Location blockLoc = new Location(
                             world,
-                            DatenBankManager.getInt(uuid, "OneBlock_x", pos),
+                            DBM.getInt("userdata", uuid, "OneBlock_x", pos),
                             100,
-                            DatenBankManager.getInt(uuid, "OneBlock_z", pos)
+                            DBM.getInt("userdata", uuid, "OneBlock_z", pos)
                     );
                     Block block = blockLoc.getBlock();
                     if (block.getType() == Material.AIR) {
@@ -71,14 +75,14 @@ public class Manager implements Listener {
 
             World world = Bukkit.getWorld("OneBlock");
             if (world != null) {
-                int spawnX = DatenBankManager.getInt(uuid, "IslandSpawn_x", 0);
-                int spawnZ = DatenBankManager.getInt(uuid, "IslandSpawn_z", 0);
+                int spawnX = DBM.getInt("userdata", uuid, "IslandSpawn_x", 0);
+                int spawnZ = DBM.getInt("userdata", uuid, "IslandSpawn_z", 0);
                 Location tp = new Location(world, spawnX, 101, spawnZ);
                 Location blockLoc = new Location(
                         world,
-                        DatenBankManager.getInt(uuid, "OneBlock_x", 0),
+                        DBM.getInt("userdata", uuid, "OneBlock_x", 0),
                         100,
-                        DatenBankManager.getInt(uuid, "OneBlock_z", 0)
+                        DBM.getInt("userdata", uuid, "OneBlock_z", 0)
                 );
                 Block block = blockLoc.getBlock();
                 if (block.getType() == Material.AIR) {
@@ -103,15 +107,15 @@ public class Manager implements Listener {
             return;
         }
 
-        boolean hasIsland = DatenBankManager.getBoolean(uuid, "EigeneInsel", false);
+        boolean hasIsland = DBM.getBoolean("userdata",uuid, "EigeneInsel", false);
         if (!hasIsland) {
             player.sendMessage(prefix + "§aDu besitzt keine Insel.");
             return;
         }
 
-        int x = DatenBankManager.getInt(uuid, "OneBlock_x", 0);
-        int z = DatenBankManager.getInt(uuid, "OneBlock_z", 0);
-        int size = DatenBankManager.getInt(uuid, "WorldBorderSize", 50);
+        int x = DBM.getInt("userdata", uuid, "OneBlock_x", 0);
+        int z = DBM.getInt("userdata", uuid, "OneBlock_z", 0);
+        int size = DBM.getInt("userdata", uuid, "WorldBorderSize", 50);
 
 
         player.teleport(new Location(world, 0, 100, 0));
@@ -126,18 +130,18 @@ public class Manager implements Listener {
         }
 
         // Spalten zurücksetzen
-        DatenBankManager.setBoolean(uuid, "EigeneInsel", false);
-        DatenBankManager.setInt(uuid, "IslandLevel", 1);
-        DatenBankManager.setInt(uuid, "MissingBlocksToLevelUp", 200);
-        DatenBankManager.setInt(uuid, "TotalBlocks", 200);
-        DatenBankManager.setInt(uuid, "IslandSpawn_x", 0);
-        DatenBankManager.setInt(uuid, "IslandSpawn_z", 0);
-        DatenBankManager.setInt(uuid, "x_position", 0);
-        DatenBankManager.setInt(uuid, "z_position", 0);
-        DatenBankManager.setInt(uuid, "OneBlock_x", 0);
-        DatenBankManager.setInt(uuid, "OneBlock_z", 0);
-        DatenBankManager.setInt(uuid, "WorldBorderSize", 50);
-        DatenBankManager.setBoolean(uuid, "Durchgespielt", false);
+        DBM.setBoolean("userdata", uuid, "EigeneInsel", false);
+        DBM.setInt("userdata", uuid, "IslandLevel", 1);
+        DBM.setInt("userdata", uuid, "MissingBlocksToLevelUp", 200);
+        DBM.setInt("userdata", uuid, "TotalBlocks", 200);
+        DBM.setInt("userdata", uuid, "IslandSpawn_x", 0);
+        DBM.setInt("userdata", uuid, "IslandSpawn_z", 0);
+        DBM.setInt("userdata", uuid, "x_position", 0);
+        DBM.setInt("userdata", uuid, "z_position", 0);
+        DBM.setInt("userdata", uuid, "OneBlock_x", 0);
+        DBM.setInt("userdata", uuid, "OneBlock_z", 0);
+        DBM.setInt("userdata", uuid, "WorldBorderSize", 50);
+        DBM.setBoolean("userdata", uuid, "Durchgespielt", false);
         player.sendMessage(prefix + "§aDeine Insel wurde vollständig gelöscht.");
     }
 
@@ -156,13 +160,13 @@ public class Manager implements Listener {
         }
 
         // Prüfen ob der Besitzer wirklich eine Insel betitzt
-        if (!DatenBankManager.getBoolean(ownerUUID, "EigeneInsel", false)) {
+        if (!DBM.getBoolean("userdata", ownerUUID, "EigeneInsel", false)) {
             visitor.sendMessage("§cDie Insel wurde nicht gefunden.");
             return;
         }
 
         // Prüfen ob Besucher auf der Insel gebannt ist
-        String deniedCSV = DatenBankManager.getString(ownerUUID, "denied", "");
+        String deniedCSV = DBM.getString("userdata", ownerUUID, "denied", "");
         List<String> denied = csvToList(deniedCSV);
 
         if (denied.contains(visitor.getUniqueId().toString())) {
@@ -171,10 +175,9 @@ public class Manager implements Listener {
             return;
         }
 
-        visitor.sendMessage(denied.toString());
         // Inselkoordinaten vom Besitzer
-        int x = DatenBankManager.getInt(ownerUUID, "IslandSpawn_x", 0);
-        int z = DatenBankManager.getInt(ownerUUID, "IslandSpawn_z", 0);
+        int x = DBM.getInt("userdata", ownerUUID, "IslandSpawn_x", 0);
+        int z = DBM.getInt("userdata", ownerUUID, "IslandSpawn_z", 0);
 
         World world = Bukkit.getWorld("OneBlock");
         if (world == null) {
@@ -192,10 +195,10 @@ public class Manager implements Listener {
     public static void rebirthIsland(Player player) {
         UUID uuid = player.getUniqueId();
 
-        DatenBankManager.setInt(uuid, "IslandLevel", 1);
-        DatenBankManager.setInt(uuid, "TotalBlocks", 200);
-        DatenBankManager.setInt(uuid, "MissingBlocksToLevelUp", 200);
-        DatenBankManager.setBoolean(uuid, "Durchgespielt", false);
+        DBM.setInt("userdata", uuid, "IslandLevel", 1);
+        DBM.setInt("userdata", uuid, "TotalBlocks", 200);
+        DBM.setInt("userdata", uuid, "MissingBlocksToLevelUp", 200);
+        DBM.setBoolean("userdata", uuid, "Durchgespielt", false);
 
         ItemStack stack = new ItemStack(Material.NETHERITE_PICKAXE);
         ItemMeta meta = stack.getItemMeta();
@@ -219,8 +222,8 @@ public class Manager implements Listener {
         String uuidStr = playerUUID.toString();
         List<UUID> allOwners = Main.getAllOwners();
         for (UUID ownerUUID : allOwners) {
-            String invitedTrustCSV = DatenBankManager.getString(ownerUUID, "invited", "");
-            String trustedCSV = DatenBankManager.getString(ownerUUID, "trusted", "");
+            String invitedTrustCSV = DBM.getString("userdata", ownerUUID, "invited", "");
+            String trustedCSV = DBM.getString("userdata", ownerUUID, "trusted", "");
             List<String> invitedTrust = csvToList(invitedTrustCSV);
             List<String> trusted = csvToList(trustedCSV);
             boolean accepted = false;
@@ -234,8 +237,8 @@ public class Manager implements Listener {
                 accepted = true;
             }
             if (accepted) {
-                DatenBankManager.setString(ownerUUID, "invited", listToCsv(invitedTrust));
-                DatenBankManager.setString(ownerUUID, "trusted", listToCsv(trusted));
+                DBM.setString("userdata", ownerUUID, "invited", listToCsv(invitedTrust));
+                DBM.setString("userdata", ownerUUID, "trusted", listToCsv(trusted));
                 OfflinePlayer ownerPlayer = Bukkit.getOfflinePlayer(ownerUUID);
                 String ownerName = ownerPlayer.getName() != null ? ownerPlayer.getName() : "Unbekannt";
                 if (invitedTrust.contains(uuidStr)) {
@@ -256,13 +259,13 @@ public class Manager implements Listener {
         UUID targetUUID = target.getUniqueId();
 
         // aktuelle Liste der eingaldenen Spieler
-        List<String> invitedList = new ArrayList<>(DatenBankManager.getStringList(ownerUUID, "invited"));
+        List<String> invitedList = new ArrayList<>(DBM.getStringList("userdata", ownerUUID, "invited"));
         String targetUUIDStr = targetUUID.toString();
 
         // Überprüfen obder Spieler bereits eingeladen ist
         if (!invitedList.contains(targetUUIDStr)) {
             invitedList.add(targetUUIDStr);
-            DatenBankManager.setStringList(ownerUUID, "invited", invitedList);
+            DBM.setStringList("userdata", ownerUUID, "invited", invitedList);
             String msg = Main.config.getString(
                     "invite.invitemessage",
                     "Du hast %player% auf deine Insel eingeladen."
@@ -285,12 +288,12 @@ public class Manager implements Listener {
         UUID ownerUUID = owner.getUniqueId();
         UUID targetUUID = target.getUniqueId();
         String targetUUIDStr = targetUUID.toString();
-        String deniedCSV = DatenBankManager.getString(ownerUUID, "denied", "");
+        String deniedCSV = DBM.getString("userdata", ownerUUID, "denied", "");
         List<String> deniedList = csvToList(deniedCSV);
 
         if (!deniedList.contains(targetUUIDStr)) {
             deniedList.add(targetUUIDStr);//Spieler zur gesperrten Liste hinzufügen
-            DatenBankManager.setString(ownerUUID, "denied", listToCsv(deniedList)); //In die Datenbank setzen
+            DBM.setString("userdata", ownerUUID, "denied", listToCsv(deniedList)); //In die Datenbank setzen
 
             // Nachricht an den Besitzer
             String banMessage = Main.config.getString("banmessage", "Spieler %player% wurde gebannt.")
@@ -315,13 +318,13 @@ public class Manager implements Listener {
         String targetUUIDStr = targetUUID.toString();
 
 
-        String deniedCSV = DatenBankManager.getString(ownerUUID, "denied", "");   // aktuelle Denied liste holen
+        String deniedCSV = DBM.getString("userdata", ownerUUID, "denied", "");   // aktuelle Denied liste holen
         List<String> deniedList = csvToList(deniedCSV);
 
         if (deniedList.contains(targetUUIDStr)) {
             // Spieler aus der "denied"-Liste entfernen
             deniedList.remove(targetUUIDStr);
-            DatenBankManager.setString(ownerUUID, "denied", listToCsv(deniedList));
+            DBM.setString("userdata", ownerUUID, "denied", listToCsv(deniedList));
 
             // Nachricht an den Besitzer
             owner.sendMessage(prefix + "§a" + target.getName() + " wurde entbannt.");
@@ -336,12 +339,12 @@ public class Manager implements Listener {
         String targetUUIDStr = targetUUID.toString();
 
         // aktuellen trusted-Liste aus der Datenbank
-        String trustedCSV = DatenBankManager.getString(ownerUUID, "trusted", "");
+        String trustedCSV = DBM.getString("userdata", ownerUUID, "trusted", "");
         List<String> trustedList = csvToList(trustedCSV);
 
         if (trustedList.remove(targetUUIDStr)) {
             //  Liste in der Datenbank speichern
-            DatenBankManager.setString(ownerUUID, "trusted", listToCsv(trustedList));
+            DBM.setString("userdata", ownerUUID, "trusted", listToCsv(trustedList));
 
             // Benachrichtigung an den Besitzer
             owner.sendMessage(prefix + "§a" + (target.getName() != null ? target.getName() : "Unbekannt") + " wurde von der Insel entfernt.");
@@ -373,14 +376,14 @@ public class Manager implements Listener {
             }
         }
 
-        String trustedCSV = DatenBankManager.getString(ownerUUID, "trusted", "");
+        String trustedCSV = DBM.getString("userdata", ownerUUID, "trusted", "");
         List<String> trustedList = csvToList(trustedCSV);
 
         String playerUUIDStr = player.getUniqueId().toString();
         boolean changed =  trustedList.remove(playerUUIDStr);
 
         if (changed) {
-            DatenBankManager.setString(ownerUUID, "trusted", listToCsv(trustedList));
+            DBM.setString("userdata", ownerUUID, "trusted", listToCsv(trustedList));
             player.sendMessage(prefix + "§aDu hast die Insel verlassen.");
         } else {
             player.sendMessage(prefix + "§cDu bist kein Mitglied dieser Insel.");
@@ -398,7 +401,7 @@ public class Manager implements Listener {
         UUID playerUUID = player.getUniqueId();
 
         // Trust Liste
-        String invited = DatenBankManager.getString(targetUUID, "invited", "");
+        String invited = DBM.getString("userdata", targetUUID, "invited", "");
 
 
         List<String> invitedTrustList = csvToList(invited);
@@ -410,7 +413,7 @@ public class Manager implements Listener {
         if (invitedTrustList.contains(playerUUIDStr)) {
             invitedTrustList.remove(playerUUIDStr);
             removed = true;
-            DatenBankManager.setString(targetUUID, "invited", listToCsv(invitedTrustList));
+            DBM.setString("userdata", targetUUID, "invited", listToCsv(invitedTrustList));
 
         }
 

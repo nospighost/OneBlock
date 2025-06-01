@@ -1,7 +1,7 @@
 package de.Main.OneBlock.OneBlock.GUI.OneBlock;
 
 import de.Main.OneBlock.Main;
-import de.Main.OneBlock.OneBlock.Manager.Manager;
+import de.Main.OneBlock.database.DBM;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
@@ -10,7 +10,6 @@ import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -21,7 +20,9 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+
 import java.util.*;
+
 import static de.Main.OneBlock.OneBlock.Manager.Manager.*;
 import static org.bukkit.Material.*;
 
@@ -30,7 +31,7 @@ public class OBGUI implements CommandExecutor, Listener {
     private final int[] grayglasmaingui = {0, 1, 2, 6, 7, 8};
     private final int[] grayglasmaingui2 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 17, 19, 20, 21, 22, 23, 24, 25, 26};
     private final int[] grayglasmaingui3 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 22, 23, 24, 25, 26, 28, 29, 30, 31, 32, 33, 34, 35};
-    private final int[] grayglasmaingui4 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 20, 22, 23, 24, 25, 26, 28, 29, 30, 31, 32, 33, 34, 35};
+    private final int[] Befehle3 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 20, 22, 21, 23, 24, 25, 26, 28, 29, 30, 31, 32, 33, 34, 35};
 
     private final int MAX_CLICKS = 3;
 
@@ -65,7 +66,6 @@ public class OBGUI implements CommandExecutor, Listener {
     }
 
     private void createguis(Player player) {
-        YamlConfiguration config = null;
 
         Einstellungen = Bukkit.createInventory(null, 3 * 9, "§cInsel-Einstellungen");
         Rebirth = Bukkit.createInventory(null, 3 * 9, "§eRebirth");
@@ -87,7 +87,7 @@ public class OBGUI implements CommandExecutor, Listener {
 
         }
 
-        for (int pos : grayglasmaingui4) {
+        for (int pos : Befehle3) {
             Befehle.setItem(pos, new ItemStack(GRAY_STAINED_GLASS_PANE));
         }
 
@@ -125,7 +125,6 @@ public class OBGUI implements CommandExecutor, Listener {
             comparator.setItemMeta(meta8);
         }
         mainGUI.setItem(5, comparator);
-
 
 
         ItemStack auswahl = new ItemStack(GRASS_BLOCK);
@@ -227,8 +226,6 @@ public class OBGUI implements CommandExecutor, Listener {
         Auswahl.setItem(27, zurück);
 
 
-
-
         ItemStack befehl = new ItemStack(GRASS_BLOCK);
         ItemMeta befehlmeta = befehl.getItemMeta();
         if (befehlmeta != null) {
@@ -313,7 +310,7 @@ public class OBGUI implements CommandExecutor, Listener {
     }
 
     private void setPlayerHeadInMainGUI(Player player) {
-        YamlConfiguration config = null;
+        UUID uuid = player.getUniqueId();
         ItemStack skull = new ItemStack(PLAYER_HEAD);
         SkullMeta skullMeta = (SkullMeta) skull.getItemMeta();
         if (skullMeta != null) {
@@ -328,22 +325,22 @@ public class OBGUI implements CommandExecutor, Listener {
             lore.add("§fKlicke, dass du zu den Spielerbefehle-Menü zu gelangst!");
             lore.add(" ");
 
-            boolean hatInsel = config.getBoolean("EigeneInsel", false);
+            boolean hatInsel = DBM.getBoolean("userdata", uuid, "EigeneInsel", false);
 
             if (hatInsel) {
 
-                lore.add("§cDein OneBlock Level: " + "§b" + config.getInt("IslandLevel"));
+                lore.add("§cDein OneBlock Level: " + "§b" + DBM.getInt("userdata", uuid, "IslandLevel", 1));
 
 
-                int x = config.getInt("OneBlock-x");
-                int z = config.getInt("OneBlock-z");
+                int x = DBM.getInt("userdata", uuid, "OneBlock_x", 0);
+                int z = DBM.getInt("userdata", uuid, "OneBlock_z", 0);
 
-                int Missing =config.getInt("MissingBlocksToLevelUp");
-                int total =config.getInt("TotalBlocks");
+                int Missing = DBM.getInt("userdata", uuid, "MissingBlocksToLevelUp", 1);
+                int total = DBM.getInt("userdata", uuid, "MissingBlocksToLevelUp", 1);
 
                 lore.add("§cDein OneBlock Standort: " + "§b" + "X: " + x + ", Z: " + z);
-                lore.add("§cVerbleibende Blöcke und gesamte Blöcke: " + "§b"+ Missing +  " | " + total);
-                lore.add("§cDeine Worldborder größe: " + "§b" + + config.getInt("WorldBorderSize"));
+                lore.add("§cVerbleibende Blöcke und gesamte Blöcke: " + "§b" + Missing + " | " + total);
+                lore.add("§cDeine Worldborder größe: " + "§b" + +DBM.getInt("userdata", uuid, "WorldBorderSize", 1));
             } else {
                 lore.add("§bDu besitzt §ckeine Insel!");
                 lore.add("§bBitte §cerstelle §bdir eine Insel.");
@@ -359,9 +356,6 @@ public class OBGUI implements CommandExecutor, Listener {
     }
 
 
-
-
-
     private void updateVerwaltungGUI(Player player) {
         UUID uuid = player.getUniqueId();
         int deleteRemaining = deleteClicks.getOrDefault(uuid, MAX_CLICKS);
@@ -373,7 +367,7 @@ public class OBGUI implements CommandExecutor, Listener {
             List<String> lore = new ArrayList<>();
 
             switch (slot) {
-                case 11 -> { 
+                case 11 -> {
                     item = new ItemStack(BARRIER);
                     displayName = "§cInsel-Löschen";
                     lore.add(" ");
@@ -381,7 +375,7 @@ public class OBGUI implements CommandExecutor, Listener {
                     lore.add(" ");
                     lore.add("§7Klicke §e" + deleteRemaining + " §7Mal zum §cLöschen§7!");
                 }
-                case 13 -> { 
+                case 13 -> {
                     item = new ItemStack(TOTEM_OF_UNDYING);
                     displayName = "§cRebirth";
                     lore.add(" ");
@@ -393,12 +387,11 @@ public class OBGUI implements CommandExecutor, Listener {
                 case 15 -> {
                     item = new ItemStack(STRUCTURE_VOID);
                     displayName = "§aWorldBorder Größe";
-                    YamlConfiguration config = null;
-                    int currentSize = config.getInt("WorldBorderSize", 50);
+                    int currentSize = DBM.getInt("userdata", uuid, "WorldBorderSize", 1);
 
                     int basePrice = 100;
-                    int upgradesDone = (currentSize - 50) / 10; 
-                    int price = (int) (basePrice * Math.pow(2, upgradesDone)); 
+                    int upgradesDone = (currentSize - 50) / 10;
+                    int price = (int) (basePrice * Math.pow(2, upgradesDone));
 
                     lore.add("§7Aktuelle Größe: §e" + currentSize);
                     lore.add("§7Klicke, um die Größe zu erhöhen");
@@ -485,7 +478,6 @@ public class OBGUI implements CommandExecutor, Listener {
         if (event.getClickedInventory() == null || event.getCurrentItem() == null) return;
 
         UUID uuid = player.getUniqueId();
-        YamlConfiguration config = null;
 
         String title = event.getView().getTitle();
         ItemStack clicked = event.getCurrentItem();
@@ -498,7 +490,7 @@ public class OBGUI implements CommandExecutor, Listener {
             switch (type) {
 
                 case STRUCTURE_VOID -> {
-                    addWorldBoarder(config, player);
+                    addWorldBoarder(player);
                 }
 
                 case TOTEM_OF_UNDYING -> {
@@ -533,7 +525,7 @@ public class OBGUI implements CommandExecutor, Listener {
                     player.openInventory(mainGUI);
                 }
                 default -> {
-                  
+
                 }
             }
         }
@@ -552,7 +544,7 @@ public class OBGUI implements CommandExecutor, Listener {
                     player.openInventory(Verwaltung);
                 }
                 default -> {
-                  
+
                 }
             }
         }
@@ -560,17 +552,15 @@ public class OBGUI implements CommandExecutor, Listener {
             event.setCancelled(true);
 
 
-            boolean durchgespielt = config.getBoolean("Durchgespielt");
-
+            boolean durchgespielt = DBM.getBoolean("userdata", uuid, "Durchgespielt", false);
             switch (type) {
                 case GRASS_BLOCK:
 
                     if (durchgespielt) {
-                        config.set("IslandLevel", 1);
-                        config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.1.blockcount"));
-                        config.set("TotalBlocks", Main.config.getInt("oneblockblocks.1.blockcount"));
-                        config.set("Durchgespielt", true);
-
+                        DBM.setInt("userdata", uuid, "IslandLevel", 1);
+                        DBM.setInt("userdata", uuid, "MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.1.blockcount"));
+                        DBM.setInt("userdata", uuid, "TotalBlocks", Main.config.getInt("oneblockblocks.1.blockcount"));
+                        DBM.setBoolean("userdata", uuid, "Durchgespielt", true);
                         player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 1 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                         player.closeInventory();
@@ -583,10 +573,10 @@ public class OBGUI implements CommandExecutor, Listener {
                 case OAK_LOG:
 
                     if (durchgespielt) {
-                        config.set("IslandLevel", 2);
-                        config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.2.blockcount"));
-                        config.set("TotalBlocks", Main.config.getInt("oneblockblocks.2.blockcount"));
-                        config.set("Durchgespielt", true);
+                        DBM.setInt("userdata", uuid, "IslandLevel", 2);
+                        DBM.setInt("userdata", uuid, "MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.2.blockcount"));
+                        DBM.setInt("userdata", uuid, "TotalBlocks", Main.config.getInt("oneblockblocks.2.blockcount"));
+                        DBM.setBoolean("userdata", uuid, "Durchgespielt", true);
 
                         player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 2 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
@@ -600,10 +590,10 @@ public class OBGUI implements CommandExecutor, Listener {
                 case STONE:
 
                     if (durchgespielt) {
-                        config.set("IslandLevel", 3);
-                        config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.3.blockcount"));
-                        config.set("TotalBlocks", Main.config.getInt("oneblockblocks.3.blockcount"));
-                        config.set("Durchgespielt", true);
+                        DBM.setInt("userdata", uuid, "IslandLevel", 3);
+                        DBM.setInt("userdata", uuid, "MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.3.blockcount"));
+                        DBM.setInt("userdata", uuid, "TotalBlocks", Main.config.getInt("oneblockblocks.3.blockcount"));
+                        DBM.setBoolean("userdata", uuid, "Durchgespielt", true);
                         player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 3 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                         player.closeInventory();
@@ -616,11 +606,10 @@ public class OBGUI implements CommandExecutor, Listener {
                 case IRON_ORE:
 
                     if (durchgespielt) {
-                        config.set("IslandLevel", 4);
-                        config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.4.blockcount"));
-                        config.set("TotalBlocks", Main.config.getInt("oneblockblocks.4.blockcount"));
-                        config.set("Durchgespielt", true);
-
+                        DBM.setInt("userdata", uuid, "IslandLevel", 4);
+                        DBM.setInt("userdata", uuid, "MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.4.blockcount"));
+                        DBM.setInt("userdata", uuid, "TotalBlocks", Main.config.getInt("oneblockblocks.4.blockcount"));
+                        DBM.setBoolean("userdata", uuid, "Durchgespielt", true);
                         player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 4 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                         player.closeInventory();
@@ -633,10 +622,10 @@ public class OBGUI implements CommandExecutor, Listener {
                 case DIAMOND_BLOCK:
 
                     if (durchgespielt) {
-                        config.set("IslandLevel", 5);
-                        config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.5.blockcount"));
-                        config.set("TotalBlocks", Main.config.getInt("oneblockblocks.5.blockcount"));
-                        config.set("Durchgespielt", true);
+                        DBM.setInt("userdata", uuid, "IslandLevel", 5);
+                        DBM.setInt("userdata", uuid, "MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.5.blockcount"));
+                        DBM.setInt("userdata", uuid, "TotalBlocks", Main.config.getInt("oneblockblocks.5.blockcount"));
+                        DBM.setBoolean("userdata", uuid, "Durchgespielt", true);
 
                         player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 5 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
@@ -650,10 +639,10 @@ public class OBGUI implements CommandExecutor, Listener {
                 case NETHERRACK:
 
                     if (durchgespielt) {
-                        config.set("IslandLevel", 6);
-                        config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.6.blockcount"));
-                        config.set("TotalBlocks", Main.config.getInt("oneblockblocks.6.blockcount"));
-                        config.set("Durchgespielt", true);
+                        DBM.setInt("userdata", uuid, "IslandLevel", 6);
+                        DBM.setInt("userdata", uuid, "MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.6blockcount"));
+                        DBM.setInt("userdata", uuid, "TotalBlocks", Main.config.getInt("oneblockblocks.6.blockcount"));
+                        DBM.setBoolean("userdata", uuid, "Durchgespielt", true);
 
                         player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 6 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
@@ -667,11 +656,10 @@ public class OBGUI implements CommandExecutor, Listener {
                 case WARPED_STEM:
 
                     if (durchgespielt) {
-                        config.set("IslandLevel", 7);
-                        config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.7.blockcount"));
-                        config.set("TotalBlocks", Main.config.getInt("oneblockblocks.7.blockcount"));
-                        config.set("Durchgespielt", true);
-
+                        DBM.setInt("userdata", uuid, "IslandLevel", 7);
+                        DBM.setInt("userdata", uuid, "MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.7.blockcount"));
+                        DBM.setInt("userdata", uuid, "TotalBlocks", Main.config.getInt("oneblockblocks.7.blockcount"));
+                        DBM.setBoolean("userdata", uuid, "Durchgespielt", true);
                         player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 7 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                         player.closeInventory();
@@ -684,10 +672,10 @@ public class OBGUI implements CommandExecutor, Listener {
                 case END_STONE:
 
                     if (durchgespielt) {
-                        config.set("IslandLevel", 8);
-                        config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.8.blockcount"));
-                        config.set("TotalBlocks", Main.config.getInt("oneblockblocks.8.blockcount"));
-                        config.set("Durchgespielt", true);
+                        DBM.setInt("userdata", uuid, "IslandLevel", 8);
+                        DBM.setInt("userdata", uuid, "MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.8.blockcount"));
+                        DBM.setInt("userdata", uuid, "TotalBlocks", Main.config.getInt("oneblockblocks.8.blockcount"));
+                        DBM.setBoolean("userdata", uuid, "Durchgespielt", true);
 
                         player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 8 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
@@ -701,10 +689,10 @@ public class OBGUI implements CommandExecutor, Listener {
                 case NETHERITE_BLOCK:
 
                     if (durchgespielt) {
-                        config.set("IslandLevel", 9);
-                        config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.9.blockcount"));
-                        config.set("TotalBlocks", Main.config.getInt("oneblockblocks.9.blockcount"));
-                        config.set("Durchgespielt", true);
+                        DBM.setInt("userdata", uuid, "IslandLevel", 9);
+                        DBM.setInt("userdata", uuid, "MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.9.blockcount"));
+                        DBM.setInt("userdata", uuid, "TotalBlocks", Main.config.getInt("oneblockblocks.9.blockcount"));
+                        DBM.setBoolean("userdata", uuid, "Durchgespielt", true);
 
                         player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 9 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
@@ -718,10 +706,10 @@ public class OBGUI implements CommandExecutor, Listener {
                 case BEACON:
 
                     if (durchgespielt) {
-                        config.set("IslandLevel", 10);
-                        config.set("MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.10.blockcount"));
-                        config.set("TotalBlocks", Main.config.getInt("oneblockblocks.10.blockcount"));
-                        config.set("Durchgespielt", true);
+                        DBM.setInt("userdata", uuid, "IslandLevel", 10);
+                        DBM.setInt("userdata", uuid, "MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.10.blockcount"));
+                        DBM.setInt("userdata", uuid, "TotalBlocks", Main.config.getInt("oneblockblocks.10.blockcount"));
+                        DBM.setBoolean("userdata", uuid, "Durchgespielt", true);
 
                         player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 10 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
@@ -813,7 +801,6 @@ public class OBGUI implements CommandExecutor, Listener {
     }
 
 
-
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
         if (!(event.getPlayer() instanceof Player player)) return;
@@ -841,16 +828,17 @@ public class OBGUI implements CommandExecutor, Listener {
         }
 
         if (title.equalsIgnoreCase("§aOneBlock-Menü")) {
-          
+
             setPlayerHeadInMainGUI(player);
             updateVerwaltungGUI(player);
         }
     }
-    public static void addWorldBoarder (YamlConfiguration config, Player player){
+
+    public static void addWorldBoarder(Player player) {
 
         UUID uuid = player.getUniqueId();
 
-        int currentSize = config.getInt("WorldBorderSize", 50); 
+        int currentSize = DBM.getInt("userdata", uuid, "WorldBorderSize", 1);
         int maxSize = 200;
 
         if (currentSize >= maxSize) {
@@ -860,8 +848,8 @@ public class OBGUI implements CommandExecutor, Listener {
         }
 
         int basePrice = 20000;
-        int upgradesDone = (currentSize - 50) / 10; 
-        int price = (int) (basePrice * Math.pow(2, upgradesDone)); 
+        int upgradesDone = (currentSize - 50) / 10;
+        int price = (int) (basePrice * Math.pow(2, upgradesDone));
 
         if (eco.getBalance(player) < price) {
             player.sendMessage("§cDu hast nicht genug Geld! Benötigt: §e" + price + " Coins");
@@ -872,15 +860,15 @@ public class OBGUI implements CommandExecutor, Listener {
 
         eco.withdrawPlayer(player, price);
 
-      
+
         currentSize += 10;
-        config.set("WorldBorderSize", currentSize);
+        DBM.setInt("userdata", uuid, "WorldBorderSize", currentSize);
 
         player.sendMessage("§aDeine WorldBorder wurde auf §e" + currentSize + " §avergrößert!");
         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
         player.closeInventory();
 
-      
+
     }
 
 }

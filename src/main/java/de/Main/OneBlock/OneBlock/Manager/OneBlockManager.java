@@ -3,7 +3,7 @@ package de.Main.OneBlock.OneBlock.Manager;
 import de.Main.OneBlock.Main;
 
 import de.Main.OneBlock.OneBlock.Player.ActionBar;
-import de.Main.OneBlock.database.DatenBankManager;
+import de.Main.OneBlock.database.DBM;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -24,12 +24,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 
-import static de.Main.OneBlock.database.DatenBankManager.getInt;
+import static de.Main.OneBlock.database.DBM.getInt;
 
 
 public class OneBlockManager implements Listener {
@@ -50,7 +49,7 @@ public class OneBlockManager implements Listener {
             return;
         }
 
-        List<String> trusted = DatenBankManager.getList(ownerUUID, "trusted", new ArrayList<>());
+        List<String> trusted = DBM.getList(ownerUUID, "trusted", new ArrayList<>());
 
         if (!ownerUUID.equals(playerUUID) && !trusted.contains(playerUUID.toString())) {
             player.sendMessage(prefix + "§cDu darfst hier nichts abbauen!");
@@ -63,7 +62,7 @@ public class OneBlockManager implements Listener {
             String chestName = chest.getCustomName();
 
             if (chestName != null) {
-                int islandLevel = getInt(ownerUUID, "IslandLevel", 1);
+                int islandLevel = getInt("userdata", ownerUUID, "IslandLevel", 1);
                 YamlConfiguration config = (YamlConfiguration) Main.config;
                 ConfigurationSection chestsSection = config.getConfigurationSection("oneblockblocks." + islandLevel + ".chests");
 
@@ -88,41 +87,41 @@ public class OneBlockManager implements Listener {
             }
         }
 
-        int blocksToLevelUp = getInt(ownerUUID, "MissingBlocksToLevelUp", 100);
-        int islandLevel = getInt(ownerUUID, "IslandLevel", 1);
-        boolean durchgespielt = DatenBankManager.getBoolean(ownerUUID, "Durchgespielt", false);
+        int blocksToLevelUp = getInt("userdata", ownerUUID, "MissingBlocksToLevelUp", 100);
+        int islandLevel = getInt("userdata", ownerUUID, "IslandLevel", 1);
+        boolean durchgespielt = DBM.getBoolean("userdata", ownerUUID, "Durchgespielt", false);
 
         World oneBlockWorld = Bukkit.getWorld("OneBlock");
         if (oneBlockWorld != null &&
                 blockLocation.getWorld().equals(oneBlockWorld) &&
-                blockLocation.getBlockX() == getInt(ownerUUID, "OneBlock_x", 0) &&
+                blockLocation.getBlockX() == getInt("userdata", ownerUUID, "OneBlock_x", 0) &&
                 blockLocation.getBlockY() == 100 &&
-                blockLocation.getBlockZ() == getInt(ownerUUID, "OneBlock_z", 0)) {
+                blockLocation.getBlockZ() == getInt("userdata", ownerUUID, "OneBlock_z", 0)) {
 
             int maxLevel = Main.config.getInt("maxlevel");
             if (islandLevel != maxLevel) {
                 blocksToLevelUp--;
-                int totalBlocks = DatenBankManager.getTotalBlocks();  // z.B. aus DB oder Config holen
+                int totalBlocks = DBM.getTotalBlocks();  // z.B. aus DB oder Config holen
                 ActionBar.sendActionbarProgress(player, islandLevel, blocksToLevelUp, totalBlocks);
 
             } else {
-                int totalBlocks = DatenBankManager.getTotalBlocks();  // z.B. aus DB oder Config holen
+                int totalBlocks = DBM.getTotalBlocks();  // z.B. aus DB oder Config holen
                 ActionBar.sendActionbarProgress(player, islandLevel, blocksToLevelUp, totalBlocks);
 
             }
 
-            DatenBankManager.setInt(ownerUUID, "MissingBlocksToLevelUp", blocksToLevelUp);
+            DBM.setInt("userdata", ownerUUID, "MissingBlocksToLevelUp", blocksToLevelUp);
 
             if (blocksToLevelUp <= 0 && islandLevel != maxLevel) {
                 islandLevel++;
-                DatenBankManager.setInt(ownerUUID, "IslandLevel", islandLevel);
+                DBM.setInt("userdata", ownerUUID, "IslandLevel", islandLevel);
                 int newTotalBlocks = Main.config.getInt("oneblockblocks." + islandLevel + ".blockcount");
-                DatenBankManager.setInt(ownerUUID, "TotalBlocks", newTotalBlocks);
-                DatenBankManager.setInt(ownerUUID, "MissingBlocksToLevelUp", newTotalBlocks);
+                DBM.setInt("userdata", ownerUUID, "TotalBlocks", newTotalBlocks);
+                DBM.setInt("userdata", ownerUUID, "MissingBlocksToLevelUp", newTotalBlocks);
             }
 
             if (islandLevel == 10 && !durchgespielt) {
-                DatenBankManager.setBoolean(ownerUUID, "durchgespielt", true);
+                DBM.setBoolean("userdata", ownerUUID, "durchgespielt", true);
             }
 
             List<String> nextBlocks = Main.config.getStringList("oneblockblocks." + islandLevel + ".blocks");
@@ -257,9 +256,9 @@ public class OneBlockManager implements Listener {
         }
     }
     public static boolean isLocationOnIsland(UUID ownerUUID, Location location) {
-        int centerX = getInt(ownerUUID, "OneBlock_x", 0);
-        int centerZ = getInt(ownerUUID, "OneBlock_z", 0);
-        int diameter = getInt(ownerUUID, "WorldBorderSize", 50);
+        int centerX = getInt("userdata", ownerUUID, "OneBlock_x", 0);
+        int centerZ = getInt("userdata", ownerUUID, "OneBlock_z", 0);
+        int diameter = getInt("userdata", ownerUUID, "WorldBorderSize", 50);
         int radius = diameter / 2;
 
         // Check, ob Location in der Welt OneBlock ist
