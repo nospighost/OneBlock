@@ -139,4 +139,10 @@ public class GrowthManager {
             return null;
         }
     }
+    public static void removeGrowth(Location loc) {
+        String path = getPath(loc);
+        growthConfig.set(path, null);
+        saveConfig();
+    }
+
 }
