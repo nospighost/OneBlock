@@ -1,8 +1,5 @@
 package de.Main.OneBlock;
 
-
-import de.Main.OneBlock.Kristalle.GUI.KristallGUI;
-import de.Main.OneBlock.Kristalle.GUI.PickaxeShop.PickaxeShop;
 import de.Main.OneBlock.NPC.GUI.NPCGUI;
 import de.Main.OneBlock.NPC.Listener.NPCInventoryListener;
 import de.Main.OneBlock.NPC.Listener.NPCListener;
