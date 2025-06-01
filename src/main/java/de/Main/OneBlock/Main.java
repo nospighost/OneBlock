@@ -88,7 +88,7 @@ public class Main extends JavaPlugin implements Listener {
         } else {
             getLogger().warning("Vault wurde nicht gefunden – Economy wird deaktiviert.");
         }
-       Bukkit.getPluginManager().registerEvents(new WorldBorderManager(), this);
+        Bukkit.getPluginManager().registerEvents(new WorldBorderManager(), this);
         getCommand("ob").setTabCompleter(new de.Main.OneBlock.OneBlock.Commands.TabCompleter());
         Bukkit.getPluginManager().registerEvents(new OneBlockManager(), this);
 
@@ -135,12 +135,9 @@ public class Main extends JavaPlugin implements Listener {
         setupGrowthFile();
         //Commands
 
-
-
-
         //<--------------------NPC-------------------->>//
         Bukkit.getPluginManager().registerEvents(new NPCListener(), this);
-        Bukkit.getPluginManager().registerEvents(new NPCInventoryListener(), this );
+        Bukkit.getPluginManager().registerEvents(new NPCInventoryListener(), this);
         NPCGUI.createNPCGUI();
 
         //<--------------------Quest-------------------->>//
@@ -155,8 +152,9 @@ public class Main extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
-       // Manager.saveIslandConfig(null, null);
+        // Manager.saveIslandConfig(null, null);
         saveDefaultConfig();
+
         getLogger().info("OneBlockPlugin deaktiviert.");
 
     }
@@ -196,7 +194,7 @@ public class Main extends JavaPlugin implements Listener {
         marketconfig = YamlConfiguration.loadConfiguration(marketfile);
     }
 
-    public static List<UUID> getAllOwners() {
+    public static List<UUID> getAllOwners() throws SQLException {
         List<UUID> owners = new ArrayList<>();
         String sql = "SELECT DISTINCT owner_uuid FROM userdata WHERE owner_uuid IS NOT NULL";
 

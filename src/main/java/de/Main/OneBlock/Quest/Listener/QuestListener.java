@@ -19,12 +19,12 @@ public class QuestListener implements Listener {
         Material block = event.getBlock().getType();
 
 
-       Integer breaked100stone = DBM.getInt("quest", uuid, "broken100stone", 0);
+       Integer breaked100stone = DBM.getInt("queststatus", uuid, "broken100stone", 0);
 
        if (block == Material.STONE){
            breaked100stone++;
 
-           DBM.setInt("quest", uuid, "broken100stone", breaked100stone);
+           DBM.setInt("queststatus", uuid, "broken100stone", breaked100stone);
        }
        if (breaked100stone == 100){
            player.sendMessage("Broken 100 stone");

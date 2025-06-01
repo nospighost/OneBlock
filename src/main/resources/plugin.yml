@@ -1,25 +1,21 @@
-name: oneblockplugin
+name: OneBlockPlugin
 version: '1.0'
 main: de.Main.OneBlock.Main
 api-version: '1.21'
 
 commands:
   ob:
-    description: OneBlock Command
-    usage: /ob join | /ob delete | ...
+    description: Hauptbefehl für OneBlock
+    usage: /ob <join|delete|...>
     permission: oneblock.use
     permission-message: §cDu hast keine Berechtigung diesen Befehl zu verwenden.
+
   obgui:
-    description: Öffnet das OneBlock GUI
+    description: Öffnet das OneBlock-GUI
     usage: /obgui
-  scoreboardreload:
-    description: Reloads the scoreboard config
-    usage: /scoreboardreload
     permission: oneblock.gui
-  globaltrash:
-    description: Öffnet das OneBlock GUI
-    usage: /globaltrash
-    permission: oneblock.gui
+    permission-message: §cDu hast keine Berechtigung, dieses GUI zu öffnen.
+
 permissions:
   oneblock.use:
     description: Basisberechtigung für /ob
@@ -30,17 +26,53 @@ permissions:
     default: op
 
   oneblock.gui:
-    description: Öffnet das OneBlock GUI
+    description: Zugriff auf OneBlock-GUIs
     default: true
 
-  oneblock.join: {}
-  oneblock.delete: {}
-  oneblock.visit: {}
-  oneblock.rebirth: {}
-  oneblock.trust: {}
-  oneblock.accept: {}
-  oneblock.deny: {}
-  oneblock.unban: {}
-  oneblock.remove: {}
-  oneblock.leave: {}
-  oneblock.decline: {}
+  oneblock.join:
+    description: Zugriff auf den /ob join Befehl
+    default: true
+
+  oneblock.delete:
+    description: Zugriff auf den /ob delete Befehl
+    default: op
+
+  oneblock.visit:
+    description: Besuch anderer OneBlock-Inseln
+    default: true
+
+  oneblock.rebirth:
+    description: Zugriff auf den Rebirth-Befehl
+    default: true
+
+  oneblock.trust:
+    description: Andere Spieler auf die Insel einladen
+    default: true
+
+  oneblock.accept:
+    description: Einladungen akzeptieren
+    default: true
+
+  oneblock.deny:
+    description: Einladungen ablehnen
+    default: true
+
+  oneblock.unban:
+    description: Spieler von der Insel entbannen
+    default: op
+
+  oneblock.remove:
+    description: Spieler von der Insel entfernen
+    default: op
+
+  oneblock.leave:
+    description: Deine aktuelle Insel verlassen
+    default: true
+
+  oneblock.decline:
+    description: Einladungen ablehnen (Alias für deny)
+    default: true
+
+  oneblock.switchChunkBiome:
+    description: Biome eines Chunks ändern
+    default: op

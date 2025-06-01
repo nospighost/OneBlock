@@ -24,6 +24,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
@@ -275,7 +276,12 @@ public class OneBlockManager implements Listener {
 
     public static UUID getUUIDFromLocation(Location location) {
         UUID ownerUUID = null;
-        Connection connection = Main.getInstance().getConnection().getConnection();
+        Connection connection = null;
+        try {
+            connection = Main.getInstance().getConnection().getConnection();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
         int x = location.getBlockX();
         int z = location.getBlockZ();
 

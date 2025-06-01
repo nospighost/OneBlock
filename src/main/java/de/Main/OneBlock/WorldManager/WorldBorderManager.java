@@ -1,6 +1,7 @@
 package de.Main.OneBlock.WorldManager;
 
 import de.Main.OneBlock.Main;
+import de.Main.OneBlock.database.DBM;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -13,12 +14,14 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 
 public class WorldBorderManager implements Listener {
-
     private static final Map<UUID, IslandBorderParticles> runningTasks = new HashMap<>();
-
+    private static final Particle defaultParticle = Particle.COMPOSTER;
+    private static long lastParticleCheck = 0;
+    private static final long particleCheckInterval = 20 * 10; // 30 Sekunden in Ticks
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
@@ -27,17 +30,17 @@ public class WorldBorderManager implements Listener {
 
         boolean insideAnyIsland = false;
 
-        // Alle Inseln prüfen
-        List<Island> islands = getAllIslands();
-
+        List<Island> islands = null;
+        try {
+            islands = getAllIslands();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
         for (Island island : islands) {
             if (island.contains(to.getBlockX(), to.getBlockZ())) {
                 insideAnyIsland = true;
 
-                // Optional: Spawn Partikel nur bei der aktuellen Insel, wenn du willst
-
                 IslandBorderParticles currentTask = runningTasks.get(player.getUniqueId());
-
                 if (currentTask == null || !currentTask.matches(island.centerX, island.centerZ, island.halfSize)) {
                     if (currentTask != null) currentTask.cancel();
 
@@ -45,63 +48,46 @@ public class WorldBorderManager implements Listener {
                     newTask.start();
                     runningTasks.put(player.getUniqueId(), newTask);
                 }
-                break; // Spieler ist in einer Insel, fertig
+                break;
             }
         }
 
         if (!insideAnyIsland) {
-            // Spieler ist außerhalb aller Inseln, Bewegung abbrechen
             event.setCancelled(true);
             Location from = event.getFrom();
             if (from != null) {
                 player.teleport(from);
             }
 
-            IslandBorderParticles task = runningTasks.get(player.getUniqueId());
+            IslandBorderParticles task = runningTasks.remove(player.getUniqueId());
             if (task != null) {
                 task.cancel();
-                runningTasks.remove(player.getUniqueId());
             }
         }
     }
 
-    private List<Island> getAllIslands() {
+    private List<Island> getAllIslands() throws SQLException {
         List<Island> islands = new ArrayList<>();
         String query = "SELECT OneBlock_x, OneBlock_z, WorldBorderSize FROM userdata";
 
-        Connection conn = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
+        Connection conn = Main.getInstance().getConnection().getConnection(); // Connection offen lassen
 
-        try {
-            conn = Main.getInstance().getConnection().getConnection();
-            ps = conn.prepareStatement(query);
-            rs = ps.executeQuery();
+        try (PreparedStatement ps = conn.prepareStatement(query);
+             ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 int centerX = rs.getInt("OneBlock_x");
                 int centerZ = rs.getInt("OneBlock_z");
                 int size = rs.getInt("WorldBorderSize");
-
                 islands.add(new Island(centerX, centerZ, size));
             }
-        } catch (Exception e) {
+
+        } catch (SQLException e) {
             Main.getInstance().getLogger().severe("Fehler bei getAllIslands: " + e.getMessage());
-        } finally {
-            try {
-                if (rs != null) rs.close();
-            } catch (Exception ignored) {}
-            try {
-                if (ps != null) ps.close();
-            } catch (Exception ignored) {}
-
         }
-
+        // Connection bleibt offen und wird nicht geschlossen
         return islands;
     }
-
-
-
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
@@ -119,8 +105,12 @@ public class WorldBorderManager implements Listener {
 
         if (event.getCause() != PlayerTeleportEvent.TeleportCause.ENDER_PEARL) return;
 
-        Island island = getIslandAtLocation(to);
-
+        Island island = null;
+        try {
+            island = getIslandAtLocation(to);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
         if (island == null) {
             event.setCancelled(true);
         }
@@ -131,13 +121,51 @@ public class WorldBorderManager implements Listener {
         private final World world;
         private final int centerX, centerZ, halfSize;
 
+        private Particle particle;
+
         public IslandBorderParticles(Player player, int centerX, int centerZ, int halfSize) {
             this.player = player;
             this.world = player.getWorld();
             this.centerX = centerX;
             this.centerZ = centerZ;
             this.halfSize = halfSize;
+            this.particle = defaultParticle;
+
+            loadParticleFromCurrentIsland();
         }
+
+        private void loadParticleFromCurrentIsland() {
+            try {
+                Island island = getIslandAtLocation(player.getLocation());
+                if (island != null) {
+                    String query = "SELECT BorderParticle FROM userdata WHERE OneBlock_x = ? AND OneBlock_z = ? LIMIT 1";
+                    Connection conn = Main.getInstance().getConnection().getConnection();
+                    try (PreparedStatement ps = conn.prepareStatement(query)) {
+                        ps.setInt(1, island.centerX);
+                        ps.setInt(2, island.centerZ);
+                        try (ResultSet rs = ps.executeQuery()) {
+                            if (rs.next()) {
+                                String particleName = rs.getString("BorderParticle");
+                                if (particleName != null && !particleName.isEmpty()) {
+                                    try {
+                                        this.particle = Particle.valueOf(particleName.toUpperCase(Locale.ROOT));
+                                    } catch (IllegalArgumentException e) {
+                                        this.particle = defaultParticle;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    this.particle = defaultParticle;
+                }
+            } catch (SQLException e) {
+                Main.getInstance().getLogger().severe("Fehler beim Laden des Partikels: " + e.getMessage());
+                this.particle = defaultParticle;
+            }
+        }
+
+
 
         public void start() {
             this.runTaskTimer(Main.getPlugin(), 0L, 3L);
@@ -150,6 +178,13 @@ public class WorldBorderManager implements Listener {
                 runningTasks.remove(player.getUniqueId());
                 return;
             }
+
+            long now = System.currentTimeMillis();
+            if (now - lastParticleCheck > particleCheckInterval * 50) {
+                loadParticleFromCurrentIsland();
+                lastParticleCheck = now;
+            }
+
             spawnBorderParticles();
         }
 
@@ -162,29 +197,18 @@ public class WorldBorderManager implements Listener {
                 double y = Math.floor(baseY) + h;
 
                 for (double x = centerX - halfSize; x <= centerX + halfSize; x += step) {
-                    spawnParticleAt(x, y, centerZ - halfSize);
+                    world.spawnParticle(particle, new Location(world, x, y, centerZ - halfSize), 1);
                 }
                 for (double z = centerZ - halfSize; z <= centerZ + halfSize; z += step) {
-                    spawnParticleAt(centerX + halfSize, y, z);
+                    world.spawnParticle(particle, new Location(world, centerX + halfSize, y, z), 1);
                 }
                 for (double x = centerX + halfSize; x >= centerX - halfSize; x -= step) {
-                    spawnParticleAt(x, y, centerZ + halfSize);
+                    world.spawnParticle(particle, new Location(world, x, y, centerZ + halfSize), 1);
                 }
                 for (double z = centerZ + halfSize; z >= centerZ - halfSize; z -= step) {
-                    spawnParticleAt(centerX - halfSize, y, z);
+                    world.spawnParticle(particle, new Location(world, centerX - halfSize, y, z), 1);
                 }
             }
-        }
-
-        private void spawnParticleAt(double x, double y, double z) {
-            Location loc = new Location(world, x, y, z);
-            world.spawnParticle(Particle.COMPOSTER, loc, 1);
-        }
-
-        @Override
-        public synchronized void cancel() throws IllegalStateException {
-            super.cancel();
-            runningTasks.remove(player.getUniqueId());
         }
 
         public boolean matches(int centerX, int centerZ, int halfSize) {
@@ -203,29 +227,22 @@ public class WorldBorderManager implements Listener {
         }
 
         public boolean contains(double x, double z) {
-            int maxX = centerX + (size % 2 == 0 ? halfSize - 1 : halfSize);
-            int maxZ = centerZ + (size % 2 == 0 ? halfSize - 1 : halfSize);
-
-            return x >= centerX - halfSize && x <= maxX
-                    && z >= centerZ - halfSize && z <= maxZ;
+            int maxX = centerX + halfSize;
+            int maxZ = centerZ + halfSize;
+            return x >= centerX - halfSize && x <= maxX && z >= centerZ - halfSize && z <= maxZ;
         }
     }
 
-    private Island getIslandAtLocation(Location location) {
+    private static Island getIslandAtLocation(Location location) throws SQLException {
         int x = location.getBlockX();
         int z = location.getBlockZ();
 
         String query = "SELECT OneBlock_x, OneBlock_z, WorldBorderSize FROM userdata";
 
-        Connection conn = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
+        Connection conn = Main.getInstance().getConnection().getConnection();
 
-        try {
-            conn = Main.getInstance().getConnection().getConnection();
-
-            ps = conn.prepareStatement(query);
-            rs = ps.executeQuery();
+        try (PreparedStatement ps = conn.prepareStatement(query);
+             ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 int centerX = rs.getInt("OneBlock_x");
@@ -233,23 +250,12 @@ public class WorldBorderManager implements Listener {
                 int size = rs.getInt("WorldBorderSize");
 
                 Island island = new Island(centerX, centerZ, size);
-
                 if (island.contains(x, z)) {
                     return island;
                 }
             }
-        } catch (Exception e) {
-            Main.getInstance().getLogger().severe("Fehler bei DB-Abfrage im WorldBorderManager: " + e.getMessage());
-        } finally {
-            try {
-                if (rs != null) rs.close();
-            } catch (Exception ignored) {
-            }
-            try {
-                if (ps != null) ps.close();
-            } catch (Exception ignored) {
-            }
-            // Verbindung wird NICHT geschlossen hier
+        } catch (SQLException e) {
+            Main.getInstance().getLogger().severe("Fehler bei getIslandAtLocation: " + e.getMessage());
         }
         return null;
     }

@@ -5,7 +5,10 @@ import de.Main.OneBlock.Main;
 import de.Main.OneBlock.OneBlock.Manager.Manager;
 import de.Main.OneBlock.database.DBM;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.World;
+import org.bukkit.block.Biome;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -43,7 +46,7 @@ public class OneBlockCommands implements Listener, CommandExecutor {
                 player.sendMessage(prefix + "§cNur der Inselbesitzer kann die Insel löschen.");
                 return true;
             }
-           Manager.deleteIsland(player);
+            Manager.deleteIsland(player);
 
         } else if (args.length == 2 && args[0].equalsIgnoreCase("visit")) {
             if (!hasPermissionOrOp(player, "oneblock.visit")) {
@@ -64,7 +67,7 @@ public class OneBlockCommands implements Listener, CommandExecutor {
                 return true;
             }
 
-            int currentLevel = DBM.getInt("userdata",player.getUniqueId(), "IslandLevel", 0);
+            int currentLevel = DBM.getInt("userdata", player.getUniqueId(), "IslandLevel", 0);
             int rebirthLevel = Main.config.getInt("RebirthLevel");
 
             if (currentLevel != rebirthLevel) {
@@ -98,7 +101,50 @@ public class OneBlockCommands implements Listener, CommandExecutor {
                 player.sendMessage(prefix + "§cSpieler nicht gefunden.");
             }
 
-        } else if (args.length == 1 && args[0].equalsIgnoreCase("accept")) {
+        } else if(args.length == 2 && args[0].equalsIgnoreCase("switchChunkBiome")) {
+            if(!hasPermissionOrOp(player, "oneblock.switchChunkBiome")) {
+                player.sendMessage("§cDazu hast du keine Berechtigung.");
+                return true;
+            }
+            if (!isOwnerOfIsland(player)) {
+                player.sendMessage(prefix + "§cNur der Inselbesitzer kann Spielern vertrauen.");
+                return true;
+            }
+            Biome newBiome;
+            try {
+                newBiome = Biome.valueOf(args[1].toUpperCase());
+            } catch (IllegalArgumentException e) {
+                player.sendMessage("§cDas Biom '" + args[1] + "' existiert nicht. Bitte gib einen gültigen Biom-Namen ein.");
+                return true;
+            }
+            Location loc = player.getLocation();
+            Manager.switchBiomePerChunk(loc, newBiome);
+            player.sendMessage("§aChunk Biom  wurde zu §e" + newBiome.name() + " §ageändert.");
+            return true;
+        } else if(args.length == 2 && args[0].equalsIgnoreCase("switchIslandBiome"))
+
+    {
+        if (!hasPermissionOrOp(player, "oneblock.switchIslandBiome")) {
+            player.sendMessage("§cDazu hast du keine Berechtigung.");
+            return true;
+        }
+        if (!isOwnerOfIsland(player)) {
+            player.sendMessage(prefix + "§cNur der Inselbesitzer kann Spielern vertrauen.");
+            return true;
+        }
+        Biome newBiome;
+        try {
+            newBiome = Biome.valueOf(args[1].toUpperCase());
+        } catch (IllegalArgumentException e) {
+            player.sendMessage("§cDas Biom '" + args[1] + "' existiert nicht. Bitte gib einen gültigen Biom-Namen ein.");
+            return true;
+        }
+        Location loc = player.getLocation();
+        Manager.switchBiomeForIsland(player, newBiome);
+        player.sendMessage("§aInsel Biom wurde zu §e" + newBiome.name() + " §ageändert.");
+        return true;
+    }
+        else if (args.length == 1 && args[0].equalsIgnoreCase("accept")) {
             if (!hasPermissionOrOp(player, "oneblock.accept")) {
                 player.sendMessage("§cDazu hast du keine Berechtigung.");
                 return true;
@@ -185,6 +231,7 @@ public class OneBlockCommands implements Listener, CommandExecutor {
             player.sendMessage("§7/ob unban <Spieler> - Spieler entbannen");
             player.sendMessage("§7/ob remove <Spieler> - Spieler von der Insel entfernen");
             player.sendMessage("§7/ob leave <Inselbesitzer> - Insel verlassen");
+            player.sendMessage("§7/ob switchChunkBiome <Biom> - Chunk Biom ändern");
         }
 
         return true;
@@ -192,10 +239,10 @@ public class OneBlockCommands implements Listener, CommandExecutor {
 
     private boolean isOwnerOfIsland(Player player) {
         UUID playerUUID = player.getUniqueId();
-        boolean ownsIsland = DBM.getBoolean("userdata",playerUUID, "EigeneInsel", false);
+        boolean ownsIsland = DBM.getBoolean("userdata", playerUUID, "EigeneInsel", false);
         UUID ownerUUID;
         try {
-            ownerUUID = DBM.getUUID("userdata",playerUUID, "owner_uuid", playerUUID);
+            ownerUUID = DBM.getUUID("userdata", playerUUID, "owner_uuid", playerUUID);
         } catch (Exception e) {
             Bukkit.getLogger().warning("Fehler beim Abrufen der Besitzer-UUID: " + e.getMessage());
             return false;

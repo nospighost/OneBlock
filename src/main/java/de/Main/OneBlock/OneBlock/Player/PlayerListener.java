@@ -15,27 +15,21 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
-
 import java.io.File;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class PlayerListener implements Listener {
+
     private final JavaPlugin plugin;
-
     public static final String WORLD_NAME = "OneBlock";
-
-
     private static final String USER_DATA_FOLDER = "plugins/OneBlockPlugin/IslandData";
-
 
     public PlayerListener(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -114,7 +108,6 @@ public class PlayerListener implements Listener {
         return -1;
     }
 
-
     @EventHandler
     public void onBlockPiston(BlockPistonExtendEvent event) {
         for (Block block : event.getBlocks()) {
@@ -151,7 +144,12 @@ public class PlayerListener implements Listener {
     }
 
     private void handlePistonMovement(List<Block> blocks, Cancellable event) {
-        Connection conn = Main.getInstance().getConnection().getConnection(); // Verbindung holen
+        Connection conn = null; // Verbindung holen
+        try {
+            conn = Main.getInstance().getConnection().getConnection();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
 
         String query = "SELECT OneBlock_x, OneBlock_z FROM userdata";
         PreparedStatement ps = null;
@@ -193,48 +191,54 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onEntityExplode(EntityExplodeEvent event) {
-        Bukkit.getScheduler().runTask(JavaPlugin.getPlugin(Main.class), () -> {
-            Connection conn = Main.getInstance().getConnection().getConnection(); // Verbindung holen
-            String query = "SELECT OneBlock_x, OneBlock_z FROM userdata";
-            PreparedStatement ps = null;
-            ResultSet rs = null;
+        Connection connection = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
 
-            try {
-                ps = conn.prepareStatement(query);
-                rs = ps.executeQuery();
+        try {
+            connection = Main.getInstance().getConnection().getConnection();
+            String query = "SELECT OneBlock_x, OneBlock_z, WorldBorderSize FROM userdata";
+            ps = connection.prepareStatement(query, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            rs = ps.executeQuery();
 
-                World world = Bukkit.getWorld("OneBlock");
-                if (world == null) return;
+            List<Block> blocksToRemove = new ArrayList<>();
+
+            for (Block block : event.blockList()) {
+                Location loc = block.getLocation();
+                boolean insideIsland = false;
 
                 while (rs.next()) {
-                    int oneBlockX = rs.getInt("OneBlock_x");
-                    int oneBlockZ = rs.getInt("OneBlock_z");
-                    Location oneBlockLocation = new Location(world, oneBlockX, 100, oneBlockZ);
+                    int centerX = rs.getInt("OneBlock_x");
+                    int centerZ = rs.getInt("OneBlock_z");
+                    int diameter = rs.getInt("WorldBorderSize");
+                    int radius = diameter / 2;
 
-                    // Überprüfen, ob die Explosion den OneBlock betrifft
-                    for (Block block : event.blockList()) {
-                        if (block.getLocation().equals(oneBlockLocation)) {
-                            // Explosion abbrechen
-                            event.setCancelled(true);
-                            block.setType(Material.DIRT);
-                            return; // Kein weiterer Check nötig
-                        }
+                    int bx = loc.getBlockX();
+                    int bz = loc.getBlockZ();
+
+                    if (bx > centerX - radius && bx < centerX + radius &&
+                            bz > centerZ - radius && bz < centerZ + radius) {
+                        insideIsland = true;
+                        break;
                     }
+
                 }
-            } catch (Exception e) {
-                Bukkit.getLogger().severe("Fehler beim Verarbeiten von EntityExplodeEvent: " + e.getMessage());
-            } finally {
-                // Ressourcen schließen
-                try {
-                    if (rs != null) rs.close();
-                } catch (Exception ignored) {
-                }
-                try {
-                    if (ps != null) ps.close();
-                } catch (Exception ignored) {
+                rs.beforeFirst();
+
+                if (!insideIsland) {
+                    blocksToRemove.add(block);
                 }
             }
-        });
+
+            // Entferne alle Blöcke die außerhalb der Inseln sind
+            event.blockList().removeAll(blocksToRemove);
+
+        } catch (Exception e) {
+            Bukkit.getLogger().severe("Fehler im Explode-Event: " + e.getMessage());
+        } finally {
+            try { if (rs != null) rs.close(); } catch (Exception ignored) {}
+            try { if (ps != null) ps.close(); } catch (Exception ignored) {}
+        }
     }
 
 
@@ -260,4 +264,5 @@ public class PlayerListener implements Listener {
             event.setCancelled(true);
         }
     }
+
 }

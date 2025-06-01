@@ -45,7 +45,11 @@ public class SQLConnection {
         }
     }
 
-    public Connection getConnection(){
-        return this.connection;
+    public Connection getConnection() throws SQLException {
+        if (connection == null || connection.isClosed()) {
+            conncet(); // neue Verbindung aufbauen, falls keine Verbindung besteht
+        }
+        return connection;
     }
+
 }

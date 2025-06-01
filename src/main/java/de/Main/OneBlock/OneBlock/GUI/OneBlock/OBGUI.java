@@ -31,7 +31,7 @@ public class OBGUI implements CommandExecutor, Listener {
     private final int[] grayglasmaingui = {0, 1, 2, 6, 7, 8};
     private final int[] grayglasmaingui2 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 17, 19, 20, 21, 22, 23, 24, 25, 26};
     private final int[] grayglasmaingui3 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 22, 23, 24, 25, 26, 28, 29, 30, 31, 32, 33, 34, 35};
-    private final int[] Befehle3 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 20, 22, 21, 23, 24, 25, 26, 28, 29, 30, 31, 32, 33, 34, 35};
+    private final int[] Befehle3 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 20, 23, 24, 25, 26, 28, 29, 30, 31, 32, 33, 34, 35};
 
     private final int MAX_CLICKS = 3;
 
@@ -297,6 +297,22 @@ public class OBGUI implements CommandExecutor, Listener {
             befehl9.setItemMeta(befehlmeta9);
         }
         Befehle.setItem(20, befehl9);
+
+        ItemStack befehl10 = new ItemStack(SHORT_GRASS);
+        ItemMeta befehlmeta10 = befehl10.getItemMeta();
+        if (befehlmeta10 != null) {
+            befehlmeta10.setDisplayName("§a/ob switchBiome ");
+            befehl10.setItemMeta(befehlmeta10);
+        }
+
+        Befehle.setItem(21, befehl10);
+        ItemStack befehl11 = new ItemStack(TALL_GRASS);
+        ItemMeta befehlmeta11 = befehl9.getItemMeta();
+        if (befehlmeta11 != null) {
+            befehlmeta11.setDisplayName("§a/ob switchIslandBiome");
+            befehl11.setItemMeta(befehlmeta11);
+        }
+        Befehle.setItem(22, befehl11);
 
         ItemStack zurück1 = new ItemStack(RED_DYE);
         ItemMeta zurückmeta1 = zurück1.getItemMeta();
@@ -774,6 +790,17 @@ public class OBGUI implements CommandExecutor, Listener {
                     player.closeInventory();
                     player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
                     sendSuggestCommandMessage(player, "visit ");
+                    break;
+
+                case SHORT_GRASS:
+                    player.closeInventory();
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    sendSuggestCommandMessage(player, "switchBiome ");
+                    break;
+                case TALL_GRASS:
+                    player.closeInventory();
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    sendSuggestCommandMessage(player, "switchIslandBiome ");
                     break;
 
 
