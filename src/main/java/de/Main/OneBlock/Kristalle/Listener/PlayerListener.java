@@ -1,379 +1,258 @@
 package de.Main.OneBlock.Kristalle.Listener;
 
-
+import de.Main.OneBlock.Kristalle.GUI.UpgradeGUI;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.*;
-import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 import static org.bukkit.Material.*;
-import static org.bukkit.enchantments.Enchantment.EFFICIENCY;
-import static org.bukkit.enchantments.Enchantment.LOYALTY;
 
 public class PlayerListener implements Listener {
 
     private final JavaPlugin plugin;
-    private static FileConfiguration growthConfig;
-    private static File growthFile;
-    private static Economy eco;
-    // Hier speichern wir die Block-Locations für Spieler, die gerade das Upgrade-Menü offen haben
-    private final Map<UUID, Location> upgradeOpenLocations = new HashMap<>();
+    private final GrowthManager growthManager;
+    private final Economy economy;
+    private final UpgradeGUI upgradeGUI;
 
-    public PlayerListener(JavaPlugin plugin, FileConfiguration growthConfig, File growthFile, Economy eco) {
+    private final Map<UUID, Location> openUpgradeGUIs = new HashMap<>();
+
+    public PlayerListener(JavaPlugin plugin, GrowthManager growthManager, Economy economy) {
         this.plugin = plugin;
-        this.eco = eco;
-        PlayerListener.growthConfig = growthConfig;
-        PlayerListener.growthFile = growthFile;
+        this.growthManager = growthManager;
+        this.economy = economy;
+        this.upgradeGUI = new UpgradeGUI(growthManager, economy);
 
-
-        // Scheduler für Belohnungen alle 5 Minuten starten
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                for (Player player : Bukkit.getOnlinePlayers()) {
-                    if (hasLevel10Crystal(player.getUniqueId())) {
-                        player.sendMessage("§aDu hast 5000 Dollar für deinen Level 10 Kristall erhalten!");
-                        eco.depositPlayer(player, 5000);
-                    }
+        // Scheduler: alle 5 Minuten 5000$ an Spieler mit Level 10+ Kristall zahlen
+        plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                if (hasLevel10Crystal(player.getUniqueId())) {
+                    economy.depositPlayer(player, 5000);
+                    player.sendMessage("§aDu hast 5000 Dollar für deinen Level 10 Kristall erhalten!");
                 }
             }
-        }.runTaskTimer(plugin, 0L, 20L * 60 * 5); // 5 Minuten in Ticks
+        }, 0L, 20L * 60 * 5);
     }
 
-
-    // Prüft, ob der Spieler mindestens einen Kristall mit Level 10 besitzt
     private boolean hasLevel10Crystal(UUID playerUUID) {
-        if (!growthConfig.isConfigurationSection("growth")) return false;
-
-        for (String world : growthConfig.getConfigurationSection("growth").getKeys(false)) {
-            if (!growthConfig.isConfigurationSection("growth." + world)) continue;
-
-            for (String coordKey : growthConfig.getConfigurationSection("growth." + world).getKeys(false)) {
-                String path = "growth." + world + "." + coordKey;
-
-                String ownerUUIDString = growthConfig.getString(path + ".owner");
-                int level = growthConfig.getInt(path + ".Level", 0);
-
-                if (ownerUUIDString != null && ownerUUIDString.equals(playerUUID.toString()) && level >= 9) {
-                    return true;
-                }
+        if (!growthManager.growthConfig.isConfigurationSection("growth")) return false;
+        for (String world : growthManager.growthConfig.getConfigurationSection("growth").getKeys(false)) {
+            for (String coord : growthManager.growthConfig.getConfigurationSection("growth." + world).getKeys(false)) {
+                String owner = growthManager.growthConfig.getString("growth." + world + "." + coord + ".owner");
+                int level = growthManager.growthConfig.getInt("growth." + world + "." + coord + ".Level");
+                if (owner != null && owner.equals(playerUUID.toString()) && level >= 10) return true;
             }
         }
         return false;
     }
 
-    // ----------------------------
-    // Block Break: Kristall abbauen = Geld
-    // ----------------------------
-    @EventHandler(ignoreCancelled = true)
-    public void onBlockBreak(BlockBreakEvent event) {
-        Player player = event.getPlayer();
-        Block block = event.getBlock();
-        Material type = block.getType();
-        ItemStack tool = player.getInventory().getItemInMainHand();
-        Location location = block.getLocation();
+    @EventHandler
+    public void onBlockBreak(BlockBreakEvent e) {
+        Player player = e.getPlayer();
+        Block block = e.getBlock();
 
-        if (type == SMALL_AMETHYST_BUD || type == MEDIUM_AMETHYST_BUD || type == LARGE_AMETHYST_BUD) {
-            event.setCancelled(true);
+        if (block.getType() == SMALL_AMETHYST_BUD || block.getType() == MEDIUM_AMETHYST_BUD || block.getType() == LARGE_AMETHYST_BUD) {
+            e.setCancelled(true);
             return;
         }
 
-        if (type == AMETHYST_CLUSTER) {
-            int eff = (tool != null && tool.hasItemMeta()) ? tool.getEnchantmentLevel(EFFICIENCY) : 0;
-            if (eff < 1) {
-                event.setCancelled(true);
-                return;
-            }
-
-            event.setCancelled(true);
-            block.setType(SMALL_AMETHYST_BUD);
-
-            String path = getPath(location);
-            int upgradeLevel = growthConfig.getInt(path + ".Level", 0);
-            int payout = 1 + upgradeLevel;
-            eco.depositPlayer(player, payout);
-            player.sendMessage("§a+§e" + payout + "§a$ verdient!");
-
-            long now = System.currentTimeMillis();
-            saveGrowth(location, SMALL_AMETHYST_BUD.name(), now + getGrowthDelayMillis(SMALL_AMETHYST_BUD), player.getUniqueId());
-            growToFinalStage(block, SMALL_AMETHYST_BUD, player.getUniqueId());
-
-            // Location.getWorld().dropItemNaturally(location, new ItemStack(AIR)); // Das droppt nix, also raus damit
-        }
-    }
-
-    // ----------------------------
-    // Block Place: Kristall anpflanzen
-    // ----------------------------
-    @EventHandler(ignoreCancelled = true)
-    public void onBlockPlace(BlockPlaceEvent event) {
-        Player player = event.getPlayer();
-        Block block = event.getBlockPlaced();
-        ItemStack handItem = player.getInventory().getItemInMainHand();
-
         if (block.getType() == AMETHYST_CLUSTER) {
-            int loyalty = (handItem != null && handItem.hasItemMeta()) ? handItem.getEnchantmentLevel(LOYALTY) : 0;
-            if (loyalty < 5) {
-                event.setCancelled(true);
-                return;
-            }
+            e.setCancelled(true);
+            block.setType(SMALL_AMETHYST_BUD);
 
             Location loc = block.getLocation();
+            int level = growthManager.getLevel(loc);
+            int payout = 1 + level;
+            economy.depositPlayer(player, payout);
+            player.sendMessage("§a+§e" + payout + "$ verdient!");
+
             long now = System.currentTimeMillis();
-            saveGrowth(loc, SMALL_AMETHYST_BUD.name(), now + getGrowthDelayMillis(SMALL_AMETHYST_BUD), player.getUniqueId());
-            block.setType(SMALL_AMETHYST_BUD);
-            growToFinalStage(block, SMALL_AMETHYST_BUD, player.getUniqueId());
+            growthManager.saveGrowth(loc, SMALL_AMETHYST_BUD, now + GrowthManager.getGrowthTimeSeconds(SMALL_AMETHYST_BUD) * 1000L, player.getUniqueId(), level, growthManager.getPrestige(loc));
 
-            player.sendMessage("§aKristall erfolgreich gepflanzt. Wachstum gestartet.");
+            // Starte Wachstum in Background
+            startGrowthCycle(block, SMALL_AMETHYST_BUD, player.getUniqueId());
         }
     }
 
-    // ----------------------------
-    // Wachstum durch Phasen
-    // ----------------------------
-    private void growToFinalStage(Block block, Material current, UUID owner) {
-        while (current != AMETHYST_CLUSTER) {
-            Material next = getNextStage(current);
-            if (next == null) break;
-            scheduleGrowthTask(block, current, next, getGrowthTimeSeconds(current), owner);
-            current = next;
-        }
-    }
+    private void startGrowthCycle(Block block, Material stage, UUID owner) {
+        Material next = GrowthManager.getNextStage(stage);
+        if (next == null) return;
 
-    private static Material getNextStage(Material mat) {
-        switch (mat) {
-            case SMALL_AMETHYST_BUD:
-                return MEDIUM_AMETHYST_BUD;
-            case MEDIUM_AMETHYST_BUD:
-                return LARGE_AMETHYST_BUD;
-            case LARGE_AMETHYST_BUD:
-                return AMETHYST_CLUSTER;
-            default:
-                return null;
-        }
-    }
+        int delay = GrowthManager.getGrowthTimeSeconds(stage);
 
-    private void scheduleGrowthTask(Block block, Material from, Material to, int delay, UUID owner) {
         new BukkitRunnable() {
             @Override
             public void run() {
-                if (block.getType() == from) {
-                    block.setType(to);
+                if (block.getType() == stage) {
+                    block.setType(next);
                     Location loc = block.getLocation();
-                    long next = (to == AMETHYST_CLUSTER) ? 0 : System.currentTimeMillis() + getGrowthDelayMillis(to);
-                    saveGrowth(loc, to.name(), next, owner);
+                    long nextGrowth = (next == AMETHYST_CLUSTER) ? 0 : System.currentTimeMillis() + GrowthManager.getGrowthTimeSeconds(next) * 1000L;
+                    growthManager.saveGrowth(loc, next, nextGrowth, owner, growthManager.getLevel(loc), growthManager.getPrestige(loc));
+
+                    // rekursiv falls noch nicht Endstadium
+                    if(next != AMETHYST_CLUSTER) startGrowthCycle(block, next, owner);
                 }
             }
         }.runTaskLater(plugin, delay * 20L);
     }
 
-    private static void saveGrowth(Location loc, String stage, long nextGrowthMillis, UUID owner) {
-        String path = getPath(loc);
-        growthConfig.set(path + ".stage", stage);
-        growthConfig.set(path + ".nextGrowth", nextGrowthMillis);
-        growthConfig.set(path + ".owner", owner != null ? owner.toString() : null);
-        growthConfig.set(path + ".isFullyGrown", stage.equals(AMETHYST_CLUSTER.name()));
-        growthConfig.set(path + ".Prestige", 1);
+    @EventHandler
+    public void onBlockPlace(BlockPlaceEvent e) {
+        Player player = e.getPlayer();
+        Block block = e.getBlock();
+        ItemStack itemInHand = player.getInventory().getItemInMainHand();
 
-        if (!growthConfig.contains(path + ".Level")) {
-            growthConfig.set(path + ".Level", 0);
+        if (block.getType() == AMETHYST_CLUSTER) {
+            if (itemInHand != null && itemInHand.containsEnchantment(org.bukkit.enchantments.Enchantment.LOYALTY)) {
+                int loyaltyLevel = itemInHand.getEnchantmentLevel(org.bukkit.enchantments.Enchantment.LOYALTY);
+                if (loyaltyLevel >= 5) {
+                    // Platzieren erlaubt
+                    return;
+                }
+            }
+            // Platzieren verhindern und Spieler informieren
+            e.setCancelled(true);
+            player.sendMessage("§cDu kannst Kristall-Blöcke nur mit einem Item mit Treue (Loyalty) Stufe 5 oder höher platzieren!");
         }
-
-        try {
-            growthConfig.save(growthFile);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static String getPath(Location loc) {
-        // Hier anpassen auf x_y_z Format für deine Config
-        return "growth." + loc.getWorld().getName() + "." + loc.getBlockX() + "_" + loc.getBlockY() + "_" + loc.getBlockZ();
-    }
-
-    private static int getGrowthTimeSeconds(Material stage) {
-        switch (stage) {
-            case SMALL_AMETHYST_BUD:
-                return 3;
-            case MEDIUM_AMETHYST_BUD:
-                return 5;
-            case LARGE_AMETHYST_BUD:
-                return 7;
-            default:
-                return 0;
-        }
-    }
-
-    private static long getGrowthDelayMillis(Material stage) {
-        return getGrowthTimeSeconds(stage) * 1000L;
-    }
-
-    // ----------------------------
-    // Upgrade-Menü öffnen
-    // ----------------------------
-    public void openUpgradeGUI(Player player, Location blockLocation) {
-        Inventory gui = Bukkit.createInventory(null, 9, "§bUpgrade-Menü");
-
-        String path = getPath(blockLocation);
-        int level = growthConfig.getInt(path + ".Level", 0);
-        double price = 1000 * Math.pow(2, level + 1);
-        int nextPayout = 1 + level + 1;
-
-        ItemStack upgrade = new ItemStack(Material.TOTEM_OF_UNDYING);
-        ItemMeta meta = upgrade.getItemMeta();
-
-        meta.setDisplayName("§aKristall-Upgrade");
-        List<String> lore = new ArrayList<>();
-        lore.add("§eAktuelles Level: §b" + level);
-        lore.add("§eNach dem Upgrade: §b" + (level + 1));
-        lore.add("§eKosten: §6" + price + "$");
-        lore.add("§aVerdienst danach: §e" + nextPayout + "$");
-        meta.setLore(lore);
-        upgrade.setItemMeta(meta);
-
-        gui.setItem(3, upgrade);
-
-        ItemStack prestige = new ItemStack(EXPERIENCE_BOTTLE);
-        ItemMeta prestigeMeta = prestige.getItemMeta();
-        if (prestigeMeta != null) {
-            prestigeMeta.setDisplayName("§aPRestige");
-            List<String> lore1 = new ArrayList<>();
-            lore1.add("§bDurch den §aPrestige §bwerden §cwerden die Upgrades des Kristalls zurückgesetzt!");
-
-            prestigeMeta.setLore(lore1);
-            prestige.setItemMeta(prestigeMeta);
-            gui.setItem(5, prestige);
-        }
-
-        // Location speichern, damit wir im InventoryClickEvent wissen, welcher Block upgegradet wird
-        upgradeOpenLocations.put(player.getUniqueId(), blockLocation);
-
-        player.openInventory(gui);
     }
 
     @EventHandler
-    public void onInventoryClick(InventoryClickEvent event) throws IOException {
-        if (!(event.getWhoClicked() instanceof Player)) return;
-        Player player = (Player) event.getWhoClicked();
+    public void onPlayerInteract(PlayerInteractEvent e) {
+        if (e.getClickedBlock() == null) return;
 
-        if (event.getView().getTitle().equalsIgnoreCase("§bUpgrade-Menü")) {
-            event.setCancelled(true);
-            ItemStack clicked = event.getCurrentItem();
-            if (clicked == null || clicked.getType() != Material.TOTEM_OF_UNDYING) return;
+        Player player = e.getPlayer();
+        Block block = e.getClickedBlock();
 
-            Location blockLoc = upgradeOpenLocations.get(player.getUniqueId());
-            if (blockLoc == null) {
-                player.sendMessage("§cFehler: Block-Location nicht gefunden.");
-                player.closeInventory();
+        // Prüfen ob es ein Amethyst Cluster ist
+        if (block.getType() == Material.AMETHYST_CLUSTER) {
+            // Nur bei Rechtsklick auf Block und wenn Shift gedrückt ist
+            if (e.getAction() == Action.RIGHT_CLICK_BLOCK && player.isSneaking()) {
+                e.setCancelled(true);
+                openUpgradeGUIs.put(player.getUniqueId(), block.getLocation());
+                upgradeGUI.open(player, block.getLocation());
+            }
+        }
+    }
+    public void removePrestigeItem(Player player) {
+        // Beispiel: Inventory holen und Item entfernen
+        Inventory inv = player.getOpenInventory().getTopInventory();
+        if (inv == null) return;
+
+        // Suche das Prestige-Item (EXP Bottle) und entferne es
+        for (int i = 0; i < inv.getSize(); i++) {
+            ItemStack item = inv.getItem(i);
+            if (item != null && item.getType() == Material.EXPERIENCE_BOTTLE) {
+                inv.setItem(i, null);
+                break;
+            }
+        }
+    }
+
+
+    private final Map<UUID, Long> clickCooldowns = new HashMap<>();
+    private static final long CLICK_COOLDOWN_MS = 1000;
+
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent e) {
+        if (!(e.getWhoClicked() instanceof Player)) return;
+        Player player = (Player) e.getWhoClicked();
+
+        if (!openUpgradeGUIs.containsKey(player.getUniqueId())) return;
+        if (!e.getView().getTitle().equals("§bUpgrade-Menü")) return;
+
+        e.setCancelled(true);
+        ItemStack clicked = e.getCurrentItem();
+        if (clicked == null || !clicked.hasItemMeta()) return;
+
+        // Cooldown check
+        long now = System.currentTimeMillis();
+        if (clickCooldowns.containsKey(player.getUniqueId())) {
+            long lastClick = clickCooldowns.get(player.getUniqueId());
+            if (now - lastClick < CLICK_COOLDOWN_MS) {
+                player.sendMessage("§cBitte nicht so schnell klicken!");
+                return;
+            }
+        }
+        clickCooldowns.put(player.getUniqueId(), now);
+
+        Location blockLoc = openUpgradeGUIs.get(player.getUniqueId());
+
+        if (clicked.getType() == Material.TOTEM_OF_UNDYING) {
+            // Upgrade
+            int level = growthManager.getLevel(blockLoc);
+            if (level >= 20) {
+                player.sendMessage("§cMaximales Level erreicht!");
                 return;
             }
 
-            String path = getPath(blockLoc);
-            int level = growthConfig.getInt(path + ".Level", 0);
-            int newLevel = level + 1;
-            int price = (int) (1000 * Math.pow(2, newLevel));
-
-            if (eco.getBalance(player) >= price) {
-                growthConfig.set(path + ".Level", newLevel);
-                growthConfig.save(growthFile);
-                player.sendMessage("§aUpgrade erfolgreich! Neuer Verdienst: §e" + (1 + newLevel) + "§a$ pro Kristall.");
-                eco.withdrawPlayer(player, price);
-            } else {
-                player.sendMessage("§cNicht genug Geld! Du brauchst §e" + price + "$");
+            int price = upgradeGUI.getUpgradePrice(level);
+            if (economy.getBalance(player) < price) {
+                player.sendMessage("§cDu hast nicht genug Geld!");
+                return;
             }
 
-            upgradeOpenLocations.remove(player.getUniqueId());
-            player.closeInventory();
-        }
-    }
+            economy.withdrawPlayer(player, price);
+            growthManager.setLevel(blockLoc, level + 1);
+            player.sendMessage("§aKristall auf Level " + (level + 1) + " geupgradet!");
+            upgradeGUI.open(player, blockLoc);
 
-    // ----------------------------
-    // Rechtsklick mit Sneaken = Menü öffnen
-    // ----------------------------
-    @EventHandler(ignoreCancelled = true)
-    public void onShiftRightClick(PlayerInteractEvent event) {
-        if (event.getAction() != org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK) return;
+        } else if (clicked.getType() == Material.EXPERIENCE_BOTTLE) {
+            // Prestige
+            int prestige = growthManager.getPrestige(blockLoc);
+            int level = growthManager.getLevel(blockLoc);
 
-        Player player = event.getPlayer();
-        if (!player.isSneaking()) return;
+            // Voraussetzungen fürs Prestigen
+            if (prestige >= 10) {
+                player.sendMessage("§cMaximaler Prestige erreicht!");
+                return;
+            }
+            if (level < 20) {
+                player.sendMessage("§cDu brauchst Level 20, um zu prestigen!");
+                return;
+            }
 
-        Block block = event.getClickedBlock();
-        if (block == null || (
-                block.getType() != AMETHYST_CLUSTER &&
-                        block.getType() != SMALL_AMETHYST_BUD &&
-                        block.getType() != MEDIUM_AMETHYST_BUD &&
-                        block.getType() != LARGE_AMETHYST_BUD)) {
-            return;
-        }
+            int prestigeCost = 10000; // Beispielkosten fürs Prestigen
+            if (economy.getBalance(player) < prestigeCost) {
+                player.sendMessage("§cDu hast nicht genug Geld zum Prestigen! (" + prestigeCost + "$)");
+                return;
+            }
 
-        // Falls Level 10 hier weitere Aktionen erwünscht sind, hier hinzufügen
+            // Geld abziehen fürs Prestigen
+            economy.withdrawPlayer(player, prestigeCost);
 
-        openUpgradeGUI(player, block.getLocation());
-    }
+            // Prestigen ausführen
+            growthManager.setPrestige(blockLoc, prestige + 1);
+            growthManager.setLevel(blockLoc, 0);
 
-    // ----------------------------
-    // Nach Server-Start geplante Wachstumsvorgänge starten
-    // ----------------------------
-    public static void startGrowthTasks(JavaPlugin plugin, FileConfiguration growthConfig) {
-        if (!growthConfig.isConfigurationSection("growth")) return;
+            // Belohnung fürs Prestigen, z.B. 5000$
+            economy.depositPlayer(player, 5000);
 
-        for (String world : growthConfig.getConfigurationSection("growth").getKeys(false)) {
-            if (!growthConfig.isConfigurationSection("growth." + world)) continue;
+            player.sendMessage("§aDu hast geprestigt! Prestige: " + (prestige + 1));
+            upgradeGUI.open(player, blockLoc);
 
-            for (String coordKey : growthConfig.getConfigurationSection("growth." + world).getKeys(false)) {
-                String path = "growth." + world + "." + coordKey;
-
-                try {
-                    String[] parts = coordKey.split("_");
-                    int x = Integer.parseInt(parts[0]);
-                    int y = Integer.parseInt(parts[1]);
-                    int z = Integer.parseInt(parts[2]);
-
-                    World w = Bukkit.getWorld(world);
-                    if (w == null) continue;
-
-                    Block block = w.getBlockAt(x, y, z);
-                    if (block.getType() == SMALL_AMETHYST_BUD || block.getType() == MEDIUM_AMETHYST_BUD || block.getType() == LARGE_AMETHYST_BUD) {
-                        long nextGrowth = growthConfig.getLong(path + ".nextGrowth", 0);
-                        if (nextGrowth == 0) continue;
-
-                        long delay = nextGrowth - System.currentTimeMillis();
-                        if (delay <= 0) delay = 0;
-
-                        Material current = Material.valueOf(growthConfig.getString(path + ".stage"));
-
-                        new BukkitRunnable() {
-                            @Override
-                            public void run() {
-                                if (block.getType() == current) {
-                                    Material next = getNextStage(current);
-                                    if (next != null) {
-                                        block.setType(next);
-                                        saveGrowth(block.getLocation(), next.name(), System.currentTimeMillis() + getGrowthDelayMillis(next), null);
-                                    }
-                                }
-                            }
-                        }.runTaskLater(plugin, delay / 50);
-                    }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
+            // Item entfernen bei max Prestige (10)
+            if (prestige + 1 >= 10) {
+                // Entferne den Prestige-Button aus GUI
+                removePrestigeItem(player);
+                player.sendMessage("§6Prestige-Item wurde entfernt, Max Prestige erreicht!");
             }
         }
     }
+
 }
