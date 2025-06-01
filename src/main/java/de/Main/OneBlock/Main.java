@@ -198,7 +198,7 @@ public class Main extends JavaPlugin implements Listener {
         List<UUID> owners = new ArrayList<>();
         String sql = "SELECT DISTINCT owner_uuid FROM userdata WHERE owner_uuid IS NOT NULL";
 
-        // Die Verbindung bleibt offen, nur PreparedStatement und ResultSet werden automatisch geschlossen
+
         Connection conn = Main.getInstance().getConnection().getConnection();
         try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
@@ -210,7 +210,7 @@ public class Main extends JavaPlugin implements Listener {
                         UUID ownerUUID = UUID.fromString(ownerUUIDStr);
                         owners.add(ownerUUID);
                     } catch (IllegalArgumentException e) {
-                        // Ungültige UUID
+
                         Main.getInstance().getLogger().warning("Ungültige UUID in der Datenbank: " + ownerUUIDStr);
                     }
                 }
@@ -218,7 +218,6 @@ public class Main extends JavaPlugin implements Listener {
         } catch (SQLException e) {
             Main.getInstance().getLogger().log(Level.SEVERE, "Fehler beim Abrufen der Besitzer aus der Datenbank", e);
         }
-        // Verbindung bleibt weiterhin offen
         return owners;
     }
 
