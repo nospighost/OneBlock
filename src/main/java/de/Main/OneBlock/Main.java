@@ -1,16 +1,15 @@
 package de.Main.OneBlock;
 
-
-import de.Main.OneBlock.Kristalle.GUI.KristallGUI;
-import de.Main.OneBlock.Kristalle.GUI.PickaxeShop.PickaxeShop;
 import de.Main.OneBlock.NPC.GUI.NPCGUI;
 import de.Main.OneBlock.NPC.Listener.NPCInventoryListener;
 import de.Main.OneBlock.NPC.Listener.NPCListener;
-import de.Main.OneBlock.NPC.Manager.NPCManager;
 import de.Main.OneBlock.OneBlock.Manager.Manager;
 import de.Main.OneBlock.OneBlock.Manager.OneBlockManager;
 import de.Main.OneBlock.OneBlock.Player.PlayerListener;
 import de.Main.OneBlock.OneBlock.Player.PlayerRespawnListener;
+import de.Main.OneBlock.Quest.GUI.QuestMainGUI;
+import de.Main.OneBlock.Quest.GUI.QuestRewardGUI;
+import de.Main.OneBlock.Quest.Listener.QuestListener;
 import de.Main.OneBlock.WorldManager.VoidGen;
 import de.Main.OneBlock.WorldManager.WorldBorderManager;
 import de.Main.OneBlock.database.DBM;
@@ -141,6 +140,11 @@ public class Main extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(new NPCListener(), this);
         Bukkit.getPluginManager().registerEvents(new NPCInventoryListener(), this );
         NPCGUI.createNPCGUI();
+
+        //<--------------------Quest-------------------->>//
+        Bukkit.getPluginManager().registerEvents(new QuestListener(), this);
+        QuestMainGUI.createQuestGUI();
+        QuestRewardGUI.createQuestGUI();
 
     }
 
