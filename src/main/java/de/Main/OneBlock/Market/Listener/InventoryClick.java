@@ -28,19 +28,17 @@ public class InventoryClick implements Listener {
             return;
         }
         if (title.equalsIgnoreCase("Market")) {
-            event.setCancelled(true);
+           event.setCancelled(true);
 
             switch (type) {
-                case LIME_DYE -> {
+                case GREEN_DYE -> {
                     MarketManager.sellAllItems(event.getView().getTopInventory());
                 }
                 case RED_DYE -> {
                     player.closeInventory();
                 }
                 case GOLD_INGOT -> {
-                    List<String> lore = new ArrayList<>();
-                    lore.add(" ");
-                    lore.add("§aDu kannst deine Items für " + "§6" + MarketManager.getSellPrice(event.getView().getTopInventory())  );
+                    player.sendMessage("TEST");
                 }
             }
         }
