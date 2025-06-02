@@ -136,9 +136,9 @@ public class Main extends JavaPlugin implements Listener {
         QuestRewardGUI.createQuestGUI();
         //<--------------------Market-------------------->>//
         Bukkit.getPluginManager().registerEvents(new MarketManager(economy, marketfile), this);
-        Bukkit.getPluginManager().registerEvents(new MarketGUI(economy, marketconfig), this);
+        Bukkit.getPluginManager().registerEvents(new MarketGUI(economy), this);
         Bukkit.getPluginManager().registerEvents(new InventoryClick(),this);
-        getCommand("market").setExecutor(new MarketGUI(economy, marketconfig));
+        getCommand("market").setExecutor(new MarketGUI(economy));
         MarketGUI.createItems();
         setServerPrefix();
 
