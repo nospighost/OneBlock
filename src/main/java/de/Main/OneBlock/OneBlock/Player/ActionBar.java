@@ -1,15 +1,18 @@
 package de.Main.OneBlock.OneBlock.Player;
 
+import de.Main.OneBlock.Main;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.entity.Player;
+import static java.lang.Long.MIN_VALUE;
 
 public class ActionBar {
     public static int frame = 0;
     public static boolean forward = true;
 
-    public static void sendActionbarProgress(Player player, int currentLevel, int missingBlocks, int totalBlocks) {
-        if (missingBlocks == Integer.MIN_VALUE) {
+    public static void sendActionbarProgress(Player player, int currentLevel, int missingBlocks, int totalBlocks, boolean Durchgespielt) {
+
+        if (currentLevel >= Main.config.getInt("maxlevel") || Durchgespielt == true) {
             StringBuilder barBuilder = new StringBuilder("§7[");
 
             if (forward) {
@@ -31,13 +34,10 @@ public class ActionBar {
             barBuilder.append("§7]");
 
             String bar = barBuilder.toString();
-            String msg = "§bLevel: §eMaximal §8| §6§l∞ " + bar;
+            String msg = "§bLevel: " + currentLevel + " §8| §6§l∞ " + bar;
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(msg));
             return;
-        }
-
-        if (totalBlocks <= 0) totalBlocks = 1; // Absicherung gegen 0 oder negative Werte
-
+        } else if (totalBlocks <= 0 && missingBlocks == MIN_VALUE) totalBlocks = 1;
         double progress = (double) (totalBlocks - missingBlocks) / totalBlocks;
         int filled = (int) (progress * 10);
 
@@ -48,9 +48,9 @@ public class ActionBar {
         for (int i = 0; i < 10; i++) {
             if (i < filled) {
                 if (i == wavePos) {
-                    bar.append("§7█"); // Du kannst hier auch andere Farben setzen
+                    bar.append("§a█");
                 } else {
-                    bar.append("§7█");
+                    bar.append("§a█");
                 }
             } else {
                 if (i == wavePos) {

@@ -9,6 +9,7 @@ import de.Main.OneBlock.OneBlock.Manager.Manager;
 import de.Main.OneBlock.OneBlock.Manager.OneBlockManager;
 import de.Main.OneBlock.OneBlock.Player.PlayerListener;
 import de.Main.OneBlock.OneBlock.Player.PlayerRespawnListener;
+import de.Main.OneBlock.OneBlock.Player.ToolSwitch;
 import de.Main.OneBlock.Quest.GUI.QuestMainGUI;
 import de.Main.OneBlock.Quest.GUI.QuestRewardGUI;
 import de.Main.OneBlock.Quest.Listener.QuestListener;
@@ -46,16 +47,13 @@ public class Main extends JavaPlugin implements Listener {
     private static String prefix;
     public static final String WORLD_NAME = "OneBlock";
     public static World oneBlockWorld;
-
     public static FileConfiguration config;
-    public static File islandDataFolder;
-    public static File GenDataFolder;
     private static Economy economy = null;
-    public File CustomItems;
     SQLConnection connection;
     DBM moneyManager;
     private File marketfile;
     private FileConfiguration marketconfig;
+    public static File marketDataFolder;
 
 
     public static Main getInstance() {
@@ -66,45 +64,39 @@ public class Main extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         instance = this;
-
         //SQL
         connection = new SQLConnection("localhost", 3306, "admin", "admin", "1234");
         moneyManager = new DBM(this);
 
         //config
+        setupMarketFile();
         saveDefaultConfig();
         config = getConfig();
         instance = this;
         if (!config.contains("maxlevel")) {
             config.set("maxlevel", 10);
         }
+        marketfile = new File(getDataFolder(), "Market");
+        if (!marketfile.exists()) {
+            marketfile.mkdirs();
+        }
+        //Economy
         setupEconomy();
-
-        //Listener
-        Bukkit.getPluginManager().registerEvents(new PlayerRespawnListener(), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
         if (economy != null) {
             Bukkit.getPluginManager().registerEvents(new Manager(economy, this), this);
             getLogger().info("Vault Economy erfolgreich erkannt.");
         } else {
             getLogger().warning("Vault wurde nicht gefunden – Economy wird deaktiviert.");
         }
-        Bukkit.getPluginManager().registerEvents(new WorldBorderManager(), this);
-        getCommand("ob").setTabCompleter(new de.Main.OneBlock.OneBlock.Commands.TabCompleter());
-        Bukkit.getPluginManager().registerEvents(new OneBlockManager(), this);
-        getLogger().info("OneBlockPlugin aktiviert!");
-        // Ordner Erstellen//
-        islandDataFolder = new File(getDataFolder(), "IslandData");
-        if (!islandDataFolder.exists()) {
-            islandDataFolder.mkdirs();
-        }
-        // Befehle
-        getCommand("ob").setExecutor(new de.Main.OneBlock.OneBlock.Commands.OneBlockCommands());
-        getCommand("obgui").setExecutor(new de.Main.OneBlock.OneBlock.GUI.OneBlock.OBGUI());
 
-        getServer().getPluginManager().registerEvents(new de.Main.OneBlock.OneBlock.GUI.OneBlock.OBGUI(), this);
 
-        // Void Gen für OneBlock-Welt
+
+
+
+
+
+
+        //<--------------------Welten Erstellung-------------------->>//
         WorldCreator worldCreator = new WorldCreator(WORLD_NAME);
         worldCreator.environment(World.Environment.NORMAL);
         worldCreator.type(WorldType.FLAT);
@@ -128,9 +120,9 @@ public class Main extends JavaPlugin implements Listener {
             getLogger().warning("Fehler beim Erstellen der OneBlock-Welt");
         }
 
-        setupEconomy();
-        setupGrowthFile();
-        //Commands
+
+
+
 
         //<--------------------NPC-------------------->>//
         Bukkit.getPluginManager().registerEvents(new NPCListener(), this);
@@ -147,14 +139,33 @@ public class Main extends JavaPlugin implements Listener {
         getCommand("market").setExecutor(new MarketGUI(economy, marketconfig));
         MarketGUI.createItems();
         setServerPrefix();
+
+        //<--------------------OneBlock-------------------->>//
+        OneBlockManager.startAutoSaveTask();
+        //<-------------Listener-------------->>//
+        getServer().getPluginManager().registerEvents(new de.Main.OneBlock.OneBlock.GUI.OneBlock.OBGUI(), this);
+        Bukkit.getPluginManager().registerEvents(new ToolSwitch(), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerRespawnListener(), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
+        //<-------------Commands-------------->>//
+        getCommand("ob").setTabCompleter(new de.Main.OneBlock.OneBlock.Commands.TabCompleter());
+        getCommand("ob").setExecutor(new de.Main.OneBlock.OneBlock.Commands.OneBlockCommands());
+        getCommand("ob gui").setExecutor(new de.Main.OneBlock.OneBlock.GUI.OneBlock.OBGUI());
+        Bukkit.getPluginManager().registerEvents(new OneBlockManager(), this);
+        //<-------------WorldBorder-------------->>//
+        Bukkit.getPluginManager().registerEvents(new WorldBorderManager(), this);
+
+        getLogger().info("OneBlockPlugin aktiviert!");
     }
 
     public static void setServerPrefix() {
         prefix = config.getString("Server");
     }
+
     public static String getPrefix() {
         return prefix;
     }
+
     @Override
     public void onDisable() {
         saveDefaultConfig();
@@ -180,8 +191,8 @@ public class Main extends JavaPlugin implements Listener {
         return connection;
     }
 
-    public void setupGrowthFile() {
-        marketfile = new File(getDataFolder(), "growth/growth.yml");
+    public void setupMarketFile() {
+        marketfile = new File(getDataFolder(), "Market/market.yml");
 
         if (!marketfile.getParentFile().exists()) {
             marketfile.getParentFile().mkdirs();
@@ -189,7 +200,7 @@ public class Main extends JavaPlugin implements Listener {
         if (!marketfile.exists()) {
             try {
                 marketfile.createNewFile();
-                getLogger().info("growth.yml erstellt.");
+                getLogger().info("market.yml erstellt.");
             } catch (IOException e) {
                 getLogger().log(Level.SEVERE, "Konnte growth.yml nicht erstellen.", e);
             }

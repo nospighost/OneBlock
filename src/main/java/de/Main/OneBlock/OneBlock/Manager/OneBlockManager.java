@@ -43,10 +43,12 @@ public class OneBlockManager implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         UUID uuid = event.getPlayer().getUniqueId();
-
+        Player player = event.getPlayer();
         mobSpawning.put(uuid, DBM.getBoolean("userdata", uuid, "mobSpawning", true));
         MissingBlocks.put(uuid, DBM.getInt("userdata", uuid, "MissingBlocksToLevelUp", 100));
         TotalBlocks.put(uuid, DBM.getInt("userdata", uuid, "TotalBlocks", 100));
+        player.sendMessage("MissingBlocks" + MissingBlocks);
+        player.sendMessage("TotalBLocks" + TotalBlocks);
     }
 
     @EventHandler
@@ -59,17 +61,18 @@ public class OneBlockManager implements Listener {
         TotalBlocks.remove(uuid);
     }
 
-    public void startAutoSaveTask() {
+    public static void startAutoSaveTask() {
         Bukkit.getScheduler().runTaskTimer(Main.getPlugin(), () -> {
             for (UUID uuid : MissingBlocks.keySet()) {
                 savePlayerData(uuid);
             }
-        }, 20L * 30, 20L * 30); // alle 30 Sekunden
+        }, 20L * 30, 20L * 30);
     }
 
-    private void savePlayerData(UUID uuid) {
+    public static void savePlayerData(UUID uuid) {
         if (mobSpawning.containsKey(uuid))
-            DBM.setBoolean("userdata", uuid, "mobSpawning", mobSpawning.get(uuid));
+            mobSpawning.put(uuid, DBM.getBoolean("userdata", uuid, "MobSpawning", true));
+        DBM.setBoolean("userdata", uuid, "mobSpawning", mobSpawning.get(uuid));
         if (MissingBlocks.containsKey(uuid))
             DBM.setInt("userdata", uuid, "MissingBlocksToLevelUp", MissingBlocks.get(uuid));
         if (TotalBlocks.containsKey(uuid))
@@ -99,7 +102,6 @@ public class OneBlockManager implements Listener {
             return;
         }
 
-        // Chest-Handling bleibt unverändert (nur ownerUUID wichtig)
         if (block.getType() == Material.CHEST) {
             Chest chest = (Chest) block.getState();
             String chestName = chest.getCustomName();
@@ -129,7 +131,7 @@ public class OneBlockManager implements Listener {
             }
         }
 
-        // Hier wird nun aus den Maps gelesen, falls nicht vorhanden aus DB geholt und reingepackt
+
         int blocksToLevelUp = MissingBlocks.getOrDefault(ownerUUID, getInt("userdata", ownerUUID, "MissingBlocksToLevelUp", 100));
         int islandLevel = getInt("userdata", ownerUUID, "IslandLevel", 1);
         boolean durchgespielt = DBM.getBoolean("userdata", ownerUUID, "Durchgespielt", false);
@@ -146,27 +148,23 @@ public class OneBlockManager implements Listener {
 
             if (islandLevel != maxLevel) {
                 blocksToLevelUp--;
-                ActionBar.sendActionbarProgress(player, islandLevel, blocksToLevelUp, totalBlocks);
+                ActionBar.sendActionbarProgress(player, islandLevel, blocksToLevelUp, totalBlocks, durchgespielt);
             } else {
-                ActionBar.sendActionbarProgress(player, islandLevel, blocksToLevelUp, totalBlocks);
+                ActionBar.sendActionbarProgress(player, islandLevel, blocksToLevelUp, totalBlocks, durchgespielt);
             }
 
-            // Update Cache Map
             MissingBlocks.put(ownerUUID, blocksToLevelUp);
 
-            // Speichere NICHT sofort in DB, das macht der AutoSaveTask oder bei Logout
-            // DBM.setInt("userdata", ownerUUID, "MissingBlocksToLevelUp", blocksToLevelUp); // entfällt hier
 
             if (blocksToLevelUp <= 0 && islandLevel != maxLevel) {
                 islandLevel++;
-                DBM.setInt("userdata", ownerUUID, "IslandLevel", islandLevel); // IslandLevel ggf. sofort speichern
+                DBM.setInt("userdata", ownerUUID, "IslandLevel", islandLevel);
 
                 int newTotalBlocks = Main.config.getInt("oneblockblocks." + islandLevel + ".blockcount");
-                // Update Cache Maps mit neuem Wert
+
                 TotalBlocks.put(ownerUUID, newTotalBlocks);
                 MissingBlocks.put(ownerUUID, newTotalBlocks);
 
-                // DB schreibst du hier sofort wegen Levelup (optional)
                 DBM.setInt("userdata", ownerUUID, "TotalBlocks", newTotalBlocks);
                 DBM.setInt("userdata", ownerUUID, "MissingBlocksToLevelUp", newTotalBlocks);
             }
@@ -191,12 +189,14 @@ public class OneBlockManager implements Listener {
                 Location regenLocation = blockLocation.clone();
                 regenLocation.setY(100);
                 regenerateOneBlock(regenLocation, blockMaterial, islandLevel);
+                if (mobSpawning.get(ownerUUID) == true) {
+                    monster(ownerUUID, blockLocation.add(0.5, 1.0, 0.5), islandLevel);
+                }
 
-                monster(ownerUUID, blockLocation.add(0.5, 1.0, 0.5), islandLevel);
+
             }
         }
     }
-
 
 
     private void regenerateOneBlock(Location blockLocation, Material blockMaterial, Integer IslandLevel) {
@@ -308,6 +308,7 @@ public class OneBlockManager implements Listener {
             }
         }
     }
+
     public static boolean isLocationOnIsland(UUID ownerUUID, Location location) {
         int centerX = getInt("userdata", ownerUUID, "OneBlock_x", 0);
         int centerZ = getInt("userdata", ownerUUID, "OneBlock_z", 0);

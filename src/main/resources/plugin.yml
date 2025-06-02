@@ -10,9 +10,9 @@ commands:
     permission: oneblock.use
     permission-message: §cDu hast keine Berechtigung diesen Befehl zu verwenden.
 
-  obgui:
+  ob gui:
     description: Öffnet das OneBlock-GUI
-    usage: /obgui
+    usage: /ob gui
     permission: oneblock.gui
     permission-message: §cDu hast keine Berechtigung, dieses GUI zu öffnen.
 
