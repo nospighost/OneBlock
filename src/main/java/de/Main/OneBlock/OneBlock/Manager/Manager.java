@@ -1,7 +1,6 @@
 package de.Main.OneBlock.OneBlock.Manager;
 
 import de.Main.OneBlock.Main;
-import de.Main.OneBlock.NPC.Manager.NPCManager;
 import de.Main.OneBlock.database.DBM;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
@@ -454,7 +453,7 @@ public class Manager implements Listener {
         return String.join(",", list);
     }
 
-    public static void switchBiomePerChunk(Location loc, Biome newBiome) {
+    public static void switchBiomePerChunk(Location loc, Biome newBiome, UUID uuid) {
         Chunk chunk = loc.getChunk();
         World world = loc.getWorld();
         int maxHeight = world.getMaxHeight();
@@ -469,9 +468,9 @@ public class Manager implements Listener {
                 }
             }
         }
-
-        // Chunk aktualisieren
-        Bukkit.getScheduler().runTaskLater(Bukkit.getPluginManager().getPlugin("OneBlockPlugin"), () -> {
+        DBM.setString("userdat", uuid, "IslandBiome", String.valueOf(newBiome));
+                // Chunk aktualisieren
+                        Bukkit.getScheduler().runTaskLater(Bukkit.getPluginManager().getPlugin("OneBlockPlugin"), () -> {
             for (Player player : world.getPlayers()) {
                 if (player.getLocation().getChunk().equals(chunk)) {
                     player.getWorld().refreshChunk(chunk.getX(), chunk.getZ());
@@ -480,7 +479,7 @@ public class Manager implements Listener {
         }, 5L);
     }
 
-    public static void switchBiomeForIsland(Player player, Biome newBiome) {
+    public static void switchBiomeForIsland(Player player, Biome newBiome, UUID uuid) {
         int centerX = getInt("userdata", player.getUniqueId(), "OneBlock_x", 0);
         int centerZ = getInt("userdata", player.getUniqueId(), "OneBlock_z", 0);
         int diameter = getInt("userdata", player.getUniqueId(), "WorldBorderSize", 50);
@@ -503,6 +502,7 @@ public class Manager implements Listener {
         int chunkEndX = maxX >> 4;
         int chunkStartZ = minZ >> 4;
         int chunkEndZ = maxZ >> 4;
+        DBM.setString("userdat", uuid, "IslandBiome", String.valueOf(newBiome));
 
         //  Insel-Chunks neu laden
         for (int chunkX = chunkStartX; chunkX <= chunkEndX; chunkX++) {

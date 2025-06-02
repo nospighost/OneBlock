@@ -43,7 +43,7 @@ import java.util.logging.Level;
 
 public class Main extends JavaPlugin implements Listener {
     private static Main instance;
-
+    private static String prefix;
     public static final String WORLD_NAME = "OneBlock";
     public static World oneBlockWorld;
 
@@ -56,6 +56,7 @@ public class Main extends JavaPlugin implements Listener {
     DBM moneyManager;
     private File marketfile;
     private FileConfiguration marketconfig;
+
 
     public static Main getInstance() {
         return instance;
@@ -82,7 +83,9 @@ public class Main extends JavaPlugin implements Listener {
         //Listener
         Bukkit.getPluginManager().registerEvents(new PlayerRespawnListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
-        if (economy != null) {Bukkit.getPluginManager().registerEvents(new Manager(economy, this), this);getLogger().info("Vault Economy erfolgreich erkannt.");
+        if (economy != null) {
+            Bukkit.getPluginManager().registerEvents(new Manager(economy, this), this);
+            getLogger().info("Vault Economy erfolgreich erkannt.");
         } else {
             getLogger().warning("Vault wurde nicht gefunden – Economy wird deaktiviert.");
         }
@@ -141,9 +144,15 @@ public class Main extends JavaPlugin implements Listener {
         //<--------------------Market-------------------->>//
         Bukkit.getPluginManager().registerEvents(new MarketManager(economy, marketconfig), this);
         Bukkit.getPluginManager().registerEvents(new MarketGUI(economy, marketconfig), this);
-
+        setServerPrefix();
     }
 
+    public static void setServerPrefix() {
+        prefix = config.getString("Server");
+    }
+    public static String getPrefix() {
+        return prefix;
+    }
     @Override
     public void onDisable() {
         saveDefaultConfig();

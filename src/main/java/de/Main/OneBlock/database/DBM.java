@@ -27,7 +27,7 @@ public class DBM implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         String playerUUID = event.getPlayer().getUniqueId().toString();
-        SQLTabel.Condition userdatacondition = new SQLTabel.Condition("owner", player.getName());
+            SQLTabel.Condition userdatacondition = new SQLTabel.Condition("owner", player.getName());
         SQLTabel.Condition queststatuscondition = new SQLTabel.Condition("owner", player.getName());
         SQLTabel.Condition questcompletecondition = new SQLTabel.Condition("owner", player.getName());
 
@@ -48,6 +48,8 @@ public class DBM implements Listener {
             tabel.set("userdata", "x_position", 0, userdatacondition);
             tabel.set("userdata", "z_position", 0, userdatacondition);
             tabel.set("userdata", "BorderParticle", "COMPOSTER", userdatacondition);
+            tabel.set("userdata", "IslandBiom", "PLAINS", userdatacondition);
+            tabel.set("userdata", "MobSpawning", true, userdatacondition);
             List<String> trustedList = new ArrayList<>();
             tabel.set("userdata", "trusted", String.join(",", trustedList), userdatacondition);
             List<String> deniedList = new ArrayList<>();
@@ -98,6 +100,8 @@ public class DBM implements Listener {
         userdatacolumns.put("z_position", SQLDataType.INT);
         userdatacolumns.put("x_position", SQLDataType.INT);
         userdatacolumns.put("BorderParticle", SQLDataType.CHAR);
+        userdatacolumns.put("IslandBiom", SQLDataType.CHAR);
+        userdatacolumns.put("MobSpawning", SQLDataType.BOOLEAN);
 
         questcompletecolumns.put("owner", SQLDataType.CHAR);
         questcompletecolumns.put("owner_uuid", SQLDataType.CHAR);

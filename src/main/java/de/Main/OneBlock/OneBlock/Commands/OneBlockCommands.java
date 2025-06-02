@@ -122,7 +122,7 @@ public class OneBlockCommands implements Listener, CommandExecutor {
                 return true;
             }
             Location loc = player.getLocation();
-            Manager.switchBiomePerChunk(loc, newBiome);
+            Manager.switchBiomePerChunk(loc, newBiome, player.getUniqueId());
             player.sendMessage("§aChunk Biom  wurde zu §e" + newBiome.name() + " §ageändert.");
             return true;
         } else if(args.length == 2 && args[0].equalsIgnoreCase("switchIslandBiome"))
@@ -144,7 +144,7 @@ public class OneBlockCommands implements Listener, CommandExecutor {
             return true;
         }
         Location loc = player.getLocation();
-        Manager.switchBiomeForIsland(player, newBiome);
+        Manager.switchBiomeForIsland(player, newBiome, player.getUniqueId());
         player.sendMessage("§aInsel Biom wurde zu §e" + newBiome.name() + " §ageändert.");
         return true;
     }

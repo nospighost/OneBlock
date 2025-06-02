@@ -13,6 +13,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
@@ -29,9 +30,12 @@ import static org.bukkit.Material.*;
 public class OBGUI implements CommandExecutor, Listener {
 
     private final int[] grayglasmaingui = {0, 1, 2, 6, 7, 8};
-    private final int[] grayglasmaingui2 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 17, 19, 20, 21, 22, 23, 24, 25, 26};
-    private final int[] grayglasmaingui3 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 22, 23, 24, 25, 26, 28, 29, 30, 31, 32, 33, 34, 35};
+    private final int[] verwaltungGrayGlasPane = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 23, 25, 26, 28, 29, 30, 31, 32, 33, 34, 35};
+    private final int[] phasenAuswahlGrayGlasPane = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 22, 23, 24, 25, 26, 28, 29, 30, 31, 32, 33, 34, 35};
     private final int[] Befehle3 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 20, 23, 24, 25, 26, 28, 29, 30, 31, 32, 33, 34, 35};
+    private final int[] Biom = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35};
+    private final Map<UUID, Long> zombieCooldowns = new HashMap<>();
+    private final long COOLDOWN_TIME = 4000; // Millisekunden
 
     private final int MAX_CLICKS = 3;
 
@@ -42,6 +46,7 @@ public class OBGUI implements CommandExecutor, Listener {
     public static Inventory Befehle;
     public static Inventory Auswahl;
     public static Inventory Verwaltung;
+    public static Inventory switchBiomeGUI;
 
     private final HashMap<UUID, Integer> deleteClicks = new HashMap<>();
     private final HashMap<UUID, Integer> rebirthClicks = new HashMap<>();
@@ -53,9 +58,16 @@ public class OBGUI implements CommandExecutor, Listener {
             return true;
         }
 
-        if (mainGUI == null || Auswahl == null || Einstellungen == null || Rebirth == null || Befehle == null || Verwaltung == null) {
+        if (mainGUI == null || Auswahl == null || Einstellungen == null || Rebirth == null || Befehle == null || Verwaltung == null || switchBiomeGUI == null) {
+
         }
-        createguis(player);
+        ItemStack grayglas = new ItemStack(GRAY_STAINED_GLASS_PANE);
+        ItemMeta graygalsmetea = grayglas.getItemMeta();
+        graygalsmetea.setHideTooltip(true);
+        graygalsmetea.setCustomModelData(0);
+        grayglas.setItemMeta(graygalsmetea);
+        createguis(player, grayglas);
+        createBiomGUI(grayglas);
 
         deleteClicks.put(player.getUniqueId(), MAX_CLICKS);
         rebirthClicks.put(player.getUniqueId(), MAX_CLICKS);
@@ -65,32 +77,30 @@ public class OBGUI implements CommandExecutor, Listener {
         return true;
     }
 
-    private void createguis(Player player) {
+    private void createguis(Player player, ItemStack grayglas) {
 
-        Einstellungen = Bukkit.createInventory(null, 3 * 9, "§cInsel-Einstellungen");
-        Rebirth = Bukkit.createInventory(null, 3 * 9, "§eRebirth");
-        Befehle = Bukkit.createInventory(null, 4 * 9, "§8Spielerbefehle");
-        Auswahl = Bukkit.createInventory(null, 4 * 9, "§aPhasen-Auswahl");
-        Verwaltung = Bukkit.createInventory(null, 3 * 9, "§cInsel-Verwaltung");
+        Einstellungen = Bukkit.createInventory(null, 27, "§cInsel-Einstellungen");
+        Rebirth = Bukkit.createInventory(null, 27, "§eRebirth");
+        Befehle = Bukkit.createInventory(null, 36, "§8Spielerbefehle");
+        Auswahl = Bukkit.createInventory(null, 36, "§aPhasen-Auswahl");
+        Verwaltung = Bukkit.createInventory(null, 36, "§cInsel-Verwaltung");
         mainGUI = Bukkit.createInventory(null, 9, "§aOneBlock-Menü");
 
-        ItemStack grayglas = new ItemStack(GRAY_STAINED_GLASS_PANE);
-        ItemMeta graygalsmetea = grayglas.getItemMeta();
-        graygalsmetea.setHideTooltip(true);
-        graygalsmetea.setCustomModelData(0);
-        grayglas.setItemMeta(graygalsmetea);
+
         for (int pos : grayglasmaingui) {
             mainGUI.setItem(pos, grayglas);
         }
 
-        for (int pos : grayglasmaingui2) {
+        for (int pos : verwaltungGrayGlasPane) {
             Verwaltung.setItem(pos, grayglas);
         }
 
-        for (int pos : grayglasmaingui3) {
+        for (int pos : phasenAuswahlGrayGlasPane) {
             Auswahl.setItem(pos, grayglas);
 
         }
+
+
 
         for (int pos : Befehle3) {
             Befehle.setItem(pos, grayglas);
@@ -329,6 +339,23 @@ public class OBGUI implements CommandExecutor, Listener {
 
 
     }
+    private void createBiomGUI(ItemStack grayglas){
+        switchBiomeGUI = Bukkit.createInventory(null, 36, "§aBiom Verwaltung");
+        for (int pos : Biom) {
+            if(switchBiomeGUI == null){
+                createBiomGUI(grayglas);
+            }
+            switchBiomeGUI.setItem(pos, grayglas);
+
+        }
+        ItemStack zurück1 = new ItemStack(RED_DYE);
+        ItemMeta zurückmeta1 = zurück1.getItemMeta();
+        if (zurückmeta1 != null) {
+            zurückmeta1.setDisplayName("§cZurück zum §aOneBlock-Menü");
+            zurück1.setItemMeta(zurückmeta1);
+        }
+        switchBiomeGUI.setItem(27, zurück1);
+    }
 
     private void setPlayerHeadInMainGUI(Player player) {
         UUID uuid = player.getUniqueId();
@@ -361,7 +388,6 @@ public class OBGUI implements CommandExecutor, Listener {
                 lore.add("§cDeine Worldborder größe: " + "§b" + +DBM.getInt("userdata", uuid, "WorldBorderSize", 1));
             } else {
                 lore.add("§bDu besitzt §ckeine Insel!");
-                lore.add("§bBitte §cerstelle §bdir eine Insel.");
 
             }
 
@@ -379,7 +405,7 @@ public class OBGUI implements CommandExecutor, Listener {
         int deleteRemaining = deleteClicks.getOrDefault(uuid, MAX_CLICKS);
         int rebirthRemaining = rebirthClicks.getOrDefault(uuid, MAX_CLICKS);
 
-        for (int slot : new int[]{10, 12, 14, 16}) {
+        for (int slot : new int[]{10, 12, 14, 16, 20, 22}) {
             ItemStack item;
             String displayName;
             List<String> lore = new ArrayList<>();
@@ -417,19 +443,43 @@ public class OBGUI implements CommandExecutor, Listener {
                     lore.add("§7Preis für nächstes Upgrade: §e" + price + " Coins");
                 }
                 case 16 -> {
-                    item = new ItemStack(STRUCTURE_VOID);
-                    displayName = "§aWorldBodrder Größe";
-                    int currentSize = DBM.getInt("userdata", uuid, "WorldBorderSize", 1);
-
-                    int basePrice = 100;
-                    int upgradesDone = (currentSize - 50) / 10;
-                    int price = (int) (basePrice * Math.pow(2, upgradesDone));
-
-                    lore.add("§7Aktuelle Größe: §e" + currentSize);
-                    lore.add("§7Klicke, um die Größe zu erhöhen");
-                    lore.add("§7(Maximal 200)");
-                    lore.add("§7Preis für nächstes Upgrade: §e" + price + " Coins");
+                    item = new ItemStack(TALL_GRASS);
+                    displayName = "§aInsel Biom ändern";
+                    String currentBiome = DBM.getString("userdata", uuid, "IslandBiom", "PLAINS");
+                    lore.add("");
+                    lore.add("§7Aktuelles Biom : §e" + currentBiome);
                 }
+                case 20 -> {
+                    item = new ItemStack(ZOMBIE_HEAD);
+                    displayName = "§aOneblock Mob Spawning";
+                    Boolean currentValue = Boolean.valueOf(String.valueOf(DBM.getBoolean("userdata", uuid, "MobSpawning", false)));
+
+                    while (lore.size() <= 1) {
+                        lore.add("");
+                    }
+                        lore.set(1, "Wert");
+                        if (currentValue == true) {
+                            lore.set(1, "§bAktuell: §c" + currentValue);
+                        } else if (currentValue == false){
+                            lore.set(1, "§bAktuell: §c" + currentValue);
+                        }
+                    }
+                case 2 -> {
+                    item = new ItemStack(ZOMBIE_HEAD);
+                    displayName = "§aOn2eblock Mob Spawning";
+                    Boolean currentValue = Boolean.valueOf(String.valueOf(DBM.getBoolean("userdata", uuid, "MobSpawning", false)));
+
+                    while (lore.size() <= 1) {
+                        lore.add(""); // Platzhalter hinzufügen
+                    }
+                    lore.set(1, "Wert");
+                    if (currentValue == true) {
+                        lore.set(1, "§bAktuell: §c" + currentValue);
+                    } else if (currentValue == false) {
+                        lore.set(1, "§bAktuell: §c" + currentValue);
+                    }
+                }
+
 
                 default -> {
                     continue;
@@ -451,7 +501,7 @@ public class OBGUI implements CommandExecutor, Listener {
                 zurückmeta.setDisplayName("§cZurück zum §aOneBlock-Menü");
                 zurück.setItemMeta(zurückmeta);
             }
-            Verwaltung.setItem(18, zurück);
+            Verwaltung.setItem(27, zurück);
         }
     }
 
@@ -507,7 +557,43 @@ public class OBGUI implements CommandExecutor, Listener {
     @EventHandler(ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) return;
-        if (event.getClickedInventory() == null || event.getCurrentItem() == null) return;
+        if (event.getClickedInventory() == null) return;
+
+        Inventory clickedInventory = event.getClickedInventory();
+        Inventory topInventory = player.getOpenInventory().getTopInventory();
+        String inventoryTitle = player.getOpenInventory().getTitle();
+
+        // Liste der blockierten Inventartitel
+        List<String> blockedInventories = Arrays.asList(
+                "§cInsel-Einstellungen",
+                "§eRebirth",
+                "§8Spielerbefehle",
+                "§aPhasen-Auswahl",
+                "§cInsel-Verwaltung",
+                "§aOneBlock-Menü"
+        );
+
+
+
+        if (blockedInventories.contains(inventoryTitle)) {
+            // Interaktionen im Top-Inventar komplett verhindern
+            if (clickedInventory.equals(topInventory)) {
+                event.setCancelled(true);
+            }
+
+            // Verschieben von unten nach oben verhindern (Shift-Klick etc.)
+            if (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
+                // Prüfe, ob der Zielinventar das Top-Inventar ist
+                Inventory destinationInventory = event.getView().getTopInventory();
+
+                // Nur blockieren, wenn Ziel das Top-Inventar ist
+                if (destinationInventory.equals(topInventory)) {
+                    event.setCancelled(true);
+                }
+            }
+        }
+
+
 
         UUID uuid = player.getUniqueId();
 
@@ -517,13 +603,21 @@ public class OBGUI implements CommandExecutor, Listener {
 
 
         if (title.equalsIgnoreCase("§cInsel-Verwaltung")) {
-            event.setCancelled(true);
+
 
             switch (type) {
 
                 case STRUCTURE_VOID -> {
                     addWorldBoarder(player);
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+
                 }
+                case TALL_GRASS -> {
+                    player.openInventory(switchBiomeGUI);
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+
+                }
+
 
                 case TOTEM_OF_UNDYING -> {
                     int clicksLeft = rebirthClicks.getOrDefault(uuid, MAX_CLICKS) - 1;
@@ -553,6 +647,26 @@ public class OBGUI implements CommandExecutor, Listener {
                         player.performCommand("ob delete");
                     }
                 }
+                case ZOMBIE_HEAD -> {
+                    UUID playerUUID = player.getUniqueId();
+                    long currentTime = System.currentTimeMillis();
+
+
+                    // Überprüfen, ob der Spieler noch in der Abklingzeit ist
+                    if (zombieCooldowns.containsKey(playerUUID) && zombieCooldowns.get(playerUUID) > currentTime) {
+                        long remainingTime = (zombieCooldowns.get(playerUUID) - currentTime) / 1000;
+                        player.sendMessage(Main.getPrefix() + " §cBitte warte " + remainingTime + " Sekunden, bevor du erneut klickst!");
+                        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1, 0.5f); // Signalton
+                        return;
+                    }
+                    zombieCooldowns.put(playerUUID, currentTime + COOLDOWN_TIME);
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    boolean currentValue = DBM.getBoolean("userdata", playerUUID, "MobSpawning", true);
+                    boolean newValue = !currentValue;
+                    DBM.setBoolean("userdata", playerUUID, "MobSpawning", newValue);
+                    updateVerwaltungGUI(player);
+                }
+
                 case RED_DYE -> {
                     player.openInventory(mainGUI);
                 }
@@ -560,16 +674,18 @@ public class OBGUI implements CommandExecutor, Listener {
 
                 }
             }
-        }
-
-        if (title.equalsIgnoreCase("§aOneBlock-Menü")) {
-            event.setCancelled(true);
-            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
-
+        } else if (title.equalsIgnoreCase("§aOneBlock-Menü")) {
             switch (type) {
-                case EXPERIENCE_BOTTLE -> player.openInventory(Auswahl);
-                case PLAYER_HEAD -> player.openInventory(Befehle);
+                case EXPERIENCE_BOTTLE -> {
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.openInventory(Auswahl);
+                }
+                case PLAYER_HEAD -> {
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.openInventory(Befehle);
+                }
                 case COMPARATOR -> {
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
                     deleteClicks.put(uuid, MAX_CLICKS);
                     rebirthClicks.put(uuid, MAX_CLICKS);
                     updateVerwaltungGUI(player);
@@ -580,8 +696,8 @@ public class OBGUI implements CommandExecutor, Listener {
                 }
             }
         }
-        if (title.equalsIgnoreCase("§aPhasen-Auswahl")) {
-            event.setCancelled(true);
+        else if (title.equalsIgnoreCase("§aPhasen-Auswahl")) {
+
 
 
             boolean durchgespielt = DBM.getBoolean("userdata", uuid, "Durchgespielt", false);
@@ -593,7 +709,7 @@ public class OBGUI implements CommandExecutor, Listener {
                         DBM.setInt("userdata", uuid, "MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.1.blockcount"));
                         DBM.setInt("userdata", uuid, "TotalBlocks", Main.config.getInt("oneblockblocks.1.blockcount"));
                         DBM.setBoolean("userdata", uuid, "Durchgespielt", true);
-                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 1 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
+                        player.sendMessage(Main.getPrefix() + "§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 1 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                         player.closeInventory();
                     } else {
@@ -610,11 +726,11 @@ public class OBGUI implements CommandExecutor, Listener {
                         DBM.setInt("userdata", uuid, "TotalBlocks", Main.config.getInt("oneblockblocks.2.blockcount"));
                         DBM.setBoolean("userdata", uuid, "Durchgespielt", true);
 
-                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 2 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
+                        player.sendMessage(Main.getPrefix() + "§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 2 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                         player.closeInventory();
                     } else {
-                        player.sendMessage("§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
+                        player.sendMessage(Main.getPrefix() + "§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
                         player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
                     }
                     break;
@@ -626,11 +742,11 @@ public class OBGUI implements CommandExecutor, Listener {
                         DBM.setInt("userdata", uuid, "MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.3.blockcount"));
                         DBM.setInt("userdata", uuid, "TotalBlocks", Main.config.getInt("oneblockblocks.3.blockcount"));
                         DBM.setBoolean("userdata", uuid, "Durchgespielt", true);
-                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 3 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
+                        player.sendMessage(Main.getPrefix() + "§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 3 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                         player.closeInventory();
                     } else {
-                        player.sendMessage("§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
+                        player.sendMessage(Main.getPrefix() + "§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
                         player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
                     }
                     break;
@@ -642,11 +758,11 @@ public class OBGUI implements CommandExecutor, Listener {
                         DBM.setInt("userdata", uuid, "MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.4.blockcount"));
                         DBM.setInt("userdata", uuid, "TotalBlocks", Main.config.getInt("oneblockblocks.4.blockcount"));
                         DBM.setBoolean("userdata", uuid, "Durchgespielt", true);
-                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 4 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
+                        player.sendMessage(Main.getPrefix() + "§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 4 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                         player.closeInventory();
                     } else {
-                        player.sendMessage("§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
+                        player.sendMessage(Main.getPrefix() + "§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
                         player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
                     }
                     break;
@@ -659,11 +775,11 @@ public class OBGUI implements CommandExecutor, Listener {
                         DBM.setInt("userdata", uuid, "TotalBlocks", Main.config.getInt("oneblockblocks.5.blockcount"));
                         DBM.setBoolean("userdata", uuid, "Durchgespielt", true);
 
-                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 5 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
+                        player.sendMessage(Main.getPrefix() + "§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 5 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                         player.closeInventory();
                     } else {
-                        player.sendMessage("§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
+                        player.sendMessage(Main.getPrefix() + "§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
                         player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
                     }
                     break;
@@ -676,11 +792,11 @@ public class OBGUI implements CommandExecutor, Listener {
                         DBM.setInt("userdata", uuid, "TotalBlocks", Main.config.getInt("oneblockblocks.6.blockcount"));
                         DBM.setBoolean("userdata", uuid, "Durchgespielt", true);
 
-                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 6 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
+                        player.sendMessage(Main.getPrefix() + "§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 6 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                         player.closeInventory();
                     } else {
-                        player.sendMessage("§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
+                        player.sendMessage(Main.getPrefix() + "§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
                         player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
                     }
                     break;
@@ -692,11 +808,11 @@ public class OBGUI implements CommandExecutor, Listener {
                         DBM.setInt("userdata", uuid, "MissingBlocksToLevelUp", Main.config.getInt("oneblockblocks.7.blockcount"));
                         DBM.setInt("userdata", uuid, "TotalBlocks", Main.config.getInt("oneblockblocks.7.blockcount"));
                         DBM.setBoolean("userdata", uuid, "Durchgespielt", true);
-                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 7 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
+                        player.sendMessage(Main.getPrefix() + "§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 7 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                         player.closeInventory();
                     } else {
-                        player.sendMessage("§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
+                        player.sendMessage(Main.getPrefix() + "§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
                         player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
                     }
                     break;
@@ -709,11 +825,11 @@ public class OBGUI implements CommandExecutor, Listener {
                         DBM.setInt("userdata", uuid, "TotalBlocks", Main.config.getInt("oneblockblocks.8.blockcount"));
                         DBM.setBoolean("userdata", uuid, "Durchgespielt", true);
 
-                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 8 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
+                        player.sendMessage(Main.getPrefix() + "§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 8 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                         player.closeInventory();
                     } else {
-                        player.sendMessage("§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
+                        player.sendMessage(Main.getPrefix() + "§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
                         player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
                     }
                     break;
@@ -726,11 +842,11 @@ public class OBGUI implements CommandExecutor, Listener {
                         DBM.setInt("userdata", uuid, "TotalBlocks", Main.config.getInt("oneblockblocks.9.blockcount"));
                         DBM.setBoolean("userdata", uuid, "Durchgespielt", true);
 
-                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 9 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
+                        player.sendMessage(Main.getPrefix() + "§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 9 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                         player.closeInventory();
                     } else {
-                        player.sendMessage("§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
+                        player.sendMessage(Main.getPrefix() + "§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
                         player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
                     }
                     break;
@@ -743,23 +859,22 @@ public class OBGUI implements CommandExecutor, Listener {
                         DBM.setInt("userdata", uuid, "TotalBlocks", Main.config.getInt("oneblockblocks.10.blockcount"));
                         DBM.setBoolean("userdata", uuid, "Durchgespielt", true);
 
-                        player.sendMessage("§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 10 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
+                        player.sendMessage(Main.getPrefix() + "§aDeine OneBlock-Phase wurde erfolgreich auf " + "§c" + Main.config.getString("oneblockblocks." + 10 + ".name", "Unbekannt") + "§a" + " zurückgesetzt!");
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                         player.closeInventory();
                     } else {
-                        player.sendMessage("§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
+                        player.sendMessage(Main.getPrefix() + "§cDu musst OneBlock einmal komplett durchgespielt haben, um diese Phase auszuwählen.");
                         player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
                     }
                     break;
 
                 case RED_DYE:
                     player.openInventory(mainGUI);
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
                     break;
             }
-        }
+        } else if (title.equalsIgnoreCase("§8Spielerbefehle")) {
 
-        if (title.equalsIgnoreCase("§8Spielerbefehle")) {
-            event.setCancelled(true);
 
             switch (type) {
                 case GRASS_BLOCK:
@@ -822,19 +937,39 @@ public class OBGUI implements CommandExecutor, Listener {
 
                 case RED_DYE:
                     player.openInventory(mainGUI);
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
                     break;
 
                 default:
                     break;
             }
 
+        } else if (title.equalsIgnoreCase("§aBiom Verwaltung")) {
+
+            switch (type) {
+                case GRASS_BLOCK:
+                    player.performCommand("ob switchIslandBiome PLAINS");
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.closeInventory();
+                    break;
+
+
+
+                case RED_DYE:
+                    player.openInventory(mainGUI);
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    break;
+
+                default:
+                    break;
+            }
         }
     }
 
     private void sendSuggestCommandMessage(Player player, String command) {
         player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
 
-        TextComponent msg = new TextComponent("§aKlicke hier, um den Befehl einzugeben: ");
+        TextComponent msg = new TextComponent(Main.getPrefix() + "§aKlicke hier, um den Befehl einzugeben: ");
         TextComponent commandPart = new TextComponent("§e/ob " + command);
 
         commandPart.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/ob " + command));
@@ -885,7 +1020,7 @@ public class OBGUI implements CommandExecutor, Listener {
         int maxSize = 200;
 
         if (currentSize >= maxSize) {
-            player.sendMessage("§cDu hast das Limit erreicht");
+            player.sendMessage(Main.getPrefix() + "§cDu hast das Limit erreicht");
             player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1, 1);
             return;
         }
@@ -895,7 +1030,7 @@ public class OBGUI implements CommandExecutor, Listener {
         int price = (int) (basePrice * Math.pow(2, upgradesDone));
 
         if (eco.getBalance(player) < price) {
-            player.sendMessage("§cDu hast nicht genug Geld! Benötigt: §e" + price + " Coins");
+            player.sendMessage(Main.getPrefix() + "§cDu hast nicht genug Geld! Benötigt: §e" + price + " Coins");
             player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
             return;
         }
@@ -907,7 +1042,7 @@ public class OBGUI implements CommandExecutor, Listener {
         currentSize += 10;
         DBM.setInt("userdata", uuid, "WorldBorderSize", currentSize);
 
-        player.sendMessage("§aDeine WorldBorder wurde auf §e" + currentSize + " §avergrößert!");
+        player.sendMessage(Main.getPrefix() + "§aDeine WorldBorder wurde auf §e" + currentSize + " §avergrößert!");
         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
         player.closeInventory();
 
