@@ -144,6 +144,8 @@ public class Main extends JavaPlugin implements Listener {
         //<--------------------Market-------------------->>//
         Bukkit.getPluginManager().registerEvents(new MarketManager(economy, marketconfig), this);
         Bukkit.getPluginManager().registerEvents(new MarketGUI(economy, marketconfig), this);
+        getCommand("market").setExecutor(new MarketGUI(economy, marketconfig));
+        MarketGUI.createItems();
         setServerPrefix();
     }
 
