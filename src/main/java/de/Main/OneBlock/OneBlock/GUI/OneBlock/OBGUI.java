@@ -600,6 +600,7 @@ public class OBGUI implements CommandExecutor, Listener {
 
         String title = event.getView().getTitle();
         ItemStack clicked = event.getCurrentItem();
+        assert clicked != null;
         Material type = clicked.getType();
 
 
