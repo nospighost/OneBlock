@@ -45,6 +45,7 @@ public class MarketGUI implements Listener, CommandExecutor {
         if (commandSender instanceof Player) {
             Player player = (Player) commandSender;
             player.openInventory(MarketGUI);
+            return true;
         }
         return false;
     }
