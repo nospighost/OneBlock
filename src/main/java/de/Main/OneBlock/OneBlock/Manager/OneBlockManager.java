@@ -43,10 +43,12 @@ public class OneBlockManager implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         UUID uuid = event.getPlayer().getUniqueId();
-
+        Player player = event.getPlayer();
         mobSpawning.put(uuid, DBM.getBoolean("userdata", uuid, "mobSpawning", true));
         MissingBlocks.put(uuid, DBM.getInt("userdata", uuid, "MissingBlocksToLevelUp", 100));
         TotalBlocks.put(uuid, DBM.getInt("userdata", uuid, "TotalBlocks", 100));
+        player.sendMessage("MissingBlocks" + MissingBlocks);
+        player.sendMessage("TotalBLocks" + TotalBlocks);
     }
 
     @EventHandler
@@ -59,17 +61,18 @@ public class OneBlockManager implements Listener {
         TotalBlocks.remove(uuid);
     }
 
-    public void startAutoSaveTask() {
+    public static void startAutoSaveTask() {
         Bukkit.getScheduler().runTaskTimer(Main.getPlugin(), () -> {
             for (UUID uuid : MissingBlocks.keySet()) {
                 savePlayerData(uuid);
             }
-        }, 20L * 30, 20L * 30); // alle 30 Sekunden
+        }, 20L * 30, 20L * 30);
     }
 
-    private void savePlayerData(UUID uuid) {
+    public static void savePlayerData(UUID uuid) {
         if (mobSpawning.containsKey(uuid))
-            DBM.setBoolean("userdata", uuid, "mobSpawning", mobSpawning.get(uuid));
+            mobSpawning.put(uuid, DBM.getBoolean("userdata", uuid, "MobSpawning", true));
+        DBM.setBoolean("userdata", uuid, "mobSpawning", mobSpawning.get(uuid));
         if (MissingBlocks.containsKey(uuid))
             DBM.setInt("userdata", uuid, "MissingBlocksToLevelUp", MissingBlocks.get(uuid));
         if (TotalBlocks.containsKey(uuid))
@@ -145,9 +148,9 @@ public class OneBlockManager implements Listener {
 
             if (islandLevel != maxLevel) {
                 blocksToLevelUp--;
-                ActionBar.sendActionbarProgress(player, islandLevel, blocksToLevelUp, totalBlocks);
+                ActionBar.sendActionbarProgress(player, islandLevel, blocksToLevelUp, totalBlocks, durchgespielt);
             } else {
-                ActionBar.sendActionbarProgress(player, islandLevel, blocksToLevelUp, totalBlocks);
+                ActionBar.sendActionbarProgress(player, islandLevel, blocksToLevelUp, totalBlocks, durchgespielt);
             }
 
             MissingBlocks.put(ownerUUID, blocksToLevelUp);
@@ -186,9 +189,10 @@ public class OneBlockManager implements Listener {
                 Location regenLocation = blockLocation.clone();
                 regenLocation.setY(100);
                 regenerateOneBlock(regenLocation, blockMaterial, islandLevel);
-                if (mobSpawning.containsKey(ownerUUID) == true) {
+                if (mobSpawning.get(ownerUUID) == true) {
                     monster(ownerUUID, blockLocation.add(0.5, 1.0, 0.5), islandLevel);
                 }
+
 
             }
         }

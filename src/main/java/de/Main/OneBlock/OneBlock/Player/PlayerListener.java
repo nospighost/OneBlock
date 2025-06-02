@@ -24,12 +24,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.logging.Level;
 
 public class PlayerListener implements Listener {
 
     private final JavaPlugin plugin;
     public static final String WORLD_NAME = "OneBlock";
-    private static final String USER_DATA_FOLDER = "plugins/OneBlockPlugin/IslandData";
 
     public PlayerListener(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -81,57 +81,49 @@ public class PlayerListener implements Listener {
 
         inv.clear();
     }
-
     private int getIslandLevelForLocation(Location location) {
-        File folder = Main.islandDataFolder;
-        if (!folder.exists() || !folder.isDirectory()) return -1;
+        int islandLevel = -1;
+        Connection connection;
 
-        File[] files = folder.listFiles((dir, name) -> name.endsWith(".yml"));
-        if (files == null) return -1;
-
-        for (File file : files) {
-            YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-            int centerX = config.getInt("x-position");
-            int centerZ = config.getInt("z-position");
-            int borderSize = config.getInt("WorldBorderSize", 50);
-            int halfSize = borderSize / 2;
-
-            if (location.getWorld() != null && location.getWorld().getName().equals("OneBlock")
-                    && location.getBlockX() >= centerX - halfSize
-                    && location.getBlockX() <= centerX + halfSize
-                    && location.getBlockZ() >= centerZ - halfSize
-                    && location.getBlockZ() <= centerZ + halfSize) {
-                return config.getInt("IslandLevel", 1);
-            }
+        // Sicherstellen, dass die Location zur Welt "OneBlock" gehört
+        if (location.getWorld() == null || !location.getWorld().getName().equals("OneBlock")) {
+            return islandLevel;
         }
 
-        return -1;
-    }
+        try {
+            connection = Main.getInstance().getConnection().getConnection(); // Verbindung öffnen
+        } catch (SQLException e) {
+            throw new RuntimeException("Fehler beim Aufbau der Datenbankverbindung", e);
+        }
 
-    @EventHandler
-    public void onBlockPiston(BlockPistonExtendEvent event) {
-        for (Block block : event.getBlocks()) {
-            if (block.getY() != 100) continue;
+        int x = location.getBlockX();
+        int z = location.getBlockZ();
 
-            File folder = new File(USER_DATA_FOLDER);
-            for (File file : folder.listFiles()) {
-                if (!file.getName().endsWith(".yml")) continue;
+        String query = "SELECT IslandLevel, OneBlock_x, OneBlock_z, WorldBorderSize FROM userdata";
 
-                YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-                int x = config.getInt("OneBlock-x");
-                int z = config.getInt("OneBlock-z");
-                World world = Bukkit.getWorld("OneBlock");
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    int centerX = rs.getInt("OneBlock_x");
+                    int centerZ = rs.getInt("OneBlock_z");
+                    int radius = rs.getInt("WorldBorderSize") / 2;
 
-                if (world != null) {
-                    Location oneBlockLocation = new Location(world, x, 100, z);
-                    if (block.getLocation().equals(oneBlockLocation)) {
-                        event.setCancelled(true);
-                        return;
+                    // Prüfen, ob die Location innerhalb des Inselbereichs liegt
+                    if (x >= centerX - radius && x <= centerX + radius &&
+                            z >= centerZ - radius && z <= centerZ + radius) {
+                        islandLevel = rs.getInt("IslandLevel");
+                        break; // Insel gefunden, Schleife beenden
                     }
                 }
             }
+        } catch (SQLException e) {
+            Main.getInstance().getLogger().log(Level.SEVERE, "Fehler beim Abrufen des Insel-Levels von der Location", e);
         }
+
+        return islandLevel;
     }
+
+
 
     @EventHandler
     public void onBlockPistonExtend(BlockPistonExtendEvent event) {

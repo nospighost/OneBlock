@@ -1,6 +1,7 @@
 package de.Main.OneBlock.OneBlock.GUI.OneBlock;
 
 import de.Main.OneBlock.Main;
+import de.Main.OneBlock.OneBlock.Manager.OneBlockManager;
 import de.Main.OneBlock.database.DBM;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -664,6 +665,7 @@ public class OBGUI implements CommandExecutor, Listener {
                     boolean currentValue = DBM.getBoolean("userdata", playerUUID, "MobSpawning", true);
                     boolean newValue = !currentValue;
                     DBM.setBoolean("userdata", playerUUID, "MobSpawning", newValue);
+                    OneBlockManager.savePlayerData(uuid);
                     updateVerwaltungGUI(player);
                 }
 
