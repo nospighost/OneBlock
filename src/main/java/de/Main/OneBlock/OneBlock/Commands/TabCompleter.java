@@ -1,6 +1,7 @@
 package de.Main.OneBlock.OneBlock.Commands;
 
 import org.bukkit.Bukkit;
+import org.bukkit.block.Biome;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -23,6 +24,8 @@ public class TabCompleter implements org.bukkit.command.TabCompleter {
         permissionMap.put("remove", "oneblock.remove");
         permissionMap.put("leave", "oneblock.leave");
         permissionMap.put("decline", "oneblock.decline");
+        permissionMap.put("switchChunkBiome", "oneblock.switchChunkBiome");
+        permissionMap.put("switchIslandBiome", "oneblock.switchIslandBiome");
     }
 
     @Override
@@ -51,6 +54,21 @@ public class TabCompleter implements org.bukkit.command.TabCompleter {
             String firstArg = args[0].toLowerCase();
             String input = args[1].toLowerCase();
 
+
+            if ((firstArg.equals("switchchunkbiome") || firstArg.equals("switchislandbiome")) && hasPermission(player, firstArg)) {
+                List<String> biomeMatches = new ArrayList<>();
+                for (Biome biome : Biome.values()) {
+                    String biomeName = biome.name().toLowerCase();
+                    if (biomeName.startsWith(input)) {
+                        biomeMatches.add(biome.name());
+                    }
+                }
+                Collections.sort(biomeMatches);
+                return biomeMatches;
+            }
+
+
+
             if (permissionMap.containsKey(firstArg) && hasPermission(player, firstArg)) {
                 List<String> playerMatches = new ArrayList<>();
 
@@ -65,6 +83,7 @@ public class TabCompleter implements org.bukkit.command.TabCompleter {
                 return playerMatches;
             }
         }
+
 
         return Collections.emptyList();
     }

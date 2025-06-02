@@ -1,10 +1,10 @@
 package de.Main.OneBlock.OneBlock.Manager;
 
 import de.Main.OneBlock.Main;
-import de.Main.OneBlock.NPC.Manager.NPCManager;
 import de.Main.OneBlock.database.DBM;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
+import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -12,9 +12,12 @@ import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.sql.SQLException;
 import java.util.*;
 
 import static de.Main.OneBlock.Main.*;
+import static de.Main.OneBlock.database.DBM.getInt;
 
 public class Manager implements Listener {
     public static Economy eco;
@@ -36,22 +39,21 @@ public class Manager implements Listener {
                 player.sendMessage(prefix + Main.config.getString("islandjoinmessage.create"));
                 int padding = Main.config.getInt("value");
                 int pos = getIslandCords(padding);
-                DBM.setInt("userdata",uuid, "OneBlock_x", pos);
-                DBM.setInt("userdata",uuid, "OneBlock_z", pos);
-                DBM.setInt("userdata",uuid, "x_position", pos);
-                DBM.setInt("userdata",uuid, "z_position", pos);
-                DBM.setInt("userdata",uuid, "IslandSpawn_x", pos);
-                DBM.setInt("userdata",uuid, "IslandSpawn_z", pos);
-                DBM.setInt("userdata",uuid, "WorldBorderSize", 50);
-                DBM.setBoolean("userdata",uuid, "EigeneInsel", true);
-                DBM.setString("userdata",uuid, "owner", player.getName());
-
+                DBM.setInt("userdata", uuid, "OneBlock_x", pos);
+                DBM.setInt("userdata", uuid, "OneBlock_z", pos);
+                DBM.setInt("userdata", uuid, "x_position", pos);
+                DBM.setInt("userdata", uuid, "z_position", pos);
+                DBM.setInt("userdata", uuid, "IslandSpawn_x", pos);
+                DBM.setInt("userdata", uuid, "IslandSpawn_z", pos);
+                DBM.setInt("userdata", uuid, "WorldBorderSize", 50);
+                DBM.setBoolean("userdata", uuid, "EigeneInsel", true);
+                DBM.setString("userdata", uuid, "owner", player.getName());
 
 
                 World world = Bukkit.getWorld("OneBlock");
                 if (world != null) {
                     Location NPC = new Location(world, pos, 101, pos);
-                    NPCManager.createNPC(NPC);
+                    //   NPCManager.createNPC(NPC);
                     Location tp = new Location(world, pos, 101, pos);
                     Location blockLoc = new Location(
                             world,
@@ -107,7 +109,7 @@ public class Manager implements Listener {
             return;
         }
 
-        boolean hasIsland = DBM.getBoolean("userdata",uuid, "EigeneInsel", false);
+        boolean hasIsland = DBM.getBoolean("userdata", uuid, "EigeneInsel", false);
         if (!hasIsland) {
             player.sendMessage(prefix + "§aDu besitzt keine Insel.");
             return;
@@ -191,7 +193,6 @@ public class Manager implements Listener {
         visitor.sendMessage("§aDu wurdest zur Insel von §e" + name + " §ateleportiert.");
     }
 
-
     public static void rebirthIsland(Player player) {
         UUID uuid = player.getUniqueId();
 
@@ -220,7 +221,12 @@ public class Manager implements Listener {
     public static void acceptInvite(Player player) {
         UUID playerUUID = player.getUniqueId();
         String uuidStr = playerUUID.toString();
-        List<UUID> allOwners = Main.getAllOwners();
+        List<UUID> allOwners = null;
+        try {
+            allOwners = Main.getAllOwners();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
         for (UUID ownerUUID : allOwners) {
             String invitedTrustCSV = DBM.getString("userdata", ownerUUID, "invited", "");
             String trustedCSV = DBM.getString("userdata", ownerUUID, "trusted", "");
@@ -359,12 +365,11 @@ public class Manager implements Listener {
         }
     }
 
-
     public static void leaveIsland(Player player, String ownerNameOrUUID) {
         UUID ownerUUID;
 
         try {
-          // Übergebenen wert versuchen zur UUID zu machen
+            // Übergebenen wert versuchen zur UUID zu machen
             ownerUUID = UUID.fromString(ownerNameOrUUID);
         } catch (IllegalArgumentException e) {
             OfflinePlayer ownerOffline = Bukkit.getOfflinePlayer(ownerNameOrUUID);
@@ -380,7 +385,7 @@ public class Manager implements Listener {
         List<String> trustedList = csvToList(trustedCSV);
 
         String playerUUIDStr = player.getUniqueId().toString();
-        boolean changed =  trustedList.remove(playerUUIDStr);
+        boolean changed = trustedList.remove(playerUUIDStr);
 
         if (changed) {
             DBM.setString("userdata", ownerUUID, "trusted", listToCsv(trustedList));
@@ -419,16 +424,16 @@ public class Manager implements Listener {
 
 
         if (removed) {
-           player.sendMessage(prefix + Main.config.getString("trust.declinetrustself").replace("%player%", targetName));
+            player.sendMessage(prefix + Main.config.getString("trust.declinetrustself").replace("%player%", targetName));
 
             if (targetPlayer.isOnline()) {
                 Player inviter = Bukkit.getPlayer(targetUUID);
                 if (inviter != null) {
-                  inviter.sendMessage(prefix + Main.config.getString("trust.declinetrust").replace("%player%", player.getName()));
+                    inviter.sendMessage(prefix + Main.config.getString("trust.declinetrust").replace("%player%", player.getName()));
                 }
             }
         } else {
-           player.sendMessage(prefix + Main.config.getString("trust.declinetrustnotrust").replace("%player%", targetName));
+            player.sendMessage(prefix + Main.config.getString("trust.declinetrustnotrust").replace("%player%", targetName));
         }
     }
 
@@ -446,5 +451,76 @@ public class Manager implements Listener {
 
     private static String listToCsv(List<String> list) {
         return String.join(",", list);
+    }
+
+    public static void switchBiomePerChunk(Location loc, Biome newBiome, UUID uuid) {
+        Chunk chunk = loc.getChunk();
+        World world = loc.getWorld();
+        int maxHeight = world.getMaxHeight();
+
+        for (int x = 0; x < 16; x++) {
+            for (int z = 0; z < 16; z++) {
+                int blockX = chunk.getX() * 16 + x;
+                int blockZ = chunk.getZ() * 16 + z;
+
+                for (int y = 0; y < maxHeight; y++) {
+                    world.setBiome(blockX, y, blockZ, newBiome);
+                }
+            }
+        }
+        DBM.setString("userdat", uuid, "IslandBiome", String.valueOf(newBiome));
+                // Chunk aktualisieren
+                        Bukkit.getScheduler().runTaskLater(Bukkit.getPluginManager().getPlugin("OneBlockPlugin"), () -> {
+            for (Player player : world.getPlayers()) {
+                if (player.getLocation().getChunk().equals(chunk)) {
+                    player.getWorld().refreshChunk(chunk.getX(), chunk.getZ());
+                }
+            }
+        }, 5L);
+    }
+
+    public static void switchBiomeForIsland(Player player, Biome newBiome, UUID uuid) {
+        int centerX = getInt("userdata", player.getUniqueId(), "OneBlock_x", 0);
+        int centerZ = getInt("userdata", player.getUniqueId(), "OneBlock_z", 0);
+        int diameter = getInt("userdata", player.getUniqueId(), "WorldBorderSize", 50);
+        int radius = diameter / 2;
+        int maxHeight = player.getWorld().getMaxHeight();
+
+        int minX = centerX - radius;
+        int maxX = centerX + radius - 1;
+        int minZ = centerZ - radius;
+        int maxZ = centerZ + radius - 1;
+        for (int x = minX; x <= maxX; x++) {
+            for (int z = minZ; z <= maxZ; z++) {
+                for (int y = 0; y < maxHeight; y++) {
+                    player.getWorld().setBiome(x, y, z, newBiome);
+                }
+            }
+        }
+        // Chunk berchnen
+        int chunkStartX = minX >> 4;
+        int chunkEndX = maxX >> 4;
+        int chunkStartZ = minZ >> 4;
+        int chunkEndZ = maxZ >> 4;
+        DBM.setString("userdat", uuid, "IslandBiome", String.valueOf(newBiome));
+
+        //  Insel-Chunks neu laden
+        for (int chunkX = chunkStartX; chunkX <= chunkEndX; chunkX++) {
+            for (int chunkZ = chunkStartZ; chunkZ <= chunkEndZ; chunkZ++) {
+                Chunk chunk = player.getWorld().getChunkAt(chunkX, chunkZ);
+                final Chunk chunkToRefresh = chunk;
+
+                Bukkit.getScheduler().runTaskLater(Main.getPlugin(), () -> {
+                    for (Player p : player.getWorld().getPlayers()) {
+                        p.getWorld().refreshChunk(chunkToRefresh.getX(), chunkToRefresh.getZ());
+                    }
+                }, 5L);
+            }
+        }
+
+    }
+
+    public static void switchMonsterSpawning(UUID uuid) {
+
     }
 }

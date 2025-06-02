@@ -43,7 +43,7 @@ import java.util.logging.Level;
 
 public class Main extends JavaPlugin implements Listener {
     private static Main instance;
-
+    private static String prefix;
     public static final String WORLD_NAME = "OneBlock";
     public static World oneBlockWorld;
 
@@ -56,6 +56,7 @@ public class Main extends JavaPlugin implements Listener {
     DBM moneyManager;
     private File marketfile;
     private FileConfiguration marketconfig;
+
 
     public static Main getInstance() {
         return instance;
@@ -88,18 +89,15 @@ public class Main extends JavaPlugin implements Listener {
         } else {
             getLogger().warning("Vault wurde nicht gefunden – Economy wird deaktiviert.");
         }
-       Bukkit.getPluginManager().registerEvents(new WorldBorderManager(), this);
+        Bukkit.getPluginManager().registerEvents(new WorldBorderManager(), this);
         getCommand("ob").setTabCompleter(new de.Main.OneBlock.OneBlock.Commands.TabCompleter());
         Bukkit.getPluginManager().registerEvents(new OneBlockManager(), this);
-
         getLogger().info("OneBlockPlugin aktiviert!");
-
         // Ordner Erstellen//
         islandDataFolder = new File(getDataFolder(), "IslandData");
         if (!islandDataFolder.exists()) {
             islandDataFolder.mkdirs();
         }
-
         // Befehle
         getCommand("ob").setExecutor(new de.Main.OneBlock.OneBlock.Commands.OneBlockCommands());
         getCommand("obgui").setExecutor(new de.Main.OneBlock.OneBlock.GUI.OneBlock.OBGUI());
@@ -130,17 +128,13 @@ public class Main extends JavaPlugin implements Listener {
             getLogger().warning("Fehler beim Erstellen der OneBlock-Welt");
         }
 
-        //Kristall
         setupEconomy();
         setupGrowthFile();
         //Commands
 
-
-
-
         //<--------------------NPC-------------------->>//
         Bukkit.getPluginManager().registerEvents(new NPCListener(), this);
-        Bukkit.getPluginManager().registerEvents(new NPCInventoryListener(), this );
+        Bukkit.getPluginManager().registerEvents(new NPCInventoryListener(), this);
         NPCGUI.createNPCGUI();
 
         //<--------------------Quest-------------------->>//
@@ -150,14 +144,19 @@ public class Main extends JavaPlugin implements Listener {
         //<--------------------Market-------------------->>//
         Bukkit.getPluginManager().registerEvents(new MarketManager(economy, marketconfig), this);
         Bukkit.getPluginManager().registerEvents(new MarketGUI(economy, marketconfig), this);
-
-
+        setServerPrefix();
     }
 
+    public static void setServerPrefix() {
+        prefix = config.getString("Server");
+    }
+    public static String getPrefix() {
+        return prefix;
+    }
     @Override
     public void onDisable() {
-       // Manager.saveIslandConfig(null, null);
         saveDefaultConfig();
+
         getLogger().info("OneBlockPlugin deaktiviert.");
 
     }
@@ -197,11 +196,11 @@ public class Main extends JavaPlugin implements Listener {
         marketconfig = YamlConfiguration.loadConfiguration(marketfile);
     }
 
-    public static List<UUID> getAllOwners() {
+    public static List<UUID> getAllOwners() throws SQLException {
         List<UUID> owners = new ArrayList<>();
         String sql = "SELECT DISTINCT owner_uuid FROM userdata WHERE owner_uuid IS NOT NULL";
 
-        // Die Verbindung bleibt offen, nur PreparedStatement und ResultSet werden automatisch geschlossen
+
         Connection conn = Main.getInstance().getConnection().getConnection();
         try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
@@ -213,7 +212,7 @@ public class Main extends JavaPlugin implements Listener {
                         UUID ownerUUID = UUID.fromString(ownerUUIDStr);
                         owners.add(ownerUUID);
                     } catch (IllegalArgumentException e) {
-                        // Ungültige UUID
+
                         Main.getInstance().getLogger().warning("Ungültige UUID in der Datenbank: " + ownerUUIDStr);
                     }
                 }
@@ -221,7 +220,6 @@ public class Main extends JavaPlugin implements Listener {
         } catch (SQLException e) {
             Main.getInstance().getLogger().log(Level.SEVERE, "Fehler beim Abrufen der Besitzer aus der Datenbank", e);
         }
-        // Verbindung bleibt weiterhin offen
         return owners;
     }
 

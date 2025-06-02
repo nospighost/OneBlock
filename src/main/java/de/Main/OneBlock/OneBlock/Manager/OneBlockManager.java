@@ -17,6 +17,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -24,6 +26,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
@@ -33,6 +36,45 @@ import static de.Main.OneBlock.database.DBM.getInt;
 
 public class OneBlockManager implements Listener {
     String prefix = Main.config.getString("Server");
+    public static Map<UUID, Boolean> mobSpawning = new HashMap<>();
+    public static Map<UUID, Integer> MissingBlocks = new HashMap<>();
+    public static Map<UUID, Integer> TotalBlocks = new HashMap<>();
+
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        UUID uuid = event.getPlayer().getUniqueId();
+
+        mobSpawning.put(uuid, DBM.getBoolean("userdata", uuid, "mobSpawning", true));
+        MissingBlocks.put(uuid, DBM.getInt("userdata", uuid, "MissingBlocksToLevelUp", 100));
+        TotalBlocks.put(uuid, DBM.getInt("userdata", uuid, "TotalBlocks", 100));
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        UUID uuid = event.getPlayer().getUniqueId();
+
+        savePlayerData(uuid);
+        mobSpawning.remove(uuid);
+        MissingBlocks.remove(uuid);
+        TotalBlocks.remove(uuid);
+    }
+
+    public void startAutoSaveTask() {
+        Bukkit.getScheduler().runTaskTimer(Main.getPlugin(), () -> {
+            for (UUID uuid : MissingBlocks.keySet()) {
+                savePlayerData(uuid);
+            }
+        }, 20L * 30, 20L * 30); // alle 30 Sekunden
+    }
+
+    private void savePlayerData(UUID uuid) {
+        if (mobSpawning.containsKey(uuid))
+            DBM.setBoolean("userdata", uuid, "mobSpawning", mobSpawning.get(uuid));
+        if (MissingBlocks.containsKey(uuid))
+            DBM.setInt("userdata", uuid, "MissingBlocksToLevelUp", MissingBlocks.get(uuid));
+        if (TotalBlocks.containsKey(uuid))
+            DBM.setInt("userdata", uuid, "TotalBlocks", TotalBlocks.get(uuid));
+    }
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
@@ -57,6 +99,7 @@ public class OneBlockManager implements Listener {
             return;
         }
 
+        // Chest-Handling bleibt unverändert (nur ownerUUID wichtig)
         if (block.getType() == Material.CHEST) {
             Chest chest = (Chest) block.getState();
             String chestName = chest.getCustomName();
@@ -78,7 +121,6 @@ public class OneBlockManager implements Listener {
                             }
                             inv.clear();
 
-                            // Spawne eine neue Chest mit zufälliger Config
                             spawnChestWithConfig(blockLocation, key, islandLevel);
                             break;
                         }
@@ -87,7 +129,8 @@ public class OneBlockManager implements Listener {
             }
         }
 
-        int blocksToLevelUp = getInt("userdata", ownerUUID, "MissingBlocksToLevelUp", 100);
+        // Hier wird nun aus den Maps gelesen, falls nicht vorhanden aus DB geholt und reingepackt
+        int blocksToLevelUp = MissingBlocks.getOrDefault(ownerUUID, getInt("userdata", ownerUUID, "MissingBlocksToLevelUp", 100));
         int islandLevel = getInt("userdata", ownerUUID, "IslandLevel", 1);
         boolean durchgespielt = DBM.getBoolean("userdata", ownerUUID, "Durchgespielt", false);
 
@@ -99,23 +142,31 @@ public class OneBlockManager implements Listener {
                 blockLocation.getBlockZ() == getInt("userdata", ownerUUID, "OneBlock_z", 0)) {
 
             int maxLevel = Main.config.getInt("maxlevel");
+            int totalBlocks = TotalBlocks.getOrDefault(ownerUUID, getInt("userdata", ownerUUID, "TotalBlocks", 100));
+
             if (islandLevel != maxLevel) {
                 blocksToLevelUp--;
-                int totalBlocks = DBM.getTotalBlocks();  // z.B. aus DB oder Config holen
                 ActionBar.sendActionbarProgress(player, islandLevel, blocksToLevelUp, totalBlocks);
-
             } else {
-                int totalBlocks = DBM.getTotalBlocks();  // z.B. aus DB oder Config holen
                 ActionBar.sendActionbarProgress(player, islandLevel, blocksToLevelUp, totalBlocks);
-
             }
 
-            DBM.setInt("userdata", ownerUUID, "MissingBlocksToLevelUp", blocksToLevelUp);
+            // Update Cache Map
+            MissingBlocks.put(ownerUUID, blocksToLevelUp);
+
+            // Speichere NICHT sofort in DB, das macht der AutoSaveTask oder bei Logout
+            // DBM.setInt("userdata", ownerUUID, "MissingBlocksToLevelUp", blocksToLevelUp); // entfällt hier
 
             if (blocksToLevelUp <= 0 && islandLevel != maxLevel) {
                 islandLevel++;
-                DBM.setInt("userdata", ownerUUID, "IslandLevel", islandLevel);
+                DBM.setInt("userdata", ownerUUID, "IslandLevel", islandLevel); // IslandLevel ggf. sofort speichern
+
                 int newTotalBlocks = Main.config.getInt("oneblockblocks." + islandLevel + ".blockcount");
+                // Update Cache Maps mit neuem Wert
+                TotalBlocks.put(ownerUUID, newTotalBlocks);
+                MissingBlocks.put(ownerUUID, newTotalBlocks);
+
+                // DB schreibst du hier sofort wegen Levelup (optional)
                 DBM.setInt("userdata", ownerUUID, "TotalBlocks", newTotalBlocks);
                 DBM.setInt("userdata", ownerUUID, "MissingBlocksToLevelUp", newTotalBlocks);
             }
@@ -140,10 +191,12 @@ public class OneBlockManager implements Listener {
                 Location regenLocation = blockLocation.clone();
                 regenLocation.setY(100);
                 regenerateOneBlock(regenLocation, blockMaterial, islandLevel);
+
                 monster(ownerUUID, blockLocation.add(0.5, 1.0, 0.5), islandLevel);
             }
         }
     }
+
 
 
     private void regenerateOneBlock(Location blockLocation, Material blockMaterial, Integer IslandLevel) {
@@ -275,7 +328,12 @@ public class OneBlockManager implements Listener {
 
     public static UUID getUUIDFromLocation(Location location) {
         UUID ownerUUID = null;
-        Connection connection = Main.getInstance().getConnection().getConnection();
+        Connection connection = null;
+        try {
+            connection = Main.getInstance().getConnection().getConnection();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
         int x = location.getBlockX();
         int z = location.getBlockZ();
 

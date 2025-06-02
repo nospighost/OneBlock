@@ -27,8 +27,9 @@ public class DBM implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         String playerUUID = event.getPlayer().getUniqueId().toString();
-        SQLTabel.Condition userdatacondition = new SQLTabel.Condition("owner", player.getName());
-        SQLTabel.Condition questcondition = new SQLTabel.Condition("owner", player.getName());
+            SQLTabel.Condition userdatacondition = new SQLTabel.Condition("owner", player.getName());
+        SQLTabel.Condition queststatuscondition = new SQLTabel.Condition("owner", player.getName());
+        SQLTabel.Condition questcompletecondition = new SQLTabel.Condition("owner", player.getName());
 
         if (!tabel.exits("userdata", userdatacondition)) {
             //userdata
@@ -46,6 +47,9 @@ public class DBM implements Listener {
             tabel.set("userdata", "IslandSpawn_z", 0, userdatacondition);
             tabel.set("userdata", "x_position", 0, userdatacondition);
             tabel.set("userdata", "z_position", 0, userdatacondition);
+            tabel.set("userdata", "BorderParticle", "COMPOSTER", userdatacondition);
+            tabel.set("userdata", "IslandBiom", "PLAINS", userdatacondition);
+            tabel.set("userdata", "MobSpawning", true, userdatacondition);
             List<String> trustedList = new ArrayList<>();
             tabel.set("userdata", "trusted", String.join(",", trustedList), userdatacondition);
             List<String> deniedList = new ArrayList<>();
@@ -53,13 +57,21 @@ public class DBM implements Listener {
             List<String> invitedList = new ArrayList<>();
             tabel.set("userdata", "invited", String.join(",", invitedList), userdatacondition);
         }
-        if (!tabel.exits("quest", questcondition)) {
+        if (!tabel.exits("questcomplete", questcompletecondition)) {
             //quest
-            tabel.set("quest", "owner", player.getName(), questcondition);
-            tabel.set("quest", "owner_uuid", playerUUID, questcondition);
-            tabel.set("quest", "broken100stone",false, questcondition);
-            tabel.set("quest", "broken200stone", false, questcondition);
-            tabel.set("quest", "broken300stone", false, questcondition);
+            tabel.set("questcomplete", "owner", player.getName(), questcompletecondition);
+            tabel.set("questcomplete", "owner_uuid", playerUUID, questcompletecondition);
+            tabel.set("questcomplete", "broken100stone", false, questcompletecondition);
+            tabel.set("questcomplete", "broken200stone", false, questcompletecondition);
+            tabel.set("questcomplete", "broken300stone", false, questcompletecondition);
+        }
+        if (!tabel.exits("queststatus", queststatuscondition)) {
+            //quest
+            tabel.set("queststatus", "owner", player.getName(), queststatuscondition);
+            tabel.set("queststatus", "owner_uuid", playerUUID, queststatuscondition);
+            tabel.set("queststatus", "broken100stone", false, queststatuscondition);
+            tabel.set("queststatus", "broken200stone", false, queststatuscondition);
+            tabel.set("queststatus", "broken300stone", false, queststatuscondition);
         }
     }
 
@@ -68,7 +80,8 @@ public class DBM implements Listener {
 
     public DBM(Main pl) {
         HashMap<String, SQLDataType> userdatacolumns = new HashMap<>();
-        HashMap<String, SQLDataType> questDatacolumns = new HashMap<>();
+        HashMap<String, SQLDataType> questcompletecolumns = new HashMap<>();
+        HashMap<String, SQLDataType> queststatuscolumns = new HashMap<>();
         userdatacolumns.put("owner", SQLDataType.CHAR);
         userdatacolumns.put("WorldBorderSize", SQLDataType.INT);
         userdatacolumns.put("TotalBlocks", SQLDataType.INT);
@@ -86,13 +99,24 @@ public class DBM implements Listener {
         userdatacolumns.put("IslandSpawn_z", SQLDataType.INT);
         userdatacolumns.put("z_position", SQLDataType.INT);
         userdatacolumns.put("x_position", SQLDataType.INT);
-        questDatacolumns.put("owner", SQLDataType.CHAR);
-        questDatacolumns.put("owner_uuid", SQLDataType.CHAR);
-        questDatacolumns.put("broken100stone", SQLDataType.BOOLEAN);
-        questDatacolumns.put("broken200stone", SQLDataType.BOOLEAN);
-        questDatacolumns.put("broken300stone", SQLDataType.BOOLEAN);
+        userdatacolumns.put("BorderParticle", SQLDataType.CHAR);
+        userdatacolumns.put("IslandBiom", SQLDataType.CHAR);
+        userdatacolumns.put("MobSpawning", SQLDataType.BOOLEAN);
+
+        questcompletecolumns.put("owner", SQLDataType.CHAR);
+        questcompletecolumns.put("owner_uuid", SQLDataType.CHAR);
+        questcompletecolumns.put("broken100stone", SQLDataType.BOOLEAN);
+        questcompletecolumns.put("broken200stone", SQLDataType.BOOLEAN);
+        questcompletecolumns.put("broken300stone", SQLDataType.BOOLEAN);
+
+        queststatuscolumns.put("owner", SQLDataType.CHAR);
+        queststatuscolumns.put("owner_uuid", SQLDataType.CHAR);
+        queststatuscolumns.put("broken100stone", SQLDataType.BOOLEAN);
+        queststatuscolumns.put("broken200stone", SQLDataType.BOOLEAN);
+        queststatuscolumns.put("broken300stone", SQLDataType.BOOLEAN);
         tabel = new SQLTabel(pl.getConnection(), "userdata", userdatacolumns);
-        tabel = new SQLTabel(pl.getConnection(), "quest", questDatacolumns);
+        tabel = new SQLTabel(pl.getConnection(), "questcomplete", questcompletecolumns);
+        tabel = new SQLTabel(pl.getConnection(), "queststatus", queststatuscolumns);
         pl.getServer().getPluginManager().registerEvents(this, pl);
     }
 
@@ -196,7 +220,12 @@ public class DBM implements Listener {
 
     public static int getTotalBlocks() {
         int totalBlocks = -1;
-        Connection connection = Main.getInstance().getConnection().getConnection(); // Connection bleibt offen
+        Connection connection = null; // Connection bleibt offen
+        try {
+            connection = Main.getInstance().getConnection().getConnection();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
         String sql = "SELECT TotalBlocks FROM userdata LIMIT 1"; // Beispielquery, ggf. anpassen
 
         try (PreparedStatement ps = connection.prepareStatement(sql);
