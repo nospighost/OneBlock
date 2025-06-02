@@ -150,7 +150,7 @@ public class Main extends JavaPlugin implements Listener {
         //<-------------Commands-------------->>//
         getCommand("ob").setTabCompleter(new de.Main.OneBlock.OneBlock.Commands.TabCompleter());
         getCommand("ob").setExecutor(new de.Main.OneBlock.OneBlock.Commands.OneBlockCommands());
-        getCommand("ob gui").setExecutor(new de.Main.OneBlock.OneBlock.GUI.OneBlock.OBGUI());
+        getCommand("obgui").setExecutor(new de.Main.OneBlock.OneBlock.GUI.OneBlock.OBGUI());
         Bukkit.getPluginManager().registerEvents(new OneBlockManager(), this);
         //<-------------WorldBorder-------------->>//
         Bukkit.getPluginManager().registerEvents(new WorldBorderManager(), this);

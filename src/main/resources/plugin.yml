@@ -2,7 +2,7 @@ name: OneBlockPlugin
 version: '1.0'
 main: de.Main.OneBlock.Main
 api-version: '1.21'
-
+author: "nospighost, Fabian260108"
 commands:
   ob:
     description: Hauptbefehl für OneBlock
@@ -10,9 +10,9 @@ commands:
     permission: oneblock.use
     permission-message: §cDu hast keine Berechtigung diesen Befehl zu verwenden.
 
-  ob gui:
+  obgui:
     description: Öffnet das OneBlock-GUI
-    usage: /ob gui
+    usage: /obgui
     permission: oneblock.gui
     permission-message: §cDu hast keine Berechtigung, dieses GUI zu öffnen.
 

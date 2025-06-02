@@ -28,7 +28,7 @@ public class MarketGUI implements Listener, CommandExecutor {
 
         ItemStack sell = new ItemStack(Material.GREEN_DYE);
 
-        MarketGUI.setItem(36, sell);
+        MarketGUI.setItem(35, sell);
 
         ItemStack close = new ItemStack(Material.RED_DYE);
 
