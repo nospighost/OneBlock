@@ -16,6 +16,10 @@ commands:
     permission: oneblock.gui
     permission-message: §cDu hast keine Berechtigung, dieses GUI zu öffnen.
 
+  market:
+    description: Öffnet das Market-GUI
+    usage: /market
+
 permissions:
   oneblock.use:
     description: Basisberechtigung für /ob
