@@ -1,6 +1,7 @@
 package de.Main.OneBlock;
 
 import de.Main.OneBlock.Market.GUI.MarketGUI;
+import de.Main.OneBlock.Market.Listener.InventoryClick;
 import de.Main.OneBlock.Market.Manager.MarketManager;
 import de.Main.OneBlock.NPC.GUI.NPCGUI;
 import de.Main.OneBlock.NPC.Listener.NPCInventoryListener;
@@ -136,6 +137,7 @@ public class Main extends JavaPlugin implements Listener {
         //<--------------------Market-------------------->>//
         Bukkit.getPluginManager().registerEvents(new MarketManager(economy, marketfile), this);
         Bukkit.getPluginManager().registerEvents(new MarketGUI(economy, marketconfig), this);
+        Bukkit.getPluginManager().registerEvents(new InventoryClick(),this);
         getCommand("market").setExecutor(new MarketGUI(economy, marketconfig));
         MarketGUI.createItems();
         setServerPrefix();
