@@ -151,6 +151,7 @@ public class Main extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(new MarketManager(economy, marketconfig), this);
         Bukkit.getPluginManager().registerEvents(new MarketGUI(economy, marketconfig), this);
 
+
     }
 
     @Override
