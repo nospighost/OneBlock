@@ -54,8 +54,8 @@ public class OBGUI implements CommandExecutor, Listener {
         }
 
         if (mainGUI == null || Auswahl == null || Einstellungen == null || Rebirth == null || Befehle == null || Verwaltung == null) {
-            createguis(player);
         }
+        createguis(player);
 
         deleteClicks.put(player.getUniqueId(), MAX_CLICKS);
         rebirthClicks.put(player.getUniqueId(), MAX_CLICKS);
@@ -74,21 +74,26 @@ public class OBGUI implements CommandExecutor, Listener {
         Verwaltung = Bukkit.createInventory(null, 3 * 9, "§cInsel-Verwaltung");
         mainGUI = Bukkit.createInventory(null, 9, "§aOneBlock-Menü");
 
+        ItemStack grayglas = new ItemStack(GRAY_STAINED_GLASS_PANE);
+        ItemMeta graygalsmetea = grayglas.getItemMeta();
+        graygalsmetea.setHideTooltip(true);
+        graygalsmetea.setCustomModelData(0);
+        grayglas.setItemMeta(graygalsmetea);
         for (int pos : grayglasmaingui) {
-            mainGUI.setItem(pos, new ItemStack(GRAY_STAINED_GLASS_PANE));
+            mainGUI.setItem(pos, grayglas);
         }
 
         for (int pos : grayglasmaingui2) {
-            Verwaltung.setItem(pos, new ItemStack(GRAY_STAINED_GLASS_PANE));
+            Verwaltung.setItem(pos, grayglas);
         }
 
         for (int pos : grayglasmaingui3) {
-            Auswahl.setItem(pos, new ItemStack(GRAY_STAINED_GLASS_PANE));
+            Auswahl.setItem(pos, grayglas);
 
         }
 
         for (int pos : Befehle3) {
-            Befehle.setItem(pos, new ItemStack(GRAY_STAINED_GLASS_PANE));
+            Befehle.setItem(pos, grayglas);
         }
 
         setPlayerHeadInMainGUI(player);
@@ -101,7 +106,7 @@ public class OBGUI implements CommandExecutor, Listener {
             List<String> lore = new ArrayList<>();
 
             lore.add(" ");
-            lore.add("§fKlicke um in das Phasen-Auswahl-Menü zu gelangen!");
+            lore.add("§fÄndere deine Phase!");
             lore.add(" ");
 
 
@@ -118,7 +123,7 @@ public class OBGUI implements CommandExecutor, Listener {
             List<String> lore = new ArrayList<>();
 
             lore.add(" ");
-            lore.add("§fKlicke um in das Insel-Verwaltung-Menü zu gelangen!");
+            lore.add("§fVerwalte deine Insel");
             lore.add(" ");
 
             meta8.setLore(lore);
@@ -338,9 +343,6 @@ public class OBGUI implements CommandExecutor, Listener {
             lore.add("§fDein Profil:");
             lore.add(" ");
 
-            lore.add("§fKlicke, dass du zu den Spielerbefehle-Menü zu gelangst!");
-            lore.add(" ");
-
             boolean hatInsel = DBM.getBoolean("userdata", uuid, "EigeneInsel", false);
 
             if (hatInsel) {
@@ -355,7 +357,7 @@ public class OBGUI implements CommandExecutor, Listener {
                 int total = DBM.getInt("userdata", uuid, "MissingBlocksToLevelUp", 1);
 
                 lore.add("§cDein OneBlock Standort: " + "§b" + "X: " + x + ", Z: " + z);
-                lore.add("§cVerbleibende Blöcke und gesamte Blöcke: " + "§b" + Missing + " | " + total);
+                lore.add("§cVerbleibende Blöcke bis zum Level up: " + "§b" + Missing + " | " + total);
                 lore.add("§cDeine Worldborder größe: " + "§b" + +DBM.getInt("userdata", uuid, "WorldBorderSize", 1));
             } else {
                 lore.add("§bDu besitzt §ckeine Insel!");
@@ -377,13 +379,13 @@ public class OBGUI implements CommandExecutor, Listener {
         int deleteRemaining = deleteClicks.getOrDefault(uuid, MAX_CLICKS);
         int rebirthRemaining = rebirthClicks.getOrDefault(uuid, MAX_CLICKS);
 
-        for (int slot : new int[]{11, 13, 15}) {
+        for (int slot : new int[]{10, 12, 14, 16}) {
             ItemStack item;
             String displayName;
             List<String> lore = new ArrayList<>();
 
             switch (slot) {
-                case 11 -> {
+                case 10 -> {
                     item = new ItemStack(BARRIER);
                     displayName = "§cInsel-Löschen";
                     lore.add(" ");
@@ -391,7 +393,7 @@ public class OBGUI implements CommandExecutor, Listener {
                     lore.add(" ");
                     lore.add("§7Klicke §e" + deleteRemaining + " §7Mal zum §cLöschen§7!");
                 }
-                case 13 -> {
+                case 12 -> {
                     item = new ItemStack(TOTEM_OF_UNDYING);
                     displayName = "§cRebirth";
                     lore.add(" ");
@@ -400,9 +402,23 @@ public class OBGUI implements CommandExecutor, Listener {
                     lore.add(" ");
                     lore.add("§7Klicke §e" + rebirthRemaining + " §7Mal zum §cRebirth§7!");
                 }
-                case 15 -> {
+                case 14 -> {
                     item = new ItemStack(STRUCTURE_VOID);
                     displayName = "§aWorldBorder Größe";
+                    int currentSize = DBM.getInt("userdata", uuid, "WorldBorderSize", 1);
+
+                    int basePrice = 100;
+                    int upgradesDone = (currentSize - 50) / 10;
+                    int price = (int) (basePrice * Math.pow(2, upgradesDone));
+
+                    lore.add("§7Aktuelle Größe: §e" + currentSize);
+                    lore.add("§7Klicke, um die Größe zu erhöhen");
+                    lore.add("§7(Maximal 200)");
+                    lore.add("§7Preis für nächstes Upgrade: §e" + price + " Coins");
+                }
+                case 16 -> {
+                    item = new ItemStack(STRUCTURE_VOID);
+                    displayName = "§aWorldBodrder Größe";
                     int currentSize = DBM.getInt("userdata", uuid, "WorldBorderSize", 1);
 
                     int basePrice = 100;

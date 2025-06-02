@@ -30,6 +30,10 @@ public class OneBlockCommands implements Listener, CommandExecutor {
         String prefix = Main.config.getString("Server");
         Player player = (Player) sender;
 
+        if(args.length == 0){
+            player.performCommand("obgui");
+        } else
+
         if (args.length == 1 && args[0].equalsIgnoreCase("join")) {
             if (!hasPermissionOrOp(player, "oneblock.join")) {
                 player.sendMessage("§cDazu hast du keine Berechtigung.");
