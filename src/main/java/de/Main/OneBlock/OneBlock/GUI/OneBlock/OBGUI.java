@@ -1,10 +1,12 @@
 package de.Main.OneBlock.OneBlock.GUI.OneBlock;
 
 import de.Main.OneBlock.Main;
+import de.Main.OneBlock.OneBlock.Commands.OneBlockCommands;
 import de.Main.OneBlock.OneBlock.Manager.OneBlockManager;
 import de.Main.OneBlock.database.DBM;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -25,21 +27,19 @@ import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.*;
 
-import static de.Main.OneBlock.OneBlock.Manager.Manager.*;
 import static org.bukkit.Material.*;
 
 public class OBGUI implements CommandExecutor, Listener {
 
     private final int[] grayglasmaingui = {0, 1, 2, 6, 7, 8};
-    private final int[] verwaltungGrayGlasPane = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 23, 25, 26, 28, 29, 30, 31, 32, 33, 34, 35};
+    private final int[] verwaltungGrayGlasPane = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 23, 24, 25, 26, 28, 29, 30, 31, 32, 33, 34, 35};
     private final int[] phasenAuswahlGrayGlasPane = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 22, 23, 24, 25, 26, 28, 29, 30, 31, 32, 33, 34, 35};
     private final int[] Befehle3 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 20, 23, 24, 25, 26, 28, 29, 30, 31, 32, 33, 34, 35};
     private final int[] Biom = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35};
     private final Map<UUID, Long> zombieCooldowns = new HashMap<>();
     private final long COOLDOWN_TIME = 4000; // Millisekunden
-
     private final int MAX_CLICKS = 3;
-
+    public Economy eco;
     public static Inventory upgradeShop;
     public static Inventory mainGUI;
     public static Inventory Einstellungen;
@@ -52,6 +52,10 @@ public class OBGUI implements CommandExecutor, Listener {
     private final HashMap<UUID, Integer> deleteClicks = new HashMap<>();
     private final HashMap<UUID, Integer> rebirthClicks = new HashMap<>();
 
+    public OBGUI(Economy eco) {
+        this.eco = eco;
+    }
+
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
@@ -60,15 +64,15 @@ public class OBGUI implements CommandExecutor, Listener {
         }
 
         if (mainGUI == null || Auswahl == null || Einstellungen == null || Rebirth == null || Befehle == null || Verwaltung == null || switchBiomeGUI == null) {
-
+            ItemStack grayglas = new ItemStack(GRAY_STAINED_GLASS_PANE);
+            ItemMeta graygalsmetea = grayglas.getItemMeta();
+            graygalsmetea.setHideTooltip(true);
+            graygalsmetea.setCustomModelData(0);
+            grayglas.setItemMeta(graygalsmetea);
+            createguis(player, grayglas);
+            createBiomGUI(grayglas);
         }
-        ItemStack grayglas = new ItemStack(GRAY_STAINED_GLASS_PANE);
-        ItemMeta graygalsmetea = grayglas.getItemMeta();
-        graygalsmetea.setHideTooltip(true);
-        graygalsmetea.setCustomModelData(0);
-        grayglas.setItemMeta(graygalsmetea);
-        createguis(player, grayglas);
-        createBiomGUI(grayglas);
+
 
         deleteClicks.put(player.getUniqueId(), MAX_CLICKS);
         rebirthClicks.put(player.getUniqueId(), MAX_CLICKS);
@@ -100,7 +104,6 @@ public class OBGUI implements CommandExecutor, Listener {
             Auswahl.setItem(pos, grayglas);
 
         }
-
 
 
         for (int pos : Befehle3) {
@@ -340,10 +343,11 @@ public class OBGUI implements CommandExecutor, Listener {
 
 
     }
-    private void createBiomGUI(ItemStack grayglas){
+
+    private void createBiomGUI(ItemStack grayglas) {
         switchBiomeGUI = Bukkit.createInventory(null, 36, "§aBiom Verwaltung");
         for (int pos : Biom) {
-            if(switchBiomeGUI == null){
+            if (switchBiomeGUI == null) {
                 createBiomGUI(grayglas);
             }
             switchBiomeGUI.setItem(pos, grayglas);
@@ -356,6 +360,51 @@ public class OBGUI implements CommandExecutor, Listener {
             zurück1.setItemMeta(zurückmeta1);
         }
         switchBiomeGUI.setItem(27, zurück1);
+        ItemStack PLAINS = new ItemStack(OAK_SAPLING);
+        ItemMeta PlainsMeta = zurück1.getItemMeta();
+        if (PlainsMeta != null) {
+            PlainsMeta.setDisplayName("§cPlains");
+            PLAINS.setItemMeta(PlainsMeta);
+        }
+        switchBiomeGUI.setItem(12, PLAINS);
+        ItemStack SAVANNA = new ItemStack(ACACIA_SAPLING);
+        ItemMeta SavannaMeta = zurück1.getItemMeta();
+        if (SavannaMeta != null) {
+            SavannaMeta.setDisplayName("§cSavanne");
+            SAVANNA.setItemMeta(SavannaMeta);
+        }
+        switchBiomeGUI.setItem(11, SAVANNA);
+        ItemStack OCEAN = new ItemStack(PRISMARINE);
+        ItemMeta OceanMeta = zurück1.getItemMeta();
+        if (OceanMeta != null) {
+            OceanMeta.setDisplayName("§cOzean");
+            OCEAN.setItemMeta(OceanMeta);
+        }
+        switchBiomeGUI.setItem(10, OCEAN);
+        ItemStack DarkOak = new ItemStack(DARK_OAK_SAPLING);
+        ItemMeta DarkOakMeta = zurück1.getItemMeta();
+        if (DarkOakMeta != null) {
+            DarkOakMeta.setDisplayName("§cDark Oak");
+            DarkOak.setItemMeta(DarkOakMeta);
+            OCEAN.setItemMeta(DarkOakMeta);
+        }
+        switchBiomeGUI.setItem(13, DarkOak);
+
+        ItemStack CHERRY = new ItemStack(CHERRY_SAPLING);
+        ItemMeta CherryMeta = zurück1.getItemMeta();
+        if (CherryMeta != null) {
+            CherryMeta.setDisplayName("§cCherry");
+            CHERRY.setItemMeta(CherryMeta);
+        }
+        switchBiomeGUI.setItem(14, CHERRY);
+
+        ItemStack FICHTE = new ItemStack(SPRUCE_SAPLING);
+        ItemMeta FichteMeta = zurück1.getItemMeta();
+        if (FichteMeta != null) {
+            FichteMeta.setDisplayName("§cFichte");
+            FICHTE.setItemMeta(FichteMeta);
+        }
+        switchBiomeGUI.setItem(15, FICHTE);
     }
 
     private void setPlayerHeadInMainGUI(Player player) {
@@ -406,7 +455,7 @@ public class OBGUI implements CommandExecutor, Listener {
         int deleteRemaining = deleteClicks.getOrDefault(uuid, MAX_CLICKS);
         int rebirthRemaining = rebirthClicks.getOrDefault(uuid, MAX_CLICKS);
 
-        for (int slot : new int[]{10, 12, 14, 16, 20, 22}) {
+        for (int slot : new int[]{10, 12, 14, 16, 22}) {
             ItemStack item;
             String displayName;
             List<String> lore = new ArrayList<>();
@@ -450,28 +499,13 @@ public class OBGUI implements CommandExecutor, Listener {
                     lore.add("");
                     lore.add("§7Aktuelles Biom : §e" + currentBiome);
                 }
-                case 20 -> {
+                case 22 -> {
                     item = new ItemStack(ZOMBIE_HEAD);
                     displayName = "§aOneblock Mob Spawning";
                     Boolean currentValue = Boolean.valueOf(String.valueOf(DBM.getBoolean("userdata", uuid, "MobSpawning", false)));
 
                     while (lore.size() <= 1) {
                         lore.add("");
-                    }
-                        lore.set(1, "Wert");
-                        if (currentValue == true) {
-                            lore.set(1, "§bAktuell: §c" + currentValue);
-                        } else if (currentValue == false){
-                            lore.set(1, "§bAktuell: §c" + currentValue);
-                        }
-                    }
-                case 2 -> {
-                    item = new ItemStack(ZOMBIE_HEAD);
-                    displayName = "§aOn2eblock Mob Spawning";
-                    Boolean currentValue = Boolean.valueOf(String.valueOf(DBM.getBoolean("userdata", uuid, "MobSpawning", false)));
-
-                    while (lore.size() <= 1) {
-                        lore.add(""); // Platzhalter hinzufügen
                     }
                     lore.set(1, "Wert");
                     if (currentValue == true) {
@@ -480,8 +514,6 @@ public class OBGUI implements CommandExecutor, Listener {
                         lore.set(1, "§bAktuell: §c" + currentValue);
                     }
                 }
-
-
                 default -> {
                     continue;
                 }
@@ -509,7 +541,7 @@ public class OBGUI implements CommandExecutor, Listener {
     private void updateDeleteItemLore(Player player, int remainingClicks) {
         UUID uuid = player.getUniqueId();
         int deleteRemaining = deleteClicks.getOrDefault(uuid, MAX_CLICKS);
-        int rebirthRemaining = rebirthClicks.getOrDefault(uuid, MAX_CLICKS);
+
 
         Inventory inv = player.getOpenInventory().getTopInventory();
         ItemStack item = inv.getItem(11);
@@ -571,9 +603,9 @@ public class OBGUI implements CommandExecutor, Listener {
                 "§8Spielerbefehle",
                 "§aPhasen-Auswahl",
                 "§cInsel-Verwaltung",
-                "§aOneBlock-Menü"
+                "§aOneBlock-Menü",
+                "§aBiom Verwaltung"
         );
-
 
 
         if (blockedInventories.contains(inventoryTitle)) {
@@ -584,16 +616,13 @@ public class OBGUI implements CommandExecutor, Listener {
 
             // Verschieben von unten nach oben verhindern (Shift-Klick etc.)
             if (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
-                // Prüfe, ob der Zielinventar das Top-Inventar ist
-                Inventory destinationInventory = event.getView().getTopInventory();
 
-                // Nur blockieren, wenn Ziel das Top-Inventar ist
+                Inventory destinationInventory = event.getView().getTopInventory();
                 if (destinationInventory.equals(topInventory)) {
                     event.setCancelled(true);
                 }
             }
         }
-
 
 
         UUID uuid = player.getUniqueId();
@@ -609,25 +638,29 @@ public class OBGUI implements CommandExecutor, Listener {
 
             switch (type) {
 
-                case STRUCTURE_VOID -> {
-                    addWorldBoarder(player);
+                case STRUCTURE_VOID -> { //World Border Erweitern
+                    addWorldBoarder(player, eco);
                     player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
 
                 }
-                case TALL_GRASS -> {
+                case TALL_GRASS -> { //Insel Biom switchen
+                    if (!OneBlockCommands.hasPermissionOrOp(player, "oneblock.switchIslandBiome")) {
+                        return;
+                    }
                     player.openInventory(switchBiomeGUI);
                     player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
 
                 }
 
 
-                case TOTEM_OF_UNDYING -> {
+                case TOTEM_OF_UNDYING -> { //Rebirth
                     int clicksLeft = rebirthClicks.getOrDefault(uuid, MAX_CLICKS) - 1;
 
                     if (clicksLeft > 0) {
                         rebirthClicks.put(uuid, clicksLeft);
                         updateRebirthItemLore(player, clicksLeft);
                         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1, 1);
+                        updateVerwaltungGUI(player);
                     } else {
                         rebirthClicks.remove(uuid);
                         player.closeInventory();
@@ -635,11 +668,12 @@ public class OBGUI implements CommandExecutor, Listener {
                         player.performCommand("ob rebirth");
                     }
                 }
-                case BARRIER -> {
+                case BARRIER -> { //delete Island
                     int clicksLeft = deleteClicks.getOrDefault(uuid, MAX_CLICKS) - 1;
 
                     if (clicksLeft > 0) {
                         deleteClicks.put(uuid, clicksLeft);
+                        updateVerwaltungGUI(player);
                         updateDeleteItemLore(player, clicksLeft);
                         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1, 1);
                     } else {
@@ -650,11 +684,12 @@ public class OBGUI implements CommandExecutor, Listener {
                     }
                 }
                 case ZOMBIE_HEAD -> {
+                    if (!OneBlockCommands.hasPermissionOrOp(player, "oneblock.switchMonsterSpawning")) {
+                        return;
+                    }
                     UUID playerUUID = player.getUniqueId();
                     long currentTime = System.currentTimeMillis();
-
-
-                    // Überprüfen, ob der Spieler noch in der Abklingzeit ist
+                    //Abklingzeit da?!
                     if (zombieCooldowns.containsKey(playerUUID) && zombieCooldowns.get(playerUUID) > currentTime) {
                         long remainingTime = (zombieCooldowns.get(playerUUID) - currentTime) / 1000;
                         player.sendMessage(Main.getPrefix() + " §cBitte warte " + remainingTime + " Sekunden, bevor du erneut klickst!");
@@ -698,9 +733,7 @@ public class OBGUI implements CommandExecutor, Listener {
 
                 }
             }
-        }
-        else if (title.equalsIgnoreCase("§aPhasen-Auswahl")) {
-
+        } else if (title.equalsIgnoreCase("§aPhasen-Auswahl")) {
 
 
             boolean durchgespielt = DBM.getBoolean("userdata", uuid, "Durchgespielt", false);
@@ -957,7 +990,6 @@ public class OBGUI implements CommandExecutor, Listener {
                     break;
 
 
-
                 case RED_DYE:
                     player.openInventory(mainGUI);
                     player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
@@ -1015,7 +1047,7 @@ public class OBGUI implements CommandExecutor, Listener {
         }
     }
 
-    public static void addWorldBoarder(Player player) {
+    public static void addWorldBoarder(Player player, Economy eco) {
 
         UUID uuid = player.getUniqueId();
 

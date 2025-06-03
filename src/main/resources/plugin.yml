@@ -80,3 +80,10 @@ permissions:
   oneblock.switchChunkBiome:
     description: Biome eines Chunks ändern
     default: op
+  oneblock.switchIslandBiome:
+    description: Biome der Insel ändern
+    default: op
+  oneblock.switchMonsterSpawning:
+    description: OneBlock Monster Spawning ändern
+    default: op
+

@@ -47,8 +47,6 @@ public class OneBlockManager implements Listener {
         mobSpawning.put(uuid, DBM.getBoolean("userdata", uuid, "mobSpawning", true));
         MissingBlocks.put(uuid, DBM.getInt("userdata", uuid, "MissingBlocksToLevelUp", 100));
         TotalBlocks.put(uuid, DBM.getInt("userdata", uuid, "TotalBlocks", 100));
-        player.sendMessage("MissingBlocks" + MissingBlocks);
-        player.sendMessage("TotalBLocks" + TotalBlocks);
     }
 
     @EventHandler
@@ -156,7 +154,7 @@ public class OneBlockManager implements Listener {
             MissingBlocks.put(ownerUUID, blocksToLevelUp);
 
 
-            if (blocksToLevelUp <= 0 && islandLevel != maxLevel) {
+            if (blocksToLevelUp <= 0 && islandLevel != maxLevel && DBM.getBoolean("userdata", ownerUUID, "Durchgespielt", false) != true) {
                 islandLevel++;
                 DBM.setInt("userdata", ownerUUID, "IslandLevel", islandLevel);
 

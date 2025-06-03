@@ -125,13 +125,11 @@ public class OneBlockCommands implements Listener, CommandExecutor {
             Manager.switchBiomePerChunk(loc, newBiome, player.getUniqueId());
             player.sendMessage("§aChunk Biom  wurde zu §e" + newBiome.name() + " §ageändert.");
             return true;
-        } else if(args.length == 2 && args[0].equalsIgnoreCase("switchIslandBiome"))
-
-    {
-        if (!hasPermissionOrOp(player, "oneblock.switchIslandBiome")) {
-            player.sendMessage("§cDazu hast du keine Berechtigung.");
-            return true;
-        }
+        } else if(args.length == 2 && args[0].equalsIgnoreCase("switchIslandBiome")){
+            if (!hasPermissionOrOp(player, "oneblock.switchIslandBiome")) {
+                player.sendMessage("§cDazu hast du keine Berechtigung.");
+                return true;
+            }
         if (!isOwnerOfIsland(player)) {
             player.sendMessage(prefix + "§cNur der Inselbesitzer kann Spielern vertrauen.");
             return true;
@@ -147,6 +145,7 @@ public class OneBlockCommands implements Listener, CommandExecutor {
         Manager.switchBiomeForIsland(player, newBiome, player.getUniqueId());
         player.sendMessage("§aInsel Biom wurde zu §e" + newBiome.name() + " §ageändert.");
         return true;
+
     }
         else if (args.length == 1 && args[0].equalsIgnoreCase("accept")) {
             if (!hasPermissionOrOp(player, "oneblock.accept")) {
@@ -255,7 +254,7 @@ public class OneBlockCommands implements Listener, CommandExecutor {
     }
 
 
-    private boolean hasPermissionOrOp(Player player, String permission) {
+    public static boolean hasPermissionOrOp(Player player, String permission) {
         return player.hasPermission("oneblock.admin") || player.hasPermission(permission) || player.isOp();
     }
 }

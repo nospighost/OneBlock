@@ -6,6 +6,7 @@ import de.Main.OneBlock.Market.Manager.MarketManager;
 import de.Main.OneBlock.NPC.GUI.NPCGUI;
 import de.Main.OneBlock.NPC.Listener.NPCInventoryListener;
 import de.Main.OneBlock.NPC.Listener.NPCListener;
+import de.Main.OneBlock.OneBlock.GUI.OneBlock.OBGUI;
 import de.Main.OneBlock.OneBlock.Manager.Manager;
 import de.Main.OneBlock.OneBlock.Manager.OneBlockManager;
 import de.Main.OneBlock.OneBlock.Player.PlayerListener;
@@ -145,14 +146,14 @@ public class Main extends JavaPlugin implements Listener {
         //<--------------------OneBlock-------------------->>//
         OneBlockManager.startAutoSaveTask();
         //<-------------Listener-------------->>//
-        getServer().getPluginManager().registerEvents(new de.Main.OneBlock.OneBlock.GUI.OneBlock.OBGUI(), this);
+        getServer().getPluginManager().registerEvents(new OBGUI(economy), this);
         Bukkit.getPluginManager().registerEvents(new ToolSwitch(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerRespawnListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
         //<-------------Commands-------------->>//
         getCommand("ob").setTabCompleter(new de.Main.OneBlock.OneBlock.Commands.TabCompleter());
         getCommand("ob").setExecutor(new de.Main.OneBlock.OneBlock.Commands.OneBlockCommands());
-        getCommand("obgui").setExecutor(new de.Main.OneBlock.OneBlock.GUI.OneBlock.OBGUI());
+        getCommand("obgui").setExecutor(new de.Main.OneBlock.OneBlock.GUI.OneBlock.OBGUI(economy));
         Bukkit.getPluginManager().registerEvents(new OneBlockManager(), this);
         //<-------------WorldBorder-------------->>//
         Bukkit.getPluginManager().registerEvents(new WorldBorderManager(), this);

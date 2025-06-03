@@ -24,8 +24,9 @@ public class TabCompleter implements org.bukkit.command.TabCompleter {
         permissionMap.put("remove", "oneblock.remove");
         permissionMap.put("leave", "oneblock.leave");
         permissionMap.put("decline", "oneblock.decline");
-        permissionMap.put("switchChunkBiome", "oneblock.switchChunkBiome");
-        permissionMap.put("switchIslandBiome", "oneblock.switchIslandBiome");
+        permissionMap.put("switchchunkbiome", "oneblock.switchChunkBiome");
+        permissionMap.put("switchislandbiome", "oneblock.switchIslandBiome");
+
     }
 
     @Override

@@ -64,7 +64,11 @@ public class WorldBorderManager implements Listener {
                 task.cancel();
             }
         }
+
     }
+
+
+
 
     private List<Island> getAllIslands() throws SQLException {
         List<Island> islands = new ArrayList<>();

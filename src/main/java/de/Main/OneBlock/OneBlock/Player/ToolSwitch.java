@@ -49,7 +49,7 @@ public class ToolSwitch implements Listener {
                 // HOE
                 else if (material.name().contains("FARMLAND") || material.name().contains("CROP") ||
                         material.name().contains("BEETROOT") || material.name().contains("CARROT") ||
-                        material.name().contains("POTATO")) {
+                        material.name().contains("POTATO") ||material.name().contains("LEAVES") ) {
                     TOOL_ASSIGNMENTS.put(material, ToolType.HOE);
                 }
             }
@@ -64,9 +64,6 @@ public class ToolSwitch implements Listener {
         ToolType toolType = TOOL_ASSIGNMENTS.getOrDefault(blockType, null);
 
 
-        Bukkit.getLogger().info("Block: " + blockType + " -> Werkzeug: " + (toolType != null ? toolType : "NONE"));
-
-        // Suche das beste Werkzeug
         int bestSlot = -1;
         if (toolType != null) {
             bestSlot = findBestToolSlot(player, toolType);
