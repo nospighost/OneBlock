@@ -2,11 +2,11 @@ package de.Main.OneBlock;
 
 import de.Main.OneBlock.Market.GUI.MarketGUI;
 import de.Main.OneBlock.Market.Listener.InventoryClick;
+import de.Main.OneBlock.Market.Listener.MarketCloseListener;
 import de.Main.OneBlock.Market.Manager.MarketManager;
 import de.Main.OneBlock.NPC.GUI.NPCGUI;
 import de.Main.OneBlock.NPC.Listener.NPCInventoryListener;
 import de.Main.OneBlock.NPC.Listener.NPCListener;
-import de.Main.OneBlock.OneBlock.GUI.OneBlock.OBGUI;
 import de.Main.OneBlock.OneBlock.Manager.Manager;
 import de.Main.OneBlock.OneBlock.Manager.OneBlockManager;
 import de.Main.OneBlock.OneBlock.Player.PlayerListener;
@@ -62,27 +62,43 @@ public class Main extends JavaPlugin implements Listener {
         return instance;
     }
 
+    private File sellPriceFile;
+    private FileConfiguration sellPriceConfig;
+
+    public FileConfiguration getSellPriceConfig() {
+        return sellPriceConfig;
+    }
+
+    public void setupSellPriceFile() {
+        sellPriceFile = new File(getDataFolder(), "sell-prices.yml");
+        if (!sellPriceFile.exists()) {
+            saveResource("sell-prices.yml", false); // Nur kopieren, wenn sie nicht da ist
+        }
+        sellPriceConfig = YamlConfiguration.loadConfiguration(sellPriceFile);
+    }
+
+
 
     @Override
     public void onEnable() {
         instance = this;
-        //SQL
+
+        // SQL-Verbindung
         connection = new SQLConnection("localhost", 3306, "admin", "admin", "1234");
         moneyManager = new DBM(this);
 
-        //config
-        setupMarketFile();
+        // Config laden
         saveDefaultConfig();
         config = getConfig();
-        instance = this;
         if (!config.contains("maxlevel")) {
             config.set("maxlevel", 10);
         }
-        marketfile = new File(getDataFolder(), "Market");
-        if (!marketfile.exists()) {
-            marketfile.mkdirs();
-        }
-        //Economy
+
+
+        // Market-Dateien einrichten
+        setupSellPriceFile();
+
+        // Economy (Vault)
         setupEconomy();
         if (economy != null) {
             Bukkit.getPluginManager().registerEvents(new Manager(economy, this), this);
@@ -91,19 +107,11 @@ public class Main extends JavaPlugin implements Listener {
             getLogger().warning("Vault wurde nicht gefunden – Economy wird deaktiviert.");
         }
 
-
-
-
-
-
-
-
-        //<--------------------Welten Erstellung-------------------->>//
+        // OneBlock Welt erstellen
         WorldCreator worldCreator = new WorldCreator(WORLD_NAME);
         worldCreator.environment(World.Environment.NORMAL);
         worldCreator.type(WorldType.FLAT);
         worldCreator.generator(new VoidGen());
-
         oneBlockWorld = Bukkit.createWorld(worldCreator);
 
         if (oneBlockWorld != null) {
@@ -117,49 +125,44 @@ public class Main extends JavaPlugin implements Listener {
             border.setDamageAmount(0.5);
             border.setWarningDistance(5);
             border.setWarningTime(15);
-
-        } else {
-            getLogger().warning("Fehler beim Erstellen der OneBlock-Welt");
         }
 
-
-
-
-
-        //<--------------------NPC-------------------->>//
+        // NPC & Quest
         Bukkit.getPluginManager().registerEvents(new NPCListener(), this);
         Bukkit.getPluginManager().registerEvents(new NPCInventoryListener(), this);
         NPCGUI.createNPCGUI();
-
-        //<--------------------Quest-------------------->>//
         Bukkit.getPluginManager().registerEvents(new QuestListener(), this);
         QuestMainGUI.createQuestGUI();
         QuestRewardGUI.createQuestGUI();
-        //<--------------------Market-------------------->>//
-        Bukkit.getPluginManager().registerEvents(new MarketManager(economy, marketfile), this);
-        Bukkit.getPluginManager().registerEvents(new MarketGUI(economy, marketconfig), this);
-        Bukkit.getPluginManager().registerEvents(new InventoryClick(),this);
-        getCommand("market").setExecutor(new MarketGUI(economy, marketconfig));
-        MarketGUI.createItems();
-        setServerPrefix();
 
-        //<--------------------OneBlock-------------------->>//
+        // Market
+        MarketManager marketManager = new MarketManager(economy, getSellPriceConfig());
+        Bukkit.getPluginManager().registerEvents(marketManager, this);
+        Bukkit.getPluginManager().registerEvents(new InventoryClick(), this);
+        MarketGUI marketGUI = new MarketGUI();
+        Bukkit.getPluginManager().registerEvents(marketGUI, this);
+        getCommand("market").setExecutor(marketGUI);
+        Bukkit.getPluginManager().registerEvents(new MarketCloseListener(), this);
+
+        MarketGUI.createMarketInventory();
+
+        // OneBlock Features
         OneBlockManager.startAutoSaveTask();
-        //<-------------Listener-------------->>//
-        getServer().getPluginManager().registerEvents(new OBGUI(economy), this);
+        Bukkit.getPluginManager().registerEvents(new de.Main.OneBlock.OneBlock.GUI.OneBlock.OBGUI(), this);
         Bukkit.getPluginManager().registerEvents(new ToolSwitch(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerRespawnListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
-        //<-------------Commands-------------->>//
-        getCommand("ob").setTabCompleter(new de.Main.OneBlock.OneBlock.Commands.TabCompleter());
-        getCommand("ob").setExecutor(new de.Main.OneBlock.OneBlock.Commands.OneBlockCommands());
-        getCommand("obgui").setExecutor(new de.Main.OneBlock.OneBlock.GUI.OneBlock.OBGUI(economy));
         Bukkit.getPluginManager().registerEvents(new OneBlockManager(), this);
-        //<-------------WorldBorder-------------->>//
         Bukkit.getPluginManager().registerEvents(new WorldBorderManager(), this);
 
+        getCommand("ob").setTabCompleter(new de.Main.OneBlock.OneBlock.Commands.TabCompleter());
+        getCommand("ob").setExecutor(new de.Main.OneBlock.OneBlock.Commands.OneBlockCommands());
+        getCommand("obgui").setExecutor(new de.Main.OneBlock.OneBlock.GUI.OneBlock.OBGUI());
+
+        setServerPrefix();
         getLogger().info("OneBlockPlugin aktiviert!");
     }
+
 
     public static void setServerPrefix() {
         prefix = config.getString("Server");

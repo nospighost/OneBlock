@@ -1,68 +1,56 @@
 package de.Main.OneBlock.Market.Manager;
 
 import net.milkbowl.vault.economy.Economy;
-import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-import java.io.File;
-
 public class MarketManager implements Listener {
-    private static Economy eco;
-    private static FileConfiguration sellPrices;
 
-    public MarketManager(Economy eco, File dataFolder) {
-        MarketManager.eco = eco;
+    private static  Economy economy;
+    private static  FileConfiguration sellPriceConfig;
 
-        File sellFile = new File(dataFolder, "sell-prices.yml");
-        if (!sellFile.exists()) {
-            System.out.println("[MarketManager] sell-prices.yml nicht gefunden!");
-            return;
-        }
-
-        sellPrices = YamlConfiguration.loadConfiguration(sellFile);
+    public MarketManager(Economy economy, FileConfiguration sellPriceConfig) {
+        this.economy = economy;
+        this.sellPriceConfig = sellPriceConfig;
     }
 
-    public static void sellAllItems(Inventory inv) {
-        Player player = (Player) inv.getHolder();
+    public static void sellAllItems(Inventory inv, Player player) {
+        double total = 0;
 
-        for (int i = 0; i < inv.getSize(); i++) {
-            ItemStack stack = inv.getItem(i);
-            if (stack == null) continue;
+        for (int i = 0; i < 27; i++) {
+            ItemStack item = inv.getItem(i);
+            if (item == null) continue;
 
-            Material item = stack.getType();
-            int amount = stack.getAmount();
-            String key = item.name().toLowerCase();
+            String key = item.getType().name().toLowerCase();
+            if (!sellPriceConfig.contains("prices." + key)) continue;
 
-            if (!sellPrices.contains("prices." + key)) continue;
-
-            double price = sellPrices.getDouble("prices." + key);
-            double finalPrice = price * amount;
-
-            eco.depositPlayer(player, finalPrice);
+            double price = sellPriceConfig.getDouble("prices." + key);
+            total += price * item.getAmount();
             inv.setItem(i, null);
+        }
+
+        if (total > 0) {
+            economy.depositPlayer(player, total);
+            player.sendMessage("§aDu hast Items im Wert von §e" + total + "§a verkauft.");
+        } else {
+            player.sendMessage("§cKeine Items mit Verkaufswert gefunden.");
         }
     }
 
     public static double getSellPrice(Inventory inv) {
         double total = 0;
 
-        for (int i = 0; i < inv.getSize(); i++) {
-            ItemStack stack = inv.getItem(i);
-            if (stack == null) continue;
+        for (ItemStack item : inv.getContents()) {
+            if (item == null) continue;
 
-            Material item = stack.getType();
-            int amount = stack.getAmount();
-            String key = item.name().toLowerCase();
+            String key = item.getType().name().toLowerCase();
+            if (!sellPriceConfig.contains("prices." + key)) continue;
 
-            if (!sellPrices.contains("prices." + key)) continue;
-
-            double price = sellPrices.getDouble("prices." + key);
-            total += price * amount;
+            double price = sellPriceConfig.getDouble("prices." + key);
+            total += price * item.getAmount();
         }
 
         return total;
