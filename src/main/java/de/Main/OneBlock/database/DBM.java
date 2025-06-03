@@ -28,8 +28,6 @@ public class DBM implements Listener {
         Player player = event.getPlayer();
         String playerUUID = event.getPlayer().getUniqueId().toString();
             SQLTabel.Condition userdatacondition = new SQLTabel.Condition("owner", player.getName());
-        SQLTabel.Condition queststatuscondition = new SQLTabel.Condition("owner", player.getName());
-        SQLTabel.Condition questcompletecondition = new SQLTabel.Condition("owner", player.getName());
 
         if (!tabel.exits("userdata", userdatacondition)) {
             //userdata
@@ -57,22 +55,7 @@ public class DBM implements Listener {
             List<String> invitedList = new ArrayList<>();
             tabel.set("userdata", "invited", String.join(",", invitedList), userdatacondition);
         }
-        if (!tabel.exits("questcomplete", questcompletecondition)) {
-            //quest
-            tabel.set("questcomplete", "owner", player.getName(), questcompletecondition);
-            tabel.set("questcomplete", "owner_uuid", playerUUID, questcompletecondition);
-            tabel.set("questcomplete", "broken100stone", false, questcompletecondition);
-            tabel.set("questcomplete", "broken200stone", false, questcompletecondition);
-            tabel.set("questcomplete", "broken300stone", false, questcompletecondition);
-        }
-        if (!tabel.exits("queststatus", queststatuscondition)) {
-            //quest
-            tabel.set("queststatus", "owner", player.getName(), queststatuscondition);
-            tabel.set("queststatus", "owner_uuid", playerUUID, queststatuscondition);
-            tabel.set("queststatus", "broken100stone", false, queststatuscondition);
-            tabel.set("queststatus", "broken200stone", false, queststatuscondition);
-            tabel.set("queststatus", "broken300stone", false, queststatuscondition);
-        }
+
     }
 
 
@@ -80,9 +63,6 @@ public class DBM implements Listener {
 
     public DBM(Main pl) {
         HashMap<String, SQLDataType> userdatacolumns = new HashMap<>();
-        HashMap<String, SQLDataType> questcompletecolumns = new HashMap<>();
-        HashMap<String, SQLDataType> queststatuscolumns = new HashMap<>();
-        userdatacolumns.put("owner", SQLDataType.CHAR);
         userdatacolumns.put("WorldBorderSize", SQLDataType.INT);
         userdatacolumns.put("TotalBlocks", SQLDataType.INT);
         userdatacolumns.put("denied", SQLDataType.TEXT);
@@ -103,20 +83,7 @@ public class DBM implements Listener {
         userdatacolumns.put("IslandBiom", SQLDataType.CHAR);
         userdatacolumns.put("MobSpawning", SQLDataType.BOOLEAN);
 
-        questcompletecolumns.put("owner", SQLDataType.CHAR);
-        questcompletecolumns.put("owner_uuid", SQLDataType.CHAR);
-        questcompletecolumns.put("broken100stone", SQLDataType.BOOLEAN);
-        questcompletecolumns.put("broken200stone", SQLDataType.BOOLEAN);
-        questcompletecolumns.put("broken300stone", SQLDataType.BOOLEAN);
-
-        queststatuscolumns.put("owner", SQLDataType.CHAR);
-        queststatuscolumns.put("owner_uuid", SQLDataType.CHAR);
-        queststatuscolumns.put("broken100stone", SQLDataType.BOOLEAN);
-        queststatuscolumns.put("broken200stone", SQLDataType.BOOLEAN);
-        queststatuscolumns.put("broken300stone", SQLDataType.BOOLEAN);
         tabel = new SQLTabel(pl.getConnection(), "userdata", userdatacolumns);
-        tabel = new SQLTabel(pl.getConnection(), "questcomplete", questcompletecolumns);
-        tabel = new SQLTabel(pl.getConnection(), "queststatus", queststatuscolumns);
         pl.getServer().getPluginManager().registerEvents(this, pl);
     }
 
