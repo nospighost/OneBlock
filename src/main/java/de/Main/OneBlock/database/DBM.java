@@ -82,6 +82,7 @@ public class DBM implements Listener {
         userdatacolumns.put("BorderParticle", SQLDataType.CHAR);
         userdatacolumns.put("IslandBiom", SQLDataType.CHAR);
         userdatacolumns.put("MobSpawning", SQLDataType.BOOLEAN);
+        userdatacolumns.put("owner", SQLDataType.CHAR);
 
         tabel = new SQLTabel(pl.getConnection(), "userdata", userdatacolumns);
         pl.getServer().getPluginManager().registerEvents(this, pl);

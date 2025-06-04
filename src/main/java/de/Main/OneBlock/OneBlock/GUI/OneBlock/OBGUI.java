@@ -36,6 +36,7 @@ public class OBGUI implements CommandExecutor, Listener {
     private final int[] phasenAuswahlGrayGlasPane = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 22, 23, 24, 25, 26, 28, 29, 30, 31, 32, 33, 34, 35};
     private final int[] Befehle3 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 20, 23, 24, 25, 26, 28, 29, 30, 31, 32, 33, 34, 35};
     private final int[] Biom = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35};
+    private final int[] Partikel = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35};
     private final Map<UUID, Long> zombieCooldowns = new HashMap<>();
     private final long COOLDOWN_TIME = 4000; // Millisekunden
     private final int MAX_CLICKS = 3;
@@ -48,6 +49,7 @@ public class OBGUI implements CommandExecutor, Listener {
     public static Inventory Auswahl;
     public static Inventory Verwaltung;
     public static Inventory switchBiomeGUI;
+    public static Inventory switchPartikelGUI;
 
     private final HashMap<UUID, Integer> deleteClicks = new HashMap<>();
     private final HashMap<UUID, Integer> rebirthClicks = new HashMap<>();
@@ -63,7 +65,7 @@ public class OBGUI implements CommandExecutor, Listener {
             return true;
         }
 
-        if (mainGUI == null || Auswahl == null || Einstellungen == null || Rebirth == null || Befehle == null || Verwaltung == null || switchBiomeGUI == null) {
+        if (mainGUI != null || Auswahl == null || Einstellungen == null || Rebirth == null || Befehle == null || Verwaltung == null || switchBiomeGUI == null) {
             ItemStack grayglas = new ItemStack(GRAY_STAINED_GLASS_PANE);
             ItemMeta graygalsmetea = grayglas.getItemMeta();
             graygalsmetea.setHideTooltip(true);
@@ -71,6 +73,7 @@ public class OBGUI implements CommandExecutor, Listener {
             grayglas.setItemMeta(graygalsmetea);
             createguis(player, grayglas);
             createBiomGUI(grayglas);
+            createPartikelGUI(grayglas);
         }
 
 
@@ -78,7 +81,7 @@ public class OBGUI implements CommandExecutor, Listener {
         rebirthClicks.put(player.getUniqueId(), MAX_CLICKS);
 
         updateVerwaltungGUI(player);
-        player.openInventory(mainGUI);
+        player.openInventory(switchPartikelGUI);
         return true;
     }
 
@@ -361,51 +364,251 @@ public class OBGUI implements CommandExecutor, Listener {
         }
         switchBiomeGUI.setItem(27, zurück1);
         ItemStack PLAINS = new ItemStack(OAK_SAPLING);
-        ItemMeta PlainsMeta = zurück1.getItemMeta();
+        ItemMeta PlainsMeta = PLAINS.getItemMeta();
         if (PlainsMeta != null) {
-            PlainsMeta.setDisplayName("§cPlains");
+            PlainsMeta.setDisplayName("§a§lPlains");
             PLAINS.setItemMeta(PlainsMeta);
         }
         switchBiomeGUI.setItem(12, PLAINS);
         ItemStack SAVANNA = new ItemStack(ACACIA_SAPLING);
-        ItemMeta SavannaMeta = zurück1.getItemMeta();
+        ItemMeta SavannaMeta = SAVANNA.getItemMeta();
         if (SavannaMeta != null) {
-            SavannaMeta.setDisplayName("§cSavanne");
+            SavannaMeta.setDisplayName("§e§lSavanne");
             SAVANNA.setItemMeta(SavannaMeta);
         }
         switchBiomeGUI.setItem(11, SAVANNA);
-        ItemStack OCEAN = new ItemStack(PRISMARINE);
-        ItemMeta OceanMeta = zurück1.getItemMeta();
+        ItemStack OCEAN = new ItemStack(CONDUIT);
+        ItemMeta OceanMeta = OCEAN.getItemMeta();
         if (OceanMeta != null) {
-            OceanMeta.setDisplayName("§cOzean");
+            OceanMeta.setDisplayName("§b§lOzean");
             OCEAN.setItemMeta(OceanMeta);
         }
         switchBiomeGUI.setItem(10, OCEAN);
         ItemStack DarkOak = new ItemStack(DARK_OAK_SAPLING);
-        ItemMeta DarkOakMeta = zurück1.getItemMeta();
+        ItemMeta DarkOakMeta = DarkOak.getItemMeta();
         if (DarkOakMeta != null) {
-            DarkOakMeta.setDisplayName("§cDark Oak");
+            DarkOakMeta.setDisplayName("§2§lDark Oak");
             DarkOak.setItemMeta(DarkOakMeta);
             OCEAN.setItemMeta(DarkOakMeta);
         }
         switchBiomeGUI.setItem(13, DarkOak);
 
         ItemStack CHERRY = new ItemStack(CHERRY_SAPLING);
-        ItemMeta CherryMeta = zurück1.getItemMeta();
+        ItemMeta CherryMeta = CHERRY.getItemMeta();
         if (CherryMeta != null) {
-            CherryMeta.setDisplayName("§cCherry");
+            CherryMeta.setDisplayName("§d§lCherry");
             CHERRY.setItemMeta(CherryMeta);
         }
         switchBiomeGUI.setItem(14, CHERRY);
 
         ItemStack FICHTE = new ItemStack(SPRUCE_SAPLING);
-        ItemMeta FichteMeta = zurück1.getItemMeta();
+        ItemMeta FichteMeta = FICHTE.getItemMeta();
         if (FichteMeta != null) {
-            FichteMeta.setDisplayName("§cFichte");
+            FichteMeta.setDisplayName("§a§lFichte");
             FICHTE.setItemMeta(FichteMeta);
         }
         switchBiomeGUI.setItem(15, FICHTE);
+
+        ItemStack MANGROVE = new ItemStack(MANGROVE_PROPAGULE);
+        ItemMeta MangroveMeta = MANGROVE.getItemMeta();
+        if (MangroveMeta != null) {
+            MangroveMeta.setDisplayName("§a§lMangrove");
+            MANGROVE.setItemMeta(MangroveMeta);
+        }
+        switchBiomeGUI.setItem(16, MANGROVE);
+
+        ItemStack COLD_OCEAN = new ItemStack(HEART_OF_THE_SEA);
+        ItemMeta ColdOceanMeta = COLD_OCEAN.getItemMeta();
+        if (ColdOceanMeta != null) {
+            ColdOceanMeta.setDisplayName("§b§lKalter Ozean");
+            COLD_OCEAN.setItemMeta(ColdOceanMeta);
+        }
+        switchBiomeGUI.setItem(19, COLD_OCEAN);
+        ItemStack NETHER_WASTES = new ItemStack(NETHERRACK);
+        ItemMeta Nether_Wastes_Meta = NETHER_WASTES.getItemMeta();
+        if (Nether_Wastes_Meta != null) {
+            Nether_Wastes_Meta.setDisplayName("§c§lNether Waste");
+            NETHER_WASTES.setItemMeta(Nether_Wastes_Meta);
+        }
+        switchBiomeGUI.setItem(20, NETHER_WASTES);
+
+        ItemStack BAMBOO_JUNGLE = new ItemStack(BAMBOO);
+        ItemMeta Bamboo_Jungle_Meta = BAMBOO_JUNGLE.getItemMeta();
+        if (Bamboo_Jungle_Meta != null) {
+            Bamboo_Jungle_Meta.setDisplayName("§a§lJungel");
+            BAMBOO_JUNGLE.setItemMeta(Bamboo_Jungle_Meta);
+        }
+        switchBiomeGUI.setItem(21, BAMBOO_JUNGLE);
+
+        ItemStack DESERT = new ItemStack(SAND);
+        ItemMeta Desert_Meta = DESERT.getItemMeta();
+        if (Desert_Meta != null) {
+            Desert_Meta.setDisplayName("§b§lWüste");
+            DESERT.setItemMeta(Desert_Meta);
+        }
+        switchBiomeGUI.setItem(22, DESERT);
+
+        ItemStack MUSHROOM_FIELDS = new ItemStack(RED_MUSHROOM_BLOCK);
+        ItemMeta Mushroom_Meta = MUSHROOM_FIELDS.getItemMeta();
+        if (Mushroom_Meta != null) {
+            Mushroom_Meta.setDisplayName("§b§lPilz Insel");
+            MUSHROOM_FIELDS.setItemMeta(Mushroom_Meta);
+        }
+        switchBiomeGUI.setItem(23, MUSHROOM_FIELDS);
+
+        ItemStack SNOWY_PLAINS = new ItemStack(SNOW);
+        ItemMeta Snowy_Meta = SNOWY_PLAINS.getItemMeta();
+        if (Snowy_Meta != null) {
+            Snowy_Meta.setDisplayName("§b§lSchnee Wald");
+            SNOWY_PLAINS.setItemMeta(Snowy_Meta);
+        }
+        switchBiomeGUI.setItem(24, SNOWY_PLAINS);
+
+        ItemStack THE_END = new ItemStack(END_STONE);
+        ItemMeta End_Meta = THE_END.getItemMeta();
+        if (End_Meta != null) {
+            End_Meta.setDisplayName("§b§lDas Ende");
+            THE_END.setItemMeta(End_Meta);
+        }
+        switchBiomeGUI.setItem(25, THE_END);
     }
+
+
+    private void createPartikelGUI(ItemStack grayglas) {
+        switchPartikelGUI = Bukkit.createInventory(null, 36, "§3Partikel Verwaltung");
+
+        // Füll Slots mit grauem Glas
+        for (int pos : Partikel) {
+            if (switchPartikelGUI == null) {
+                createBiomGUI(grayglas);
+            }
+            switchPartikelGUI.setItem(pos, grayglas);
+        }
+
+        // Zurück Button
+        ItemStack zurück1 = new ItemStack(Material.RED_DYE);
+        ItemMeta zurückmeta1 = zurück1.getItemMeta();
+        if (zurückmeta1 != null) {
+            zurückmeta1.setDisplayName("§cZurück zum §aOneBlock-Menü");
+            zurück1.setItemMeta(zurückmeta1);
+        }
+        switchPartikelGUI.setItem(27, zurück1);
+
+        // Partikel Items
+
+        ItemStack flame = new ItemStack(Material.FIRE_CHARGE);
+        ItemMeta flameMeta = flame.getItemMeta();
+        if (flameMeta != null) {
+            flameMeta.setDisplayName("§cFlammen Partikel");
+            flame.setItemMeta(flameMeta);
+        }
+        switchPartikelGUI.setItem(10, flame);
+
+        ItemStack waxOffAxe = new ItemStack(IRON_AXE);
+        ItemMeta waxMeta = waxOffAxe.getItemMeta();
+        if (waxMeta != null) {
+            waxMeta.setDisplayName("§7Wax Off Partikel");
+            waxOffAxe.setItemMeta(waxMeta);
+        }
+        switchPartikelGUI.setItem(11, waxOffAxe);
+
+        ItemStack sparkle = new ItemStack(NETHER_STAR);
+        ItemMeta sparkleMeta = sparkle.getItemMeta();
+        if (sparkleMeta != null) {
+            sparkleMeta.setDisplayName("§bGlitzer Partikel");
+            sparkle.setItemMeta(sparkleMeta);
+        }
+        switchPartikelGUI.setItem(12, sparkle);
+
+        ItemStack bubble = new ItemStack(WATER_CAULDRON);
+        ItemMeta bubbleMeta = bubble.getItemMeta();
+        if (bubbleMeta != null) {
+            bubbleMeta.setDisplayName("§9Blasen Partikel");
+            bubble.setItemMeta(bubbleMeta);
+        }
+        switchPartikelGUI.setItem(13, bubble);
+
+        ItemStack cloud = new ItemStack(WIND_CHARGE);
+        ItemMeta cloudMeta = cloud.getItemMeta();
+        if (cloudMeta != null) {
+            cloudMeta.setDisplayName("§fWolken Partikel");
+            cloud.setItemMeta(cloudMeta);
+        }
+        switchPartikelGUI.setItem(14, cloud);
+
+        ItemStack spark = new ItemStack(FIREWORK_ROCKET);
+        ItemMeta sparkMeta = spark.getItemMeta();
+        if (sparkMeta != null) {
+            sparkMeta.setDisplayName("§eFunken Partikel");
+            spark.setItemMeta(sparkMeta);
+        }
+        switchPartikelGUI.setItem(15, spark);
+
+        ItemStack heart = new ItemStack(Material.RED_TULIP);
+        ItemMeta heartMeta = heart.getItemMeta();
+        if (heartMeta != null) {
+            heartMeta.setDisplayName("§cHerz Partikel");
+            heart.setItemMeta(heartMeta);
+        }
+        switchPartikelGUI.setItem(16, heart);
+
+        ItemStack bubbleLarge = new ItemStack(Material.BUBBLE_CORAL);
+        ItemMeta bubbleLargeMeta = bubbleLarge.getItemMeta();
+        if (bubbleLargeMeta != null) {
+            bubbleLargeMeta.setDisplayName("§3Große Blasen");
+            bubbleLarge.setItemMeta(bubbleLargeMeta);
+        }
+        switchPartikelGUI.setItem(19, bubbleLarge);
+
+        ItemStack smokeLarge = new ItemStack(Material.GUNPOWDER);
+        ItemMeta smokeLargeMeta = smokeLarge.getItemMeta();
+        if (smokeLargeMeta != null) {
+            smokeLargeMeta.setDisplayName("§8Großer Rauch");
+            smokeLarge.setItemMeta(smokeLargeMeta);
+        }
+        switchPartikelGUI.setItem(20, smokeLarge);
+
+        ItemStack sparkLarge = new ItemStack(Material.LIGHTNING_ROD);
+        ItemMeta sparkLargeMeta = sparkLarge.getItemMeta();
+        if (sparkLargeMeta != null) {
+            sparkLargeMeta.setDisplayName("§6Blitz Partikel");
+            sparkLarge.setItemMeta(sparkLargeMeta);
+        }
+        switchPartikelGUI.setItem(21, sparkLarge);
+
+        ItemStack magic = new ItemStack(Material.ENCHANTED_BOOK);
+        ItemMeta magicMeta = magic.getItemMeta();
+        if (magicMeta != null) {
+            magicMeta.setDisplayName("§dMagische Partikel");
+            magic.setItemMeta(magicMeta);
+        }
+        switchPartikelGUI.setItem(22, magic);
+
+        ItemStack ender = new ItemStack(Material.ENDER_EYE);
+        ItemMeta enderMeta = ender.getItemMeta();
+        if (enderMeta != null) {
+            enderMeta.setDisplayName("§5Ender Partikel");
+            ender.setItemMeta(enderMeta);
+        }
+        switchPartikelGUI.setItem(23, ender);
+
+        ItemStack portal = new ItemStack(OBSIDIAN);
+        ItemMeta portalMeta = portal.getItemMeta();
+        if (portalMeta != null) {
+            portalMeta.setDisplayName("§cPortal Partikel");
+            portal.setItemMeta(portalMeta);
+        }
+        switchPartikelGUI.setItem(24, portal);
+
+        ItemStack snow = new ItemStack(Material.SNOWBALL);
+        ItemMeta snowMeta = snow.getItemMeta();
+        if (snowMeta != null) {
+            snowMeta.setDisplayName("§fSchnee Partikel");
+            snow.setItemMeta(snowMeta);
+        }
+        switchPartikelGUI.setItem(25, snow);
+    }
+
 
     private void setPlayerHeadInMainGUI(Player player) {
         UUID uuid = player.getUniqueId();
@@ -604,7 +807,8 @@ public class OBGUI implements CommandExecutor, Listener {
                 "§aPhasen-Auswahl",
                 "§cInsel-Verwaltung",
                 "§aOneBlock-Menü",
-                "§aBiom Verwaltung"
+                "§aBiom Verwaltung",
+                "§3Partikel Verwaltung"
         );
 
 
@@ -629,7 +833,6 @@ public class OBGUI implements CommandExecutor, Listener {
 
         String title = event.getView().getTitle();
         ItemStack clicked = event.getCurrentItem();
-        assert clicked != null;
         Material type = clicked.getType();
 
 
@@ -970,7 +1173,6 @@ public class OBGUI implements CommandExecutor, Listener {
                     sendSuggestCommandMessage(player, "switchIslandBiome ");
                     break;
 
-
                 case RED_DYE:
                     player.openInventory(mainGUI);
                     player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
@@ -981,15 +1183,77 @@ public class OBGUI implements CommandExecutor, Listener {
             }
 
         } else if (title.equalsIgnoreCase("§aBiom Verwaltung")) {
-
             switch (type) {
-                case GRASS_BLOCK:
+                case CONDUIT:
+                    player.performCommand("ob switchIslandBiome OCEAN");
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.closeInventory();
+                    break;
+                case ACACIA_SAPLING:
+                    player.performCommand("ob switchIslandBiome SAVANNA");
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.closeInventory();
+                    break;
+                case OAK_SAPLING:
                     player.performCommand("ob switchIslandBiome PLAINS");
                     player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
                     player.closeInventory();
                     break;
-
-
+                case DARK_OAK_SAPLING:
+                    player.performCommand("ob switchIslandBiome DARK_FOREST");
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.closeInventory();
+                    break;
+                case CHERRY_SAPLING:
+                    player.performCommand("ob switchIslandBiome CHERRY_GROVE");
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.closeInventory();
+                    break;
+                case SPRUCE_SAPLING:
+                    player.performCommand("ob switchIslandBiome TAIGA");
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.closeInventory();
+                    break;
+                case MANGROVE_PROPAGULE:
+                    player.performCommand("ob switchIslandBiome MANGROVE_SWAMP");
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.closeInventory();
+                    break;
+                case HEART_OF_THE_SEA:
+                    player.performCommand("ob switchIslandBiome COLD_OCEAN");
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.closeInventory();
+                    break;
+                case NETHERRACK:
+                    player.performCommand("ob switchIslandBiome NETHER_WASTES");
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.closeInventory();
+                    break;
+                case BAMBOO:
+                    player.performCommand("ob switchIslandBiome BAMBOO_JUNGLE");
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.closeInventory();
+                    break;
+                case SAND:
+                    player.performCommand("ob switchIslandBiome DESERT");
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.closeInventory();
+                    break;
+                case RED_MUSHROOM_BLOCK:
+                    player.performCommand("ob switchIslandBiome MUSHROOM_FIELDS");
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.closeInventory();
+                    break;
+                case SNOW:
+                    player.performCommand("ob switchIslandBiome SNOWY_PLAINS");
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.closeInventory();
+                    break;
+                case END_STONE:
+                    player.performCommand("ob switchIslandBiome THE_END");
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.closeInventory();
+                    break;
                 case RED_DYE:
                     player.openInventory(mainGUI);
                     player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
@@ -998,7 +1262,88 @@ public class OBGUI implements CommandExecutor, Listener {
                 default:
                     break;
             }
+        }else if (title.equalsIgnoreCase("§3Partikel Verwaltung")) {
+            switch (type) {
+                case LAVA_BUCKET:
+                    DBM.setString("userdata", player.getUniqueId(), "BorderParticle", "FALLING_LAVA");
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.closeInventory();
+                    break;
+                case IRON_AXE:
+                    DBM.setString("userdata", player.getUniqueId(), "BorderParticle", "WAX_OFF");
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.closeInventory();
+                    break;
+                case SCULK_CATALYST:
+                    DBM.setString("userdata", player.getUniqueId(), "BorderParticle", "SONIC_BOOM");
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.closeInventory();
+                    break;
+                case WATER_BUCKET:
+                    DBM.setString("userdata", player.getUniqueId(), "BorderParticle", "RAIN");
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.closeInventory();
+                    break;
+                case NOTE_BLOCK:
+                    DBM.setString("userdata", player.getUniqueId(), "BorderParticle", "NOTE");
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.closeInventory();
+                    break;
+                case SCULK_VEIN:
+                    DBM.setString("userdata", player.getUniqueId(), "BorderParticle", "SCULK_SOUL");
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.closeInventory();
+                    break;
+                case RED_TULIP:
+                    DBM.setString("userdata", player.getUniqueId(), "BorderParticle", "GLOW");
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.closeInventory();
+                    break;
+                case COMPOSTER:
+                    DBM.setString("userdata", player.getUniqueId(), "BorderParticle", "COMPOSTER");
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.closeInventory();
+                    break;
+                case HONEY_BLOCK:
+                    DBM.setString("userdata", player.getUniqueId(), "BorderParticle", "DRIPPING_HONEY");
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.closeInventory();
+                    break;
+                case FISHING_ROD:
+                    DBM.setString("userdata", player.getUniqueId(), "BorderParticle", "FISHING");
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.closeInventory();
+                    break;
+                case LAPIS_LAZULI:
+                    DBM.setString("userdata", player.getUniqueId(), "BorderParticle", "FALLING_WATER");
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.closeInventory();
+                    break;
+                case TRIAL_SPAWNER:
+                    DBM.setString("userdata", player.getUniqueId(), "BorderParticle", "TRIAL_OMEN");
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.closeInventory();
+                    break;
+                case FIREWORK_ROCKET:
+                    DBM.setString("userdata", player.getUniqueId(), "BorderParticle", "FIREWORK");
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.closeInventory();
+                    break;
+                case SNOWBALL:
+                    DBM.setString("userdata", player.getUniqueId(), "BorderParticle", "TRIAL_SPAWNER_DETECTION");
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    player.closeInventory();
+                    break;
+                case RED_DYE:
+                    player.openInventory(mainGUI);
+                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1, 1);
+                    break;
+                default:
+                    break;
+            }
         }
+
+
     }
 
     private void sendSuggestCommandMessage(Player player, String command) {

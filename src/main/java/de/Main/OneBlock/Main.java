@@ -4,6 +4,9 @@ import de.Main.OneBlock.Market.GUI.MarketGUI;
 import de.Main.OneBlock.Market.Listener.InventoryClick;
 import de.Main.OneBlock.Market.Listener.MarketCloseListener;
 import de.Main.OneBlock.Market.Manager.MarketManager;
+import de.Main.OneBlock.OneBlock.Commands.OneBlockCommands;
+import de.Main.OneBlock.OneBlock.Commands.TabCompleter;
+import de.Main.OneBlock.OneBlock.GUI.OneBlock.OBGUI;
 import de.Main.OneBlock.OneBlock.Manager.Manager;
 import de.Main.OneBlock.OneBlock.Manager.OneBlockManager;
 import de.Main.OneBlock.OneBlock.Player.PlayerListener;
@@ -135,16 +138,16 @@ public class Main extends JavaPlugin implements Listener {
 
         // OneBlock Features
         OneBlockManager.startAutoSaveTask();
-        Bukkit.getPluginManager().registerEvents(new de.Main.OneBlock.OneBlock.GUI.OneBlock.OBGUI(economy), this);
+        Bukkit.getPluginManager().registerEvents(new OBGUI(economy), this);
         Bukkit.getPluginManager().registerEvents(new ToolSwitch(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerRespawnListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
         Bukkit.getPluginManager().registerEvents(new OneBlockManager(), this);
         Bukkit.getPluginManager().registerEvents(new WorldBorderManager(), this);
 
-        getCommand("ob").setTabCompleter(new de.Main.OneBlock.OneBlock.Commands.TabCompleter());
-        getCommand("ob").setExecutor(new de.Main.OneBlock.OneBlock.Commands.OneBlockCommands());
-        getCommand("obgui").setExecutor(new de.Main.OneBlock.OneBlock.GUI.OneBlock.OBGUI(economy));
+        getCommand("ob").setTabCompleter(new TabCompleter());
+        getCommand("ob").setExecutor(new OneBlockCommands());
+        getCommand("obgui").setExecutor(new OBGUI(economy));
 
         setServerPrefix();
         getLogger().info("OneBlockPlugin aktiviert!");

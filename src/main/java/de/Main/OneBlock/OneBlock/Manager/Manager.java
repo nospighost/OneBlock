@@ -52,8 +52,6 @@ public class Manager implements Listener {
 
                 World world = Bukkit.getWorld("OneBlock");
                 if (world != null) {
-                    Location NPC = new Location(world, pos, 101, pos);
-                    //   NPCManager.createNPC(NPC);
                     Location tp = new Location(world, pos, 101, pos);
                     Location blockLoc = new Location(
                             world,
@@ -468,7 +466,7 @@ public class Manager implements Listener {
                 }
             }
         }
-        DBM.setString("userdata", uuid, "IslandBiome", String.valueOf(newBiome));
+        DBM.setString("userdata", uuid, "IslandBiom", String.valueOf(newBiome));
                 // Chunk aktualisieren
                         Bukkit.getScheduler().runTaskLater(Bukkit.getPluginManager().getPlugin("OneBlockPlugin"), () -> {
             for (Player player : world.getPlayers()) {
@@ -502,7 +500,7 @@ public class Manager implements Listener {
         int chunkEndX = maxX >> 4;
         int chunkStartZ = minZ >> 4;
         int chunkEndZ = maxZ >> 4;
-        DBM.setString("userdat", uuid, "IslandBiome", String.valueOf(newBiome));
+        DBM.setString("userdata", uuid, "IslandBiom", String.valueOf(newBiome));
 
         //  Insel-Chunks neu laden
         for (int chunkX = chunkStartX; chunkX <= chunkEndX; chunkX++) {

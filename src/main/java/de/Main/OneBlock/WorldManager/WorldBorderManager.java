@@ -162,6 +162,7 @@ public class WorldBorderManager implements Listener {
                     }
                 } else {
                     this.particle = defaultParticle;
+
                 }
             } catch (SQLException e) {
                 Main.getInstance().getLogger().severe("Fehler beim Laden des Partikels: " + e.getMessage());
