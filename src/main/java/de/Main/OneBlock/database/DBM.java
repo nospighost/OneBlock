@@ -156,8 +156,7 @@ public class DBM implements Listener {
     }
 
     private static String getJsonFromDB(UUID ownerUUID, String key) {
-        // Hier musst du deinen echten Code zum Laden einfügen
-        // Zum Beispiel: return database.get(ownerUUID, key);
+
         return null;
     }
 
@@ -194,7 +193,7 @@ public class DBM implements Listener {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        String sql = "SELECT TotalBlocks FROM userdata LIMIT 1"; // Beispielquery, ggf. anpassen
+        String sql = "SELECT TotalBlocks FROM userdata LIMIT 1"; 
 
         try (PreparedStatement ps = connection.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
