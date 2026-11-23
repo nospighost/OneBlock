@@ -17,37 +17,170 @@
     </properties>
 
     <build>
-        <defaultGoal>clean package</defaultGoal>
+
         <plugins>
+
+            <!-- Java Compiler -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
+
                 <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
+                    <source>22</source>
+                    <target>22</target>
                 </configuration>
             </plugin>
+
+
+            <!-- Normales Maven-JAR deaktivieren -->
+            <!-- Das finale JAR wird durch Shade erstellt -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+
+
+            <!-- Abhängigkeiten in das finale JAR packen -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.5.3</version>
+
                 <executions>
+
                     <execution>
                         <phase>package</phase>
+
                         <goals>
                             <goal>shade</goal>
                         </goals>
+
+                        <configuration>
+
+                            <!-- Name und Speicherort des fertigen JARs -->
+                            <outputFile>
+                                ${project.build.directory}/${project.artifactId}-${project.version}.jar
+                            </outputFile>
+
+                            <!-- Nicht benötigte Manifest-Datei ausschließen -->
+                            <filters>
+
+                                <filter>
+                                    <artifact>co.aikar:acf-bukkit</artifact>
+
+                                    <excludes>
+                                        <exclude>META-INF/MANIFEST.MF</exclude>
+                                    </excludes>
+                                </filter>
+
+                            </filters>
+
+                        </configuration>
+
+                    </execution>
+
+                </executions>
+
+            </plugin>
+
+
+            <!-- Alte .jar.original-Datei löschen
+                 und fertiges Plugin in den Server kopieren -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+
+                <executions>
+
+
+                    <!-- Alte originale JAR-Datei löschen -->
+                    <execution>
+
+                        <id>delete-original-jar</id>
+
+                        <phase>package</phase>
+
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+
+                        <configuration>
+
+                            <target>
+
+                                <delete
+                                        file="${project.build.directory}/${project.artifactId}-${project.version}.jar.original"
+                                        failonerror="false"/>
+
+                            </target>
+
+                        </configuration>
+
+                    </execution>
+
+
+                    <!-- Fertiges JAR in den Server-Plugin-Ordner kopieren -->
+                    <execution>
+
+                        <id>copy-plugin-to-server</id>
+
+                        <phase>package</phase>
+
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+
+                        <configuration>
+
+                            <target>
+
+                                <copy
+                                        file="${project.build.directory}/${project.artifactId}-${project.version}.jar"
+                                        todir="D:\Dokumente\Server\plugins"
+                                        overwrite="true"/>
+
+                            </target>
+
+                        </configuration>
+
+                    </execution>
+
+
+                </executions>
+
+            </plugin>
+
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+
+                <executions>
+                    <execution>
+                        <id>reload-plugin</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+
+                        <configuration>
+                            <mainClass>
+                                org.GhostLibs.oneBlock.PlugmanReload
+                            </mainClass>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
         </plugins>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-            </resource>
-        </resources>
+
     </build>
 
     <repositories>
@@ -87,7 +220,11 @@
             <version>0.5.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
-
+        <dependency>
+            <groupId>com.github.t9t.minecraft-rcon-client</groupId>
+            <artifactId>minecraft-rcon-client</artifactId>
+            <version>1.0.0</version>
+        </dependency>
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>

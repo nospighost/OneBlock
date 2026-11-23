@@ -29,6 +29,7 @@ public final class DatabaseSchema {
                 .column("player_id", SQLDataType.INT).autoIncrement().notNull().primaryKey()
                 .column("uuid", SQLDataType.VARCHAR_255).notNull().unique()
                 .column("island_resets", SQLDataType.INT).defaultValue(0)
+                .column("auto_teleport_island", SQLDataType.BOOLEAN).defaultValue(false)
                 .column("last_seen", SQLDataType.BIGINT);
     }
 

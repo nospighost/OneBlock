@@ -12,7 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Übersetzer {
+public class Sprache {
 
     private static OneBlock plugin;
     private static String currentLanguage;

@@ -1,12 +1,15 @@
 package org.GhostLibs.oneBlock.model;
 
 import org.bukkit.Location;
+import org.eclipse.sisu.Nullable;
 
 import java.util.Objects;
+import java.util.UUID;
 
 public class PlayerIsland {
 
     private int islandId;
+    private @Nullable UUID ownerUUID;
     private int ownerId;
     private String islandName;
     private Location spawnLocation;
@@ -22,7 +25,7 @@ public class PlayerIsland {
 
     public PlayerIsland(int islandId, int ownerId, String islandName, Location spawnLocation,
                         Location oneblockLocation, int borderSize, double islandLevel,
-                        String biome, boolean locked, long createdAt) {
+                        String biome, boolean locked, long createdAt, UUID ownerUUID) {
         this.islandId = islandId;
         this.ownerId = ownerId;
         this.islandName = islandName;
@@ -33,6 +36,7 @@ public class PlayerIsland {
         this.biome = biome;
         this.locked = locked;
         this.createdAt = createdAt;
+        this.ownerUUID = ownerUUID;
     }
 
     public int getIslandId() {
@@ -115,6 +119,14 @@ public class PlayerIsland {
         this.createdAt = createdAt;
     }
 
+    public UUID getOwnerUUID() {
+        return ownerUUID;
+    }
+
+    public void setOwnerUUID(UUID ownerUUID) {
+        this.ownerUUID = ownerUUID;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -138,6 +150,7 @@ public class PlayerIsland {
                 ", biome='" + biome + '\'' +
                 ", locked=" + locked +
                 ", createdAt=" + createdAt +
+                ", ownerUUID=" + ownerUUID +
                 '}';
     }
 }

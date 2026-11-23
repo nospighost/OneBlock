@@ -2,7 +2,7 @@ package org.GhostLibs.oneBlock.gui;
 
 import org.GhostLibs.oneBlock.CustomItems;
 import org.GhostLibs.oneBlock.OneBlock;
-import org.GhostLibs.oneBlock.Übersetzer;
+import org.GhostLibs.oneBlock.Sprache;
 import org.GhostLibs.oneBlock.model.PlayerData;
 import org.GhostLibs.oneBlock.model.PlayerIsland;
 import org.bukkit.Bukkit;
@@ -53,11 +53,11 @@ public class IslandListGUI implements InventoryHolder {
                 ownerName = "Unbekannt";
             }
 
-            meta.setDisplayName(Übersetzer.get("UI.islandItemTitle", "%player%", ownerName));
+            meta.setDisplayName(Sprache.get("UI.islandItemTitle", "%player%", ownerName));
 
             lore.add("");
-            lore.add(Übersetzer.get("UI.islandName", "%name%", island.getIslandName()));
-            lore.add(Übersetzer.get("UI.islandLocked", "%state%", island.isLocked() ? Übersetzer.get("UI.islandLockedYes") : Übersetzer.get("UI.islandLockedNo")));
+            lore.add(Sprache.get("UI.islandName", "%name%", island.getIslandName()));
+            lore.add(Sprache.get("UI.islandLocked", "%state%", island.isLocked() ? Sprache.get("UI.islandLockedYes") : Sprache.get("UI.islandLockedNo")));
 
         });
 

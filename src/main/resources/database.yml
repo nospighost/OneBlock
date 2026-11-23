@@ -1,8 +1,9 @@
-database:
-  host: localhost
+connection:
+  host: "localhost"
   port: 3308
-  database: oneblock
-  user: root
-  password: geheim
+  database: "crateplugin"
+  user: "root"
+  password: "geheim"
+  ssl: false
   use-connection-string: false
   connection-string: ""

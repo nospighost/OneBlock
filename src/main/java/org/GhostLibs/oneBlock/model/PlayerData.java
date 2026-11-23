@@ -1,5 +1,7 @@
 package org.GhostLibs.oneBlock.model;
 
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -8,12 +10,12 @@ public class PlayerData {
     private int playerId;
     private UUID uuid;
     private int islandResets;
-    private long lastSeen;
+    private Long lastSeen;
 
     public PlayerData() {
     }
 
-    public PlayerData(int playerId, UUID uuid, int islandResets, long lastSeen) {
+    public PlayerData(int playerId, UUID uuid, int islandResets, Long lastSeen) {
         this.playerId = playerId;
         this.uuid = uuid;
         this.islandResets = islandResets;
@@ -44,11 +46,11 @@ public class PlayerData {
         this.islandResets = islandResets;
     }
 
-    public long getLastSeen() {
+    public Long getLastSeen() {
         return lastSeen;
     }
 
-    public void setLastSeen(long lastSeen) {
+    public void setLastSeen(Long lastSeen) {
         this.lastSeen = lastSeen;
     }
 
