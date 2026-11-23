@@ -1,10 +1,11 @@
+language: "de"
+
 oneblock:
   default:
     worldBorderSize: 26
     x: 0
     y: 1
     z: 0
-
 
 phases:
   1:

@@ -1,12 +1,10 @@
 package org.GhostLibs.oneBlock.manager;
 
-import org.GhostLibs.oneBlock.OneBlock;
-import org.GhostLibs.oneBlock.models.OBPhase;
+import org.GhostLibs.oneBlock.model.OBPhase;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -48,11 +46,11 @@ public class PhaseManager {
                 List<String> blockStrings = singlePhaseSection.getStringList("blocks");
                 List<Material> materials = new ArrayList<>();
 
-                for (String blockStr : blockStrings) {
+                for (String blockName : blockStrings) {
                     try {
-                        materials.add(Material.valueOf(blockStr.toUpperCase()));
+                        materials.add(Material.valueOf(blockName.toUpperCase()));
                     } catch (IllegalArgumentException e) {
-                        plugin.getLogger().warning("Ungültiges Material '" + blockStr + "' in Phase " + phaseId);
+                        plugin.getLogger().warning("Ungültiges Material '" + blockName + "' in Phase " + phaseId);
                     }
                 }
 

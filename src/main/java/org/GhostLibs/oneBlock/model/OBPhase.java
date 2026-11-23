@@ -1,4 +1,4 @@
-package org.GhostLibs.oneBlock.models;
+package org.GhostLibs.oneBlock.model;
 
 import org.GhostLibs.oneBlock.manager.PhaseManager;
 import org.bukkit.Material;

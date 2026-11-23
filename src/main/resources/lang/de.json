@@ -1,0 +1,10 @@
+{
+  "prefix": "&8[&aOneBlock&8] &7",
+  "UI": {
+    "islandItemTitle": "&b&lInsel von %player%",
+    "islandLocked": "§bGesperrt §8» %state%",
+    "islandLockedYes": "&c&lJa",
+    "islandLockedNo": "§a§lNein",
+    "islandName": "§bInselname §8» %name%"
+  }
+}
