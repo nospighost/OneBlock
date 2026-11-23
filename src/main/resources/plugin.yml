@@ -1,0 +1,10 @@
+name: One-Block
+description: $description
+prefix: AntiCheat
+version: '${version}'
+
+main: org.GhostLibs.oneBlock.OneBlock
+api-version: '26.2'
+load: POSTWORLD
+
+authors: [ nospighost ]

@@ -1,0 +1,8 @@
+database:
+  host: localhost
+  port: 3308
+  database: oneblock
+  user: root
+  password: geheim
+  use-connection-string: false
+  connection-string: ""

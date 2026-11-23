@@ -1,0 +1,76 @@
+oneblock:
+  default:
+    worldBorderSize: 26
+    x: 0
+    y: 1
+    z: 0
+
+
+phases:
+  1:
+    name: "&a&lAnfänger"
+    blockAmount: 120
+    blocks:
+      - DIRT
+      - COAL_ORE
+      - GRASS_BLOCK
+      - COARSE_DIRT
+      - OAK_LOG
+      - BIRCH_LOG
+      - OAK_LEAVES
+  2:
+    name: "&e&lFortgeschritten"
+    blockAmount: 120
+    blocks:
+      - STONE
+      - IRON_ORE
+      - COAL_ORE
+      - OAK_LOG
+      - COPPER_ORE
+      - DEEPSLATE_COAL_ORE
+  3:
+    name: "&2&lBäume & Erde"
+    blockAmount: 150
+    blocks:
+      - DARK_OAK_LOG
+      - SPRUCE_LOG
+      - DARK_OAK_LEAVES
+      - OAK_LOG
+      - GRASS_BLOCK
+      - GRAVEL
+      - SAND
+      - ANVIL
+      - DIRT
+      - CLAY
+      - MOSS_BLOCK
+  4:
+    name: "&c&lNether & Tiefe"
+    blockAmount: 200
+    blocks:
+      - NETHERRACK
+      - SOUL_SAND
+      - SOUL_SOIL
+      - CRIMSON_NYLIUM
+      - WARPED_NYLIUM
+      - NETHER_QUARTZ_ORE
+      - NETHER_GOLD_ORE
+      - MAGMA_BLOCK
+      - BASALT
+      - BLACKSTONE
+      - DEEPSLATE_IRON_ORE
+      - RED_SAND
+  5:
+    name: "&5&lDas Finale & End"
+    blockAmount: 250
+    blocks:
+      - END_STONE
+      - OBSIDIAN
+      - CRYING_OBSIDIAN
+      - DIAMOND_ORE
+      - DEEPSLATE_DIAMOND_ORE
+      - EMERALD_ORE
+      - AMETHYST_BLOCK
+      - RAW_IRON_BLOCK
+      - RAW_GOLD_BLOCK
+      - GOLD_ORE
+      - CHEST
