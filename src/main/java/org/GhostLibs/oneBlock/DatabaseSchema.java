@@ -36,7 +36,7 @@ public final class DatabaseSchema {
     private Table playerIsland() {
         return Table.create("player_island")
                 .column("island_id", SQLDataType.INT).autoIncrement().notNull().primaryKey()
-                .column("owner_id", SQLDataType.INT).notNull()
+                .column("owner_id", SQLDataType.INT).notNull().unique()
                 .column("island_name", SQLDataType.VARCHAR_255)
                 .column("spawn_location", SQLDataType.LOCATION)
                 .column("oneblock_location", SQLDataType.LOCATION)

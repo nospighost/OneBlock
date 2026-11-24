@@ -2,12 +2,15 @@
   "prefix": "&8[&aOneBlock&8] &7",
   "COMMANDS": {
     "ISLAND_SUCCESSFULL_CREATED": "&7Deine Insel wurde erfolgreich erstellt!",
-    "ISLAND_ALREADY_EXISTS": "&cDu besitzt bereits eine Insel!!",
+    "ISLAND_ALREADY_EXISTS": "&cDu besitzt bereits eine Insel!",
+    "ISLAND_NO_ISLAND": "&cDu besitzt keine Insel!",
     "ISLAND_ERROR_CREATED": "&cDeine Insel konnte nicht erstellt werden!",
     "ISLANDSETTINGS_ERROR_CREATED": "&cDeine Insel-Einstellungen konnte nicht erstellt werden!",
     "ISLANDPHASES_ERROR_CREATED": "&cDeine Insel-Phase konnte nicht erstellt werden!",
     "ISLAND_DELETE": "&cDeine Insel wurde gelöscht!",
-    "ISLAND_DELETE_ERROR": "&cFehler beim löschen der Insel"
+    "ISLAND_DELETE_ERROR": "&cFehler beim löschen der Insel",
+    "ISLAND_BUSY": "Deine Insel wird gerade erstellt, bitte warte einen Moment.",
+    "ISLAND_CREATING": "Deine Insel wird erstellt, das kann einen Moment dauern..."
   },
   "ERRORS": {
     "NO_PLAYER_DATA": "&cEs konnte kein Spielerdatensatz für %player% gefunden werden!"
@@ -17,6 +20,6 @@
     "islandLocked": "§bGesperrt §8» %state%",
     "islandLockedYes": "&c&lJa",
     "islandLockedNo": "§a§lNein",
-    "islandName": "§bInselname §8» %name%"
+    "islandName": "§bInselname §8» §b%name%"
   }
 }

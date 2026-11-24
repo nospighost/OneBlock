@@ -28,10 +28,9 @@ public class IslandListGUI implements InventoryHolder {
         OneBlock.getInstance().getObManager().getPlayerData(uuid).thenAccept(data -> {
             this.playerData = data;
         });
-        CreateGUI();
     }
 
-    private void CreateGUI(){
+    public void CreateGUI(){
         IslandListGUI guiHolder = new IslandListGUI(ownerUUID);
 
         inv = Bukkit.createInventory(guiHolder, 27, "§b§lInseln");
@@ -59,6 +58,7 @@ public class IslandListGUI implements InventoryHolder {
             lore.add(Sprache.get("UI.islandName", "%name%", island.getIslandName()));
             lore.add(Sprache.get("UI.islandLocked", "%state%", island.isLocked() ? Sprache.get("UI.islandLockedYes") : Sprache.get("UI.islandLockedNo")));
 
+            meta.setLore(lore);
         });
 
         return islandItem;

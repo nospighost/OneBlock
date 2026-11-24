@@ -1,5 +1,6 @@
 language: "de"
-
+OBDelete:
+  TPWorld: "lobby-1"
 phases:
   1:
     name: "&a&lAnfänger"

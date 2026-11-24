@@ -1,8 +1,9 @@
 package org.GhostLibs.oneBlock.manager;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import de.main.database.db.DBM;
 import de.main.database.util.MessageUtil;
-import org.GhostLibs.oneBlock.OneBlock;
 import org.GhostLibs.oneBlock.Sprache;
 import org.GhostLibs.oneBlock.events.OBCreateIsland;
 import org.GhostLibs.oneBlock.events.OBCreateIslandPhase;
@@ -12,29 +13,56 @@ import org.GhostLibs.oneBlock.model.PlayerIsland;
 import org.GhostLibs.oneBlock.util.OBEventUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.checkerframework.checker.units.qual.C;
-import org.jetbrains.annotations.NotNull;
 
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 
 public class OBManager {
     private final DBM dbm;
     private static OBManager instance;
     private final JavaPlugin plugin;
+    private final WorldManager worldManager;
+    private final Set<UUID> busy = ConcurrentHashMap.newKeySet();
+    private static final int START_BORDER_SIZE = 7;
 
     public static OBManager getInstance() {
         return instance;
     }
-    public OBManager(DBM dbm, JavaPlugin plugin) {
+
+    public OBManager(DBM dbm, JavaPlugin plugin, WorldManager worldManager) {
         this.dbm = dbm;
         instance = this;
         this.plugin = plugin;
+        this.worldManager = worldManager;
+    }
+
+    private static final class IslandAbort extends RuntimeException {
+        IslandAbort() {
+            super(null, null, false, false);
+        }
+    }
+
+    private static <T> CompletableFuture<T> abort() {
+        return CompletableFuture.failedFuture(new IslandAbort());
+    }
+
+    private static boolean isAbort(Throwable t) {
+        while (t != null) {
+            if (t instanceof IslandAbort) return true;
+            t = t.getCause();
+        }
+        return false;
     }
 
     public CompletableFuture<PlayerData> getPlayerData(UUID uuid) {
@@ -58,7 +86,6 @@ public class OBManager {
     public CompletableFuture<Integer> getPlayerID(UUID uuid) {
         return dbm.getInt("player_data", "player_id", "uuid", uuid.toString(), -1);
     }
-
 
     public CompletableFuture<PlayerIsland> getPlayerIsland(UUID uuid) {
         return getPlayerID(uuid).thenCompose(id -> {
@@ -84,7 +111,6 @@ public class OBManager {
             }
             return mapRowToIsland(row, null);
         });
-
     }
 
     public CompletableFuture<List<PlayerIsland>> getMembersIslands(UUID uuid) {
@@ -99,7 +125,6 @@ public class OBManager {
         });
     }
 
-
     private PlayerData mapRowToPlayerData(Map<String, Object> row) {
         int playerId = ((Number) row.get("player_id")).intValue();
         UUID uuid = UUID.fromString((String) row.get("uuid"));
@@ -113,8 +138,8 @@ public class OBManager {
         int islandId = ((Number) row.get("island_id")).intValue();
         int ownerId = ((Number) row.get("owner_id")).intValue();
         String islandName = (String) row.get("island_name");
-        Location spawnLocation = (Location) row.get("spawn_location");
-        Location oneblockLocation = (Location) row.get("oneblock_location");
+        Location spawnLocation = toLocation(row.get("spawn_location"));
+        Location oneblockLocation = toLocation(row.get("oneblock_location"));
         int borderSize = ((Number) row.get("border_size")).intValue();
         double islandLevel = ((Number) row.get("island_level")).doubleValue();
         String biome = (String) row.get("biome");
@@ -134,6 +159,26 @@ public class OBManager {
                 createdAt,
                 uuid
         );
+    }
+
+    private Location toLocation(Object value) {
+        if (value == null) return null;
+        if (value instanceof Location loc) return loc;
+
+        JsonObject json = JsonParser.parseString(value.toString()).getAsJsonObject();
+
+        String worldName = json.has("world") && !json.get("world").isJsonNull()
+                ? json.get("world").getAsString()
+                : null;
+        World world = worldName != null ? Bukkit.getWorld(worldName) : null;
+
+        double x = json.get("x").getAsDouble();
+        double y = json.get("y").getAsDouble();
+        double z = json.get("z").getAsDouble();
+        float yaw = json.has("yaw") ? json.get("yaw").getAsFloat() : 0f;
+        float pitch = json.has("pitch") ? json.get("pitch").getAsFloat() : 0f;
+
+        return new Location(world, x, y, z, yaw, pitch);
     }
 
     public void createPlayerData(Map<String, Object> data) {
@@ -246,12 +291,44 @@ public class OBManager {
             return CompletableFuture.completedFuture(null);
         }
 
+        UUID uuid = player.getUniqueId();
+        if (!busy.add(uuid)) {
+            sendMessageSync(player, Sprache.get("COMMANDS.ISLAND_BUSY"));
+            return CompletableFuture.completedFuture(null);
+        }
+
+        return getPlayerIsland(uuid)
+                .thenCompose(existing -> {
+                    if (existing != null) {
+                        sendMessageSync(player, Sprache.get("COMMANDS.ISLAND_ALREADY_EXISTS"));
+                        return CompletableFuture.<Void>completedFuture(null);
+                    }
+
+                    return worldManager.createWorld(player, START_BORDER_SIZE)
+                            .exceptionallyCompose(ex -> rollback(uuid)
+                                    .thenCompose(v -> CompletableFuture.<World>failedFuture(ex)))
+                            .thenCompose(world -> buildIsland(player, playerId, playerData, world)
+                                    .handle((ok, ex) -> {
+                                        if (ex == null) {
+                                            teleportToIsland(player, world);
+                                            return CompletableFuture.<Void>completedFuture(null);
+                                        }
+                                        return rollback(uuid).thenCompose(v -> isAbort(ex)
+                                                ? CompletableFuture.<Void>completedFuture(null)
+                                                : CompletableFuture.<Void>failedFuture(ex));
+                                    })
+                                    .thenCompose(f -> f));
+                })
+                .whenComplete((v, ex) -> busy.remove(uuid));
+    }
+
+    private CompletableFuture<Void> buildIsland(Player player, int playerId, PlayerData playerData, World world) {
         Map<String, Object> islandData = new HashMap<>();
         islandData.put("owner_id", playerId);
         islandData.put("island_name", player.getName() + "'s Island");
-        islandData.put("spawn_location", null);
-        islandData.put("oneblock_location", null);
-        islandData.put("border_size", 7);
+        islandData.put("spawn_location", new Location(world, 0.5, 101, 0.5));
+        islandData.put("oneblock_location", new Location(world, 0, 100, 0));
+        islandData.put("border_size", START_BORDER_SIZE);
         islandData.put("island_level", 0.0);
         islandData.put("biome", "PLAINS");
         islandData.put("locked", false);
@@ -259,36 +336,50 @@ public class OBManager {
 
         OBCreateIsland event = new OBCreateIsland(player, playerData, islandData);
 
-        return OBEventUtil.callSync(plugin, event)
-                .thenCompose(createEvent -> {
-                    if (createEvent.isCancelled()) {
-                        return CompletableFuture.completedFuture(null);
-                    }
+        return OBEventUtil.callSync(plugin, event).thenCompose(createEvent -> {
+            if (createEvent.isCancelled()) {
+                return abort();
+            }
 
-                    return OBManager.getInstance().createPlayerIsland(createEvent.getIslandData())
-                            .thenCompose(islandId -> {
-                                if (islandId == -1) {
-                                    sendMessageSync(player, Sprache.get("COMMANDS.ISLAND_ERROR_CREATED"));
-                                    return CompletableFuture.completedFuture(null);
-                                }
+            return createPlayerIsland(createEvent.getIslandData()).thenCompose(islandId -> {
+                if (islandId == -1) {
+                    sendMessageSync(player, Sprache.get("COMMANDS.ISLAND_ERROR_CREATED"));
+                    return abort();
+                }
 
-                                if (islandId == -2) {
-                                    sendMessageSync(player, Sprache.get("COMMANDS.ISLAND_ALREADY_EXISTS"));
-                                    return CompletableFuture.completedFuture(null);
-                                }
+                if (islandId == -2) {
+                    sendMessageSync(player, Sprache.get("COMMANDS.ISLAND_ALREADY_EXISTS"));
+                    return abort();
+                }
 
-                                return loadIsland(player, islandId, createEvent);
-                            });
+                return loadIsland(player, islandId, createEvent);
+            });
+        });
+    }
+
+    private void teleportToIsland(Player player, World world) {
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            if (player.isOnline()) {
+                player.teleportAsync(world.getSpawnLocation());
+            }
+        });
+    }
+
+    private CompletableFuture<Void> rollback(UUID uuid) {
+        return deleteIsland(uuid).toCompletableFuture()
+                .handle((r, ex) -> (Void) null)
+                .thenCompose(v -> worldManager.deleteWorld(uuid))
+                .exceptionally(ex -> {
+                    plugin.getLogger().log(Level.SEVERE, "Rollback fehlgeschlagen für " + uuid, ex);
+                    return null;
                 });
     }
 
     private CompletableFuture<Void> loadIsland(Player player, int islandId, OBCreateIsland createEvent) {
-        OBManager manager = OBManager.getInstance();
-
-        return manager.getPlayerIsland(islandId)
+        return getPlayerIsland(islandId)
                 .thenCompose(playerIsland -> {
                     if (playerIsland == null) {
-                        return CompletableFuture.failedFuture(new IllegalStateException("PlayerIsland could not be loaded."));
+                        return CompletableFuture.<Void>failedFuture(new IllegalStateException("PlayerIsland could not be loaded."));
                     }
 
                     createEvent.setPlayerIsland(playerIsland);
@@ -315,34 +406,32 @@ public class OBManager {
         return OBEventUtil.callSync(plugin, event)
                 .thenCompose(settingsEvent -> {
                     if (settingsEvent.isCancelled()) {
-                        return CompletableFuture.completedFuture(null);
+                        return abort();
                     }
 
                     PlayerIsland modifiedIsland = settingsEvent.getPlayerIsland();
 
                     if (modifiedIsland == null) {
-                        return CompletableFuture.failedFuture(
+                        return CompletableFuture.<Void>failedFuture(
                                 new IllegalStateException("PlayerIsland cannot be null.")
                         );
                     }
 
                     createEvent.setPlayerIsland(modifiedIsland);
 
-                    return OBManager.getInstance()
-                            .updatePlayerIsland(modifiedIsland)
+                    return updatePlayerIsland(modifiedIsland)
                             .thenCompose(updated -> {
                                 if (!updated) {
-                                    return CompletableFuture.failedFuture(
+                                    return CompletableFuture.<Void>failedFuture(
                                             new IllegalStateException("Could not update PlayerIsland.")
                                     );
                                 }
 
-                                return OBManager.getInstance()
-                                        .createIslandSettings(settingsEvent.getSettingsData())
+                                return createIslandSettings(settingsEvent.getSettingsData())
                                         .thenCompose(settingsId -> {
-                                            if (settingsId <= 0) {
+                                            if (settingsId == null || settingsId <= 0) {
                                                 sendMessageSync(player, Sprache.get("COMMANDS.ISLANDSETTINGS_ERROR_CREATED"));
-                                                return CompletableFuture.completedFuture(null);
+                                                return CompletableFuture.<Void>failedFuture(new IslandAbort());
                                             }
 
                                             return createIslandPhase(player, settingsEvent);
@@ -369,20 +458,17 @@ public class OBManager {
         return OBEventUtil.callSync(plugin, event)
                 .thenCompose(phaseEvent -> {
                     if (phaseEvent.isCancelled()) {
-                        return CompletableFuture.completedFuture(null);
+                        return abort();
                     }
 
-                    return OBManager.getInstance()
-                            .createIslandPhases(phaseEvent.getPhaseData())
+                    return createIslandPhases(phaseEvent.getPhaseData())
                             .thenAccept(success -> {
-                                if (success == -1) {
+                                if (success == null || success == -1) {
                                     sendMessageSync(player, Sprache.get("COMMANDS.ISLANDPHASES_ERROR_CREATED"));
-                                    return;
+                                    throw new IslandAbort();
                                 }
 
-                                if (success == 0) {
-                                    sendMessageSync(player, Sprache.get("COMMANDS.ISLAND_SUCCESSFULL_CREATED"));
-                                }
+                                sendMessageSync(player, Sprache.get("COMMANDS.ISLAND_SUCCESSFULL_CREATED"));
                             });
                 });
     }
@@ -407,14 +493,19 @@ public class OBManager {
                 return CompletableFuture.completedFuture(-1);
             }
 
-            try {
-                dbm.delete("player_island", "owner_id", playerId);
-            } catch (Exception exception) {
-                exception.printStackTrace();
-                return CompletableFuture.completedFuture(-2);
-            }
+            return dbm.exists("player_island", "owner_id", playerId).thenCompose(exists -> {
+                if (!exists) {
+                    return CompletableFuture.completedFuture(-3);
+                }
 
-            return CompletableFuture.completedFuture(0);
+                return dbm.delete("player_island", "owner_id", playerId)
+                        .thenCompose(ignored -> worldManager.deleteWorld(uuid))
+                        .thenApply(v -> 0)
+                        .exceptionally(exception -> {
+                            plugin.getLogger().log(Level.SEVERE, "deleteIsland fehlgeschlagen für " + uuid, exception);
+                            return -2;
+                        });
+            });
         });
     }
 }

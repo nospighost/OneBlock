@@ -7,6 +7,7 @@ import org.GhostLibs.oneBlock.commands.OBCommands;
 import org.GhostLibs.oneBlock.listener.JoinListener;
 import org.GhostLibs.oneBlock.manager.OBManager;
 import org.GhostLibs.oneBlock.manager.PhaseManager;
+import org.GhostLibs.oneBlock.manager.WorldManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class OneBlock extends JavaPlugin {
@@ -15,6 +16,7 @@ public final class OneBlock extends JavaPlugin {
     private OBManager obManager;
     private static OneBlock instance;
     private PaperCommandManager commandManager;
+    private WorldManager worldManager;
     public static OneBlock getInstance() {
         return instance;
     }
@@ -32,7 +34,8 @@ public final class OneBlock extends JavaPlugin {
         DatabaseSchema databaseSchema = new DatabaseSchema(dbm);
         databaseSchema.create();
 
-        obManager = new OBManager(dbm, this);
+        worldManager = new WorldManager(this);
+        obManager = new OBManager(dbm, this, worldManager);
 
         Sprache.init(this, getConfig().getString("language"));
         PhaseManager.setPlugin(this);
@@ -41,7 +44,7 @@ public final class OneBlock extends JavaPlugin {
         commandManager = new PaperCommandManager(this);
         commandManager.registerCommand(new OBCommands(this));
 
-        getServer().getPluginManager().registerEvents(new JoinListener(), this);
+        getServer().getPluginManager().registerEvents(new JoinListener(worldManager), this);
 
         MessageUtil.setPREFIX(Sprache.get("prefix"));
         getLogger().info("╔════════════════════════════════════╗");
@@ -59,6 +62,10 @@ public final class OneBlock extends JavaPlugin {
         getLogger().info("╚════════════════════════════════════╝");
 
 
+    }
+
+    public WorldManager getWorldManager() {
+        return worldManager;
     }
 
     public DBM getDbm() {
