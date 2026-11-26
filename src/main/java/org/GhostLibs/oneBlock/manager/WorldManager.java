@@ -1,19 +1,18 @@
 package org.GhostLibs.oneBlock.manager;
 
-import org.GhostLibs.oneBlock.OneBlock;
+
 import org.GhostLibs.oneBlock.util.ErrorLogger;
 import org.GhostLibs.oneBlock.util.VoidGenerator;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.Comparator;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -69,12 +68,39 @@ public final class WorldManager {
 
     public boolean hasWorld(UUID uuid) {
         try {
-            File folder = new File(Bukkit.getWorldContainer(), worldName(uuid));
-            return folder.exists();
+            String name = worldName(uuid);
+            if (Bukkit.getWorld(name) != null) return true;
+            return Files.isDirectory(resolveWorldFolder(uuid, null));
         } catch (Exception e) {
             ErrorLogger.log("Fehler beim Prüfen ob Welt existiert (hasWorld) im WorldManager.java: " + e.getMessage(), e);
             return false;
         }
+    }
+
+
+    private Path resolveWorldFolder(UUID uuid, World loadedWorld) {
+        if (loadedWorld != null) {
+            return loadedWorld.getWorldPath().toAbsolutePath().normalize();
+        }
+
+        String name = worldName(uuid);
+        NamespacedKey worldKey = new WorldCreator(name).key();
+
+        Path paperFolder = Bukkit.getServer().getLevelDirectory()
+                .resolve("dimensions")
+                .resolve(worldKey.getNamespace())
+                .resolve(worldKey.getKey())
+                .toAbsolutePath()
+                .normalize();
+
+        Path legacyFolder = Bukkit.getWorldContainer().toPath()
+                .resolve(name)
+                .toAbsolutePath()
+                .normalize();
+
+        if (Files.isDirectory(paperFolder)) return paperFolder;
+        if (Files.isDirectory(legacyFolder)) return legacyFolder;
+        return paperFolder;
     }
 
     public World getWorld(UUID uuid) {
@@ -266,17 +292,27 @@ public final class WorldManager {
 
         Bukkit.getScheduler().runTask(plugin, () -> {
             World world = Bukkit.getWorld(name);
+            Path worldFolder = resolveWorldFolder(uuid, world);
+
             if (world == null) {
                 debugMsg(player, "Welt war nicht geladen.");
-                finishDeleteWorld(name, future, player);
+                finishDeleteWorld(worldFolder, future, player);
                 return;
             }
 
-            Location evacLoc = Bukkit.getWorld(Objects.requireNonNull(OneBlock.getInstance().getConfig().getString("OBDelete.TPWorld"))).getSpawnLocation();
-            if (evacLoc == null) {
-                evacLoc = new Location(Bukkit.getWorld("world"), 0, 100, 0);
-                ErrorLogger.log("Teleport Location (world name) für die Evakuierung konnte nicht gefunden werden. Verwende Standard-Welt-Spawn-Position.");
+            String evacuationWorldName = plugin.getConfig().getString("OBDelete.TPWorld");
+            World evacuationWorld = evacuationWorldName != null ? Bukkit.getWorld(evacuationWorldName) : null;
+            if (evacuationWorld == null || evacuationWorld.equals(world)) {
+                evacuationWorld = Bukkit.getWorlds().stream().filter(candidate -> !candidate.equals(world)).findFirst().orElse(null);
             }
+            if (evacuationWorld == null) {
+                IllegalStateException ex = new IllegalStateException("Keine andere geladene Welt für die Evakuierung vorhanden.");
+                ErrorLogger.log("Welt kann nicht gelöscht werden, da keine Evakuierungswelt verfügbar ist: " + name, ex);
+                future.completeExceptionally(ex);
+                return;
+            }
+
+            Location evacLoc = evacuationWorld.getSpawnLocation();
             List<CompletableFuture<Boolean>> teleportFutures = new ArrayList<>();
             for (Player p : world.getPlayers()) {
                 teleportFutures.add(p.teleportAsync(evacLoc));
@@ -298,7 +334,7 @@ public final class WorldManager {
                             return;
                         }
                         debugMsg(player, "Welt entladen.");
-                        finishDeleteWorld(name, future, player);
+                        finishDeleteWorld(worldFolder, future, player);
                     } catch (Exception e) {
                         ErrorLogger.log("Fehler beim Entladen der Welt in deleteWorld() im WorldManager.java für " + name + ": " + e.getMessage(), e);
                         future.completeExceptionally(e);
@@ -310,25 +346,24 @@ public final class WorldManager {
         return future;
     }
 
-    private void finishDeleteWorld(String name, CompletableFuture<Void> future, Player player) {
+    private void finishDeleteWorld(Path worldFolder, CompletableFuture<Void> future, Player player) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             try {
-                File worldFolder = new File(Bukkit.getWorldContainer(), name);
-                if (worldFolder.exists()) {
-                    debugMsg(player, "Lösche Ordner: " + worldFolder.getAbsolutePath());
-                    deleteFolder(worldFolder.toPath());
+                if (Files.exists(worldFolder)) {
+                    debugMsg(player, "Lösche Ordner: " + worldFolder);
+                    deleteFolder(worldFolder);
                     debugMsg(player, "Ordner gelöscht.");
                 } else {
-                    debugMsg(player, "Ordner existiert nicht.");
+                    debugMsg(player, "Ordner existiert nicht: " + worldFolder);
                 }
                 future.complete(null);
             } catch (IOException e) {
                 debugMsg(player, "Fehler beim Löschen: " + e.getMessage());
-                ErrorLogger.log("Fehler beim Löschen einer Welt im WorldManager.java " + e.getMessage(), e);
+                ErrorLogger.log("Fehler beim Löschen einer Welt im WorldManager.java: " + e.getMessage(), e);
                 future.completeExceptionally(e);
             } catch (Exception e) {
                 debugMsg(player, "Unerwarteter Fehler beim Löschen: " + e.getMessage());
-                ErrorLogger.log("Unerwarteter Fehler beim Löschen einer Welt im WorldManager.java " + e.getMessage(), e);
+                ErrorLogger.log("Unerwarteter Fehler beim Löschen einer Welt im WorldManager.java: " + e.getMessage(), e);
                 future.completeExceptionally(e);
             }
         });
@@ -337,13 +372,23 @@ public final class WorldManager {
     private void deleteFolder(Path path) throws IOException {
         if (!Files.exists(path)) return;
         try (var walk = Files.walk(path)) {
-            walk.sorted((a, b) -> b.compareTo(a)).forEach(file -> {
-                try {
-                    Files.delete(file);
-                } catch (IOException e) {
-                    ErrorLogger.log("Fehler beim Löschen einer Datei/Ordner (deleteFolder) im WorldManager.java: " + file + " - " + e.getMessage(), e);
-                }
-            });
+            for (Path file : walk.sorted(Comparator.reverseOrder()).toList()) {
+                Files.delete(file);
+            }
         }
     }
+
+    public boolean isWorldLoaded(String worldName) {
+        return worldName != null && Bukkit.getWorld(worldName) != null;
+    }
+
+    public World loadWorld(String worldName) {
+        World world = Bukkit.getWorld(worldName);
+        if (world != null) {
+            return world;
+        }
+        return Bukkit.createWorld(new WorldCreator(worldName));
+    }
+
+
 }

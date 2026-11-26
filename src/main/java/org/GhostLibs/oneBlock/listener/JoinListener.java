@@ -40,12 +40,5 @@ public class JoinListener implements Listener {
     }
 
 
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerQuit(PlayerQuitEvent event) {
-        if (!worldManager.hasWorld(event.getPlayer().getUniqueId())) return;
-        World world = worldManager.getWorld(event.getPlayer().getUniqueId());
-        worldManager.unloadIfEmpty(world);
-    }
-
 
 }

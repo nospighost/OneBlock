@@ -1,6 +1,7 @@
 package org.GhostLibs.oneBlock.model;
 
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.eclipse.sisu.Nullable;
 
 import java.util.Objects;
@@ -19,13 +20,14 @@ public class PlayerIsland {
     private String biome = "PLAINS";
     private boolean locked = false;
     private long createdAt;
+    private World world;
 
     public PlayerIsland() {
     }
 
     public PlayerIsland(int islandId, int ownerId, String islandName, Location spawnLocation,
                         Location oneblockLocation, int borderSize, double islandLevel,
-                        String biome, boolean locked, long createdAt, UUID ownerUUID) {
+                        String biome, boolean locked, long createdAt, UUID ownerUUID, World world) {
         this.islandId = islandId;
         this.ownerId = ownerId;
         this.islandName = islandName;
@@ -37,6 +39,15 @@ public class PlayerIsland {
         this.locked = locked;
         this.createdAt = createdAt;
         this.ownerUUID = ownerUUID;
+        this.world = world;
+    }
+
+    public World getWorld() {
+        return world;
+    }
+
+    public void setWorld(World world) {
+        this.world = world;
     }
 
     public int getIslandId() {
@@ -49,6 +60,10 @@ public class PlayerIsland {
 
     public int getOwnerId() {
         return ownerId;
+    }
+
+    public boolean isOwner(int playerId) {
+        return this.ownerId == playerId;
     }
 
     public void setOwnerId(int ownerId) {

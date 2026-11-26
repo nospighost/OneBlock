@@ -4,18 +4,23 @@ import co.aikar.commands.PaperCommandManager;
 import de.main.database.db.DBM;
 import de.main.database.util.MessageUtil;
 import org.GhostLibs.oneBlock.commands.OBCommands;
+import org.GhostLibs.oneBlock.gui.IslandListGUIListener;
+import org.GhostLibs.oneBlock.listener.BlockListener;
+import org.GhostLibs.oneBlock.listener.IslandCacheListener;
 import org.GhostLibs.oneBlock.listener.JoinListener;
+import org.GhostLibs.oneBlock.manager.IslandCache;
 import org.GhostLibs.oneBlock.manager.OBManager;
 import org.GhostLibs.oneBlock.manager.PhaseManager;
 import org.GhostLibs.oneBlock.manager.WorldManager;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.awt.print.Paper;
 
 public final class OneBlock extends JavaPlugin {
 
     private DBM dbm;
     private OBManager obManager;
     private static OneBlock instance;
-    private PaperCommandManager commandManager;
     private WorldManager worldManager;
     public static OneBlock getInstance() {
         return instance;
@@ -41,10 +46,14 @@ public final class OneBlock extends JavaPlugin {
         PhaseManager.setPlugin(this);
         PhaseManager.loadPhases();
 
-        commandManager = new PaperCommandManager(this);
+        PaperCommandManager commandManager = new PaperCommandManager(this);
         commandManager.registerCommand(new OBCommands(this));
 
+        IslandCache cache = new IslandCache(obManager);
         getServer().getPluginManager().registerEvents(new JoinListener(worldManager), this);
+        getServer().getPluginManager().registerEvents(new IslandCacheListener(cache, worldManager), this);
+        getServer().getPluginManager().registerEvents(new BlockListener(this, worldManager, cache), this);
+        getServer().getPluginManager().registerEvents(new IslandListGUIListener(), this);
 
         MessageUtil.setPREFIX(Sprache.get("prefix"));
         getLogger().info("╔════════════════════════════════════╗");

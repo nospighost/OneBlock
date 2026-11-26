@@ -7,9 +7,11 @@ import org.GhostLibs.oneBlock.model.PlayerData;
 import org.GhostLibs.oneBlock.model.PlayerIsland;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -37,13 +39,18 @@ public class IslandListGUI implements InventoryHolder {
         fillBorder();
 
         OneBlock.getInstance().getObManager().getPlayerIsland(ownerUUID).thenAccept(island -> {
-            inv.setItem(11, createIslandItem(island));
+            inv.setItem(10, createIslandItem(island));
         });
 
     }
 
     private ItemStack createIslandItem(PlayerIsland island) {
-        ItemStack islandItem = new ItemStack(island.getOwnerId() == playerData.getPlayerId() ? Material.BEACON : Material.GRASS_BLOCK);
+
+        boolean islandOwner = island.getOwnerUUID().equals(ownerUUID);
+        ItemStack islandItem = new ItemStack(islandOwner ? Material.BEACON : Material.GRASS_BLOCK);
+
+        NamespacedKey key = new NamespacedKey(OneBlock.getInstance(), "island_item");
+
         islandItem.editMeta(meta -> {
            List<String> lore = new ArrayList<>();
 
@@ -51,8 +58,8 @@ public class IslandListGUI implements InventoryHolder {
             if (ownerName == null) {
                 ownerName = "Unbekannt";
             }
-
             meta.setDisplayName(Sprache.get("UI.islandItemTitle", "%player%", ownerName));
+            meta.getPersistentDataContainer().set(key, PersistentDataType.INTEGER, playerData.getPlayerId());
 
             lore.add("");
             lore.add(Sprache.get("UI.islandName", "%name%", island.getIslandName()));

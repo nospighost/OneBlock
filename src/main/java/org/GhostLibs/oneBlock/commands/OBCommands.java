@@ -54,6 +54,7 @@ public class OBCommands extends BaseCommand {
                 });
     }
 
+
     @Subcommand("delete")
     @CommandPermission("oneblock.delete")
     public void onDelete(Player player) {

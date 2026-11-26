@@ -8,6 +8,7 @@ import org.GhostLibs.oneBlock.Sprache;
 import org.GhostLibs.oneBlock.events.OBCreateIsland;
 import org.GhostLibs.oneBlock.events.OBCreateIslandPhase;
 import org.GhostLibs.oneBlock.events.OBCreateIslandSettings;
+import org.GhostLibs.oneBlock.model.IslandPhase;
 import org.GhostLibs.oneBlock.model.PlayerData;
 import org.GhostLibs.oneBlock.model.PlayerIsland;
 import org.GhostLibs.oneBlock.util.OBEventUtil;
@@ -101,11 +102,35 @@ public class OBManager {
         });
     }
 
+
+    public CompletionStage<IslandPhase> getIslandPhase(int islandId) {
+            return dbm.getRow("island_phases", "island_id", islandId).thenApply(row -> {
+                if (row == null || row.isEmpty()) {
+                    return null;
+                }
+                return mapRowToIslandPhase(row);
+            });
+    }
+
+
     public CompletableFuture<PlayerIsland> getPlayerIsland(int islandID) {
         if (islandID == -1) {
             return CompletableFuture.completedFuture(null);
         }
         return dbm.getRow("player_island", "island_id", islandID).thenApply(row -> {
+            if (row == null || row.isEmpty()) {
+                return null;
+            }
+            return mapRowToIsland(row, null);
+        });
+    }
+
+    public CompletableFuture<PlayerIsland> getPlayerIslandByPlayerId(int playerId) {
+        if (playerId == -1) {
+            return CompletableFuture.completedFuture(null);
+        }
+
+        return dbm.getRow("player_island", "owner_id", playerId).thenApply(row -> {
             if (row == null || row.isEmpty()) {
                 return null;
             }
@@ -134,6 +159,24 @@ public class OBManager {
         return new PlayerData(playerId, uuid, islandResets, lastSeen);
     }
 
+    private IslandPhase mapRowToIslandPhase(Map<String, Object> row) {
+
+        int phaseId = ((Number) row.get("current_phase_id")).intValue();
+        int selectedPhaseId = ((Number) row.get("selected_phase_id")).intValue();
+        int blocksLeft = ((Number) row.get("blocks_left")).intValue();
+        int minedBlocks = ((Number) row.get("mined_blocks")).intValue();
+        int islandId = ((Number) row.get("island_id")).intValue();
+
+        return new IslandPhase(
+                islandId,
+                phaseId,
+                selectedPhaseId,
+                blocksLeft,
+                minedBlocks
+        );
+    }
+
+
     private PlayerIsland mapRowToIsland(Map<String, Object> row, UUID uuid) {
         int islandId = ((Number) row.get("island_id")).intValue();
         int ownerId = ((Number) row.get("owner_id")).intValue();
@@ -157,7 +200,8 @@ public class OBManager {
                 biome,
                 locked,
                 createdAt,
-                uuid
+                uuid,
+                spawnLocation.getWorld()
         );
     }
 
@@ -279,10 +323,25 @@ public class OBManager {
             return CompletableFuture.completedFuture(false);
         }
 
+         // TODO: Gucken ob andere werte außer Biome auch überschrieben werden wenn ich diese im Event ändere
         Map<String, Object> values = new HashMap<>();
         values.put("biome", island.getBiome());
 
         return DBM.get().updateRow("player_island", values, "island_id", island.getIslandId());
+    }
+
+    public CompletableFuture<Boolean> updateIslandPhase(IslandPhase phase) {
+        if (phase == null) {
+            return CompletableFuture.completedFuture(false);
+        }
+
+        Map<String, Object> values = new HashMap<>();
+        values.put("current_phase_id", phase.getCurrentPhaseId());
+        values.put("selected_phase_id", phase.getSelectedPhaseId());
+        values.put("blocks_left", phase.getBlocksLeft());
+        values.put("mined_blocks", phase.getMinedBlocks());
+
+        return dbm.updateRow("island_phases", values, "island_id", phase.getIslandId());
     }
 
     public CompletableFuture<Void> createIsland(Player player, int playerId, PlayerData playerData) {
@@ -508,4 +567,25 @@ public class OBManager {
             });
         });
     }
+
+    public void teleportToOneblock(int playerId, Player player) {
+        getPlayerIslandByPlayerId(playerId).thenAccept(island -> {
+            if (island == null || island.getOneblockLocation() == null) return;
+
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                Location loc = island.getSpawnLocation();
+
+                if (loc.getWorld() == null) return;
+                String worldName = loc.getWorld().getName();
+
+                World world = worldManager.loadWorld(worldName);
+                if (world == null) return;
+
+                loc.setWorld(world);
+
+                player.teleportAsync(loc);
+            });
+        });
+    }
+
 }
