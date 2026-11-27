@@ -7,6 +7,8 @@ import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -391,4 +393,10 @@ public final class WorldManager {
     }
 
 
+    public UUID getOwnerByWorld(World world) {
+        if (world == null) return null;
+        String name = world.getName();
+        if (!name.startsWith(obWorldPrefix)) return null;
+        return UUID.fromString(name.substring(obWorldPrefix.length()));
+    }
 }

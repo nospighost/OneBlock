@@ -4,8 +4,10 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.eclipse.sisu.Nullable;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class PlayerIsland {
 
@@ -21,16 +23,31 @@ public class PlayerIsland {
     private boolean locked = false;
     private long createdAt;
     private World world;
+    private volatile List<IslandMember> members = new CopyOnWriteArrayList<>();
 
     public PlayerIsland() {
     }
 
-    public PlayerIsland(int islandId, int ownerId, String islandName, Location spawnLocation,
-                        Location oneblockLocation, int borderSize, double islandLevel,
-                        String biome, boolean locked, long createdAt, UUID ownerUUID, World world) {
+    public PlayerIsland(
+            int islandId,
+            int ownerId,
+            String islandName,
+            Location spawnLocation,
+            Location oneblockLocation,
+            int borderSize,
+            double islandLevel,
+            String biome,
+            boolean locked,
+            long createdAt,
+            UUID ownerUUID,
+            World world,
+            List<IslandMember> members
+    ) {
         this.islandId = islandId;
         this.ownerId = ownerId;
+        this.ownerUUID = ownerUUID;
         this.islandName = islandName;
+        this.world = world;
         this.spawnLocation = spawnLocation;
         this.oneblockLocation = oneblockLocation;
         this.borderSize = borderSize;
@@ -38,8 +55,27 @@ public class PlayerIsland {
         this.biome = biome;
         this.locked = locked;
         this.createdAt = createdAt;
-        this.ownerUUID = ownerUUID;
-        this.world = world;
+        setMembers(members);
+    }
+
+    public List<IslandMember> getMembers() {
+        return members;
+    }
+
+    public void setMembers(List<IslandMember> members) {
+        this.members = members == null ? new CopyOnWriteArrayList<>() : new CopyOnWriteArrayList<>(members);
+    }
+
+    public boolean hasPermission(UUID uuid, OBPermission permission) {
+        if (uuid == null || permission == null) return false;
+        if (uuid.equals(ownerUUID)) return true;
+
+        for (IslandMember member : members) {
+            if (uuid.equals(member.getUuid())) {
+                return member.hasPermission(permission);
+            }
+        }
+        return false;
     }
 
     public World getWorld() {

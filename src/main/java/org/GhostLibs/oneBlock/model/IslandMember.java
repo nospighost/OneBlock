@@ -1,13 +1,19 @@
 package org.GhostLibs.oneBlock.model;
 
+import java.util.EnumSet;
 import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 
 public class IslandMember {
 
+    private int memberId;
     private int islandId;
     private int playerId;
+    private UUID uuid;
     private String role = "MEMBER";
     private long joinedAt;
+    private final Set<OBPermission> permissions = EnumSet.noneOf(OBPermission.class);
 
     public IslandMember() {
     }
@@ -17,6 +23,54 @@ public class IslandMember {
         this.playerId = playerId;
         this.role = role;
         this.joinedAt = joinedAt;
+    }
+
+    public static String serializePermissions(Set<OBPermission> permissions) {
+        StringBuilder builder = new StringBuilder();
+        for (OBPermission permission : permissions) {
+            if (builder.length() > 0) builder.append(',');
+            builder.append(permission.name());
+        }
+        return builder.toString();
+    }
+
+    public void loadPermissions(String serialized) {
+        permissions.clear();
+        if (serialized == null || serialized.isBlank()) return;
+        for (String name : serialized.split(",")) {
+            try {
+                permissions.add(OBPermission.valueOf(name.trim()));
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+    }
+
+    public String permissionsToString() {
+        return serializePermissions(permissions);
+    }
+
+    public boolean hasPermission(OBPermission permission) {
+        return permissions.contains(permission);
+    }
+
+    public void setPermission(OBPermission permission, boolean allowed) {
+        if (allowed) {
+            permissions.add(permission);
+        } else {
+            permissions.remove(permission);
+        }
+    }
+
+    public Set<OBPermission> getPermissions() {
+        return permissions;
+    }
+
+    public int getMemberId() {
+        return memberId;
+    }
+
+    public void setMemberId(int memberId) {
+        this.memberId = memberId;
     }
 
     public int getIslandId() {
@@ -33,6 +87,14 @@ public class IslandMember {
 
     public void setPlayerId(int playerId) {
         this.playerId = playerId;
+    }
+
+    public UUID getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(UUID uuid) {
+        this.uuid = uuid;
     }
 
     public String getRole() {
@@ -66,9 +128,11 @@ public class IslandMember {
     @Override
     public String toString() {
         return "IslandMember{" +
-                "islandId=" + islandId +
+                "memberId=" + memberId +
+                ", islandId=" + islandId +
                 ", playerId=" + playerId +
                 ", role='" + role + '\'' +
+                ", permissions=" + permissions +
                 ", joinedAt=" + joinedAt +
                 '}';
     }

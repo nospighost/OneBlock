@@ -10,7 +10,18 @@
     "ISLAND_DELETE": "&cDeine Insel wurde gelöscht!",
     "ISLAND_DELETE_ERROR": "&cFehler beim löschen der Insel",
     "ISLAND_BUSY": "Deine Insel wird gerade erstellt, bitte warte einen Moment.",
-    "ISLAND_CREATING": "Deine Insel wird erstellt, das kann einen Moment dauern..."
+    "ISLAND_CREATING": "Deine Insel wird erstellt, das kann einen Moment dauern...",
+    "NO_PLAYER_DATA": "&cEs konnte kein Spielerdatensatz für %player% gefunden werden!",
+    "MEMBER_ADDED": "&a%player% wurde zu deiner Insel hinzugefügt. Rechte stellst du mit &e/ob permissions %player% &aein.",
+    "MEMBER_REMOVED": "&a%player% wurde von deiner Insel entfernt.",
+    "MEMBER_NO_ISLAND": "&cDu besitzt keine Insel.",
+    "MEMBER_PLAYER_NOT_FOUND": "&cDer Spieler %player% wurde nicht gefunden.",
+    "MEMBER_NO_PLAYER_DATA": "&c%player% hat noch keine Spielerdaten.",
+    "MEMBER_ALREADY": "&c%player% ist bereits Mitglied deiner Insel.",
+    "MEMBER_NOT_MEMBER": "&c%player% ist kein Mitglied deiner Insel.",
+    "MEMBER_IS_OWNER": "&cDu kannst dich nicht selbst hinzufügen oder entfernen.",
+    "MEMBER_ERROR": "&cDie Aktion ist fehlgeschlagen.",
+    "MEMBER_PERMISSION_ERROR": "&cDas Recht konnte nicht gespeichert werden."
   },
   "ERRORS": {
     "NO_PLAYER_DATA": "&cEs konnte kein Spielerdatensatz für %player% gefunden werden!"
@@ -20,6 +31,22 @@
     "islandLocked": "§bGesperrt §8» %state%",
     "islandLockedYes": "&c&lJa",
     "islandLockedNo": "§a§lNein",
-    "islandName": "§bInselname §8» §b%name%"
+    "islandName": "§bInselname §8» §b%name%",
+    "previousPage": "&eVorherige Seite",
+    "nextPage": "&eNächste Seite",
+    "noIslandTitle": "&cKeine Insel",
+    "noIslandHint": "&7Erstelle eine mit &e/ob create&7.",
+    "memberPermissionsTitle": "&b&lRechte: %player%",
+    "memberHeadTitle": "&e%player%",
+    "permissionState": "&7Status: %state%",
+    "permissionAllowed": "&aErlaubt",
+    "permissionDenied": "&cVerboten",
+    "permissionToggleHint": "&eKlicke zum Umschalten"
+  },
+  "PERMISSIONS": {
+    "BREAK_ONEBLOCK": {
+      "NAME": "&bOneBlock abbauen",
+      "DESC": "&7Darf den OneBlock der Insel abbauen."
+    }
   }
 }

@@ -209,6 +209,12 @@
 
     <dependencies>
         <dependency>
+            <groupId>io.papermc.paper</groupId>
+            <artifactId>paper-api</artifactId>
+            <version>26.2.build.112-stable</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.GhostLibs</groupId>
             <artifactId>DBM</artifactId>
             <version>1.0.3-SNAPSHOT</version>
@@ -221,15 +227,15 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
+            <groupId>fr.minuskube.inv</groupId>
+            <artifactId>smart-invs</artifactId>
+            <version>1.2.7</version>
+        </dependency>
+        <dependency>
             <groupId>com.github.t9t.minecraft-rcon-client</groupId>
             <artifactId>minecraft-rcon-client</artifactId>
             <version>1.0.0</version>
         </dependency>
-        <dependency>
-            <groupId>io.papermc.paper</groupId>
-            <artifactId>paper-api</artifactId>
-            <version>26.2.build.112-stable</version>
-            <scope>provided</scope>
-        </dependency>
+
     </dependencies>
 </project>

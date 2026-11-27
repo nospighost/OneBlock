@@ -60,9 +60,11 @@ public final class DatabaseSchema {
 
     private Table islandMembers() {
         return Table.create("island_members")
+                .column("member_id", SQLDataType.INT).autoIncrement().notNull().primaryKey()
                 .column("island_id", SQLDataType.INT).notNull()
                 .column("player_id", SQLDataType.INT).notNull()
                 .column("role", SQLDataType.VARCHAR_255).defaultValue("MEMBER")
+                .column("permissions", SQLDataType.VARCHAR_255).defaultValue("")
                 .column("joined_at", SQLDataType.BIGINT)
                 .foreignKey("island_id").references("player_island", "island_id").onDelete(ReferentialAction.CASCADE)
                 .foreignKey("player_id").references("player_data", "player_id").onDelete(ReferentialAction.CASCADE);

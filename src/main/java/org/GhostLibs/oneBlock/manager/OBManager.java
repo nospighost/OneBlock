@@ -8,7 +8,10 @@ import org.GhostLibs.oneBlock.Sprache;
 import org.GhostLibs.oneBlock.events.OBCreateIsland;
 import org.GhostLibs.oneBlock.events.OBCreateIslandPhase;
 import org.GhostLibs.oneBlock.events.OBCreateIslandSettings;
+import org.GhostLibs.oneBlock.model.IslandMember;
 import org.GhostLibs.oneBlock.model.IslandPhase;
+import org.GhostLibs.oneBlock.model.MemberResult;
+import org.GhostLibs.oneBlock.model.OBPermission;
 import org.GhostLibs.oneBlock.model.PlayerData;
 import org.GhostLibs.oneBlock.model.PlayerIsland;
 import org.GhostLibs.oneBlock.util.OBEventUtil;
@@ -17,11 +20,13 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -30,12 +35,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 public class OBManager {
-    private final DBM dbm;
+    private static final int START_BORDER_SIZE = 7;
     private static OBManager instance;
+    private final DBM dbm;
     private final JavaPlugin plugin;
     private final WorldManager worldManager;
     private final Set<UUID> busy = ConcurrentHashMap.newKeySet();
-    private static final int START_BORDER_SIZE = 7;
+    private volatile IslandCache islandCache;
 
     public static OBManager getInstance() {
         return instance;
@@ -46,6 +52,10 @@ public class OBManager {
         instance = this;
         this.plugin = plugin;
         this.worldManager = worldManager;
+    }
+
+    public void setIslandCache(IslandCache islandCache) {
+        this.islandCache = islandCache;
     }
 
     private static final class IslandAbort extends RuntimeException {
@@ -88,6 +98,15 @@ public class OBManager {
         return dbm.getInt("player_data", "player_id", "uuid", uuid.toString(), -1);
     }
 
+    public void createPlayerData(Map<String, Object> data) {
+        dbm.exists("player_data", "uuid", data.get("uuid")).thenAccept(exists -> {
+            if (exists) {
+                return;
+            }
+            dbm.insert("player_data", data);
+        });
+    }
+
     public CompletableFuture<PlayerIsland> getPlayerIsland(UUID uuid) {
         return getPlayerID(uuid).thenCompose(id -> {
             if (id == -1) {
@@ -101,17 +120,6 @@ public class OBManager {
             });
         });
     }
-
-
-    public CompletionStage<IslandPhase> getIslandPhase(int islandId) {
-            return dbm.getRow("island_phases", "island_id", islandId).thenApply(row -> {
-                if (row == null || row.isEmpty()) {
-                    return null;
-                }
-                return mapRowToIslandPhase(row);
-            });
-    }
-
 
     public CompletableFuture<PlayerIsland> getPlayerIsland(int islandID) {
         if (islandID == -1) {
@@ -139,15 +147,51 @@ public class OBManager {
     }
 
     public CompletableFuture<List<PlayerIsland>> getMembersIslands(UUID uuid) {
-        return dbm.selectAll("player_island").thenApply(rows -> {
-            List<PlayerIsland> islands = new ArrayList<>();
-            if (rows != null) {
-                for (Map<String, Object> row : rows) {
-                    islands.add(mapRowToIsland(row, uuid));
-                }
+        return getPlayerID(uuid).thenCompose(playerId -> {
+            if (playerId == -1) {
+                return CompletableFuture.completedFuture(List.<PlayerIsland>of());
             }
-            return islands;
+
+            // TODO: durch eine WHERE-Abfrage ersetzen, falls der DBM eine Mehrfach-Zeilen-Abfrage anbietet
+            return dbm.selectAll("island_members").thenCompose(rows -> {
+                List<CompletableFuture<PlayerIsland>> futures = new ArrayList<>();
+                if (rows != null) {
+                    for (Map<String, Object> row : rows) {
+                        if (((Number) row.get("player_id")).intValue() != playerId) continue;
+
+                        int islandId = ((Number) row.get("island_id")).intValue();
+                        futures.add(getPlayerIsland(islandId).thenCompose(island -> {
+                            if (island == null) {
+                                return CompletableFuture.<PlayerIsland>completedFuture(null);
+                            }
+
+                            return getPlayerData(island.getOwnerId()).thenApply(ownerData -> {
+                                if (ownerData == null) {
+                                    return null;
+                                }
+                                island.setOwnerUUID(ownerData.getUuid());
+                                return island;
+                            });
+                        }));
+                    }
+                }
+
+                return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                        .thenApply(v -> futures.stream()
+                                .map(CompletableFuture::join)
+                                .filter(Objects::nonNull)
+                                .toList());
+            });
         });
+    }
+
+    public CompletionStage<IslandPhase> getIslandPhase(int islandId) {
+            return dbm.getRow("island_phases", "island_id", islandId).thenApply(row -> {
+                if (row == null || row.isEmpty()) {
+                    return null;
+                }
+                return mapRowToIslandPhase(row);
+            });
     }
 
     private PlayerData mapRowToPlayerData(Map<String, Object> row) {
@@ -158,24 +202,6 @@ public class OBManager {
 
         return new PlayerData(playerId, uuid, islandResets, lastSeen);
     }
-
-    private IslandPhase mapRowToIslandPhase(Map<String, Object> row) {
-
-        int phaseId = ((Number) row.get("current_phase_id")).intValue();
-        int selectedPhaseId = ((Number) row.get("selected_phase_id")).intValue();
-        int blocksLeft = ((Number) row.get("blocks_left")).intValue();
-        int minedBlocks = ((Number) row.get("mined_blocks")).intValue();
-        int islandId = ((Number) row.get("island_id")).intValue();
-
-        return new IslandPhase(
-                islandId,
-                phaseId,
-                selectedPhaseId,
-                blocksLeft,
-                minedBlocks
-        );
-    }
-
 
     private PlayerIsland mapRowToIsland(Map<String, Object> row, UUID uuid) {
         int islandId = ((Number) row.get("island_id")).intValue();
@@ -201,8 +227,46 @@ public class OBManager {
                 locked,
                 createdAt,
                 uuid,
-                spawnLocation.getWorld()
+                spawnLocation.getWorld(),
+                List.of()
         );
+    }
+
+    private IslandPhase mapRowToIslandPhase(Map<String, Object> row) {
+
+        int phaseId = ((Number) row.get("current_phase_id")).intValue();
+        int selectedPhaseId = ((Number) row.get("selected_phase_id")).intValue();
+        int blocksLeft = ((Number) row.get("blocks_left")).intValue();
+        int minedBlocks = ((Number) row.get("mined_blocks")).intValue();
+        int islandId = ((Number) row.get("island_id")).intValue();
+
+        return new IslandPhase(
+                islandId,
+                phaseId,
+                selectedPhaseId,
+                blocksLeft,
+                minedBlocks
+        );
+    }
+
+    private CompletableFuture<IslandMember> mapRowToIslandMember(Map<String, Object> row) {
+        int playerId = ((Number) row.get("player_id")).intValue();
+
+        return getPlayerData(playerId).thenApply(playerData -> {
+            if (playerData == null) {
+                return null;
+            }
+
+            IslandMember member = new IslandMember();
+            member.setMemberId(((Number) row.get("member_id")).intValue());
+            member.setIslandId(((Number) row.get("island_id")).intValue());
+            member.setPlayerId(playerId);
+            member.setUuid(playerData.getUuid());
+            member.setRole(row.get("role") != null ? (String) row.get("role") : "MEMBER");
+            member.setJoinedAt(row.get("joined_at") != null ? ((Number) row.get("joined_at")).longValue() : 0L);
+            member.loadPermissions((String) row.get("permissions"));
+            return member;
+        });
     }
 
     private Location toLocation(Object value) {
@@ -223,15 +287,6 @@ public class OBManager {
         float pitch = json.has("pitch") ? json.get("pitch").getAsFloat() : 0f;
 
         return new Location(world, x, y, z, yaw, pitch);
-    }
-
-    public void createPlayerData(Map<String, Object> data) {
-        dbm.exists("player_data", "uuid", data.get("uuid")).thenAccept(exists -> {
-            if (exists) {
-                return;
-            }
-            dbm.insert("player_data", data);
-        });
     }
 
     public CompletableFuture<Integer> createPlayerIsland(Map<String, Object> data) {
@@ -416,24 +471,6 @@ public class OBManager {
         });
     }
 
-    private void teleportToIsland(Player player, World world) {
-        Bukkit.getScheduler().runTask(plugin, () -> {
-            if (player.isOnline()) {
-                player.teleportAsync(world.getSpawnLocation());
-            }
-        });
-    }
-
-    private CompletableFuture<Void> rollback(UUID uuid) {
-        return deleteIsland(uuid).toCompletableFuture()
-                .handle((r, ex) -> (Void) null)
-                .thenCompose(v -> worldManager.deleteWorld(uuid))
-                .exceptionally(ex -> {
-                    plugin.getLogger().log(Level.SEVERE, "Rollback fehlgeschlagen für " + uuid, ex);
-                    return null;
-                });
-    }
-
     private CompletableFuture<Void> loadIsland(Player player, int islandId, OBCreateIsland createEvent) {
         return getPlayerIsland(islandId)
                 .thenCompose(playerIsland -> {
@@ -532,18 +569,22 @@ public class OBManager {
                 });
     }
 
-    public void sendMessageSync(Player player, String message) {
-        Runnable task = () -> {
-            if (player.isOnline()) {
-                MessageUtil.send(player, message);
-            }
-        };
+    private CompletableFuture<Void> rollback(UUID uuid) {
+        return deleteIsland(uuid).toCompletableFuture()
+                .handle((r, ex) -> (Void) null)
+                .thenCompose(v -> worldManager.deleteWorld(uuid))
+                .exceptionally(ex -> {
+                    plugin.getLogger().log(Level.SEVERE, "Rollback fehlgeschlagen für " + uuid, ex);
+                    return null;
+                });
+    }
 
-        if (Bukkit.isPrimaryThread()) {
-            task.run();
-        } else {
-            Bukkit.getScheduler().runTask(plugin, task);
-        }
+    private void teleportToIsland(Player player, World world) {
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            if (player.isOnline()) {
+                player.teleportAsync(world.getSpawnLocation());
+            }
+        });
     }
 
     public CompletionStage<Integer> deleteIsland(UUID uuid) {
@@ -588,4 +629,150 @@ public class OBManager {
         });
     }
 
-}
+    public CompletableFuture<List<IslandMember>> getIslandMembers(int islandId) {
+        // TODO: durch eine WHERE-Abfrage ersetzen, falls der DBM eine Mehrfach-Zeilen-Abfrage anbietet
+        return dbm.selectAll("island_members").thenCompose(rows -> {
+            List<CompletableFuture<IslandMember>> futures = new ArrayList<>();
+            if (rows != null) {
+                for (Map<String, Object> row : rows) {
+                    if (((Number) row.get("island_id")).intValue() != islandId) continue;
+                    futures.add(mapRowToIslandMember(row));
+                }
+            }
+
+            return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                    .thenApply(v -> futures.stream()
+                            .map(CompletableFuture::join)
+                            .filter(Objects::nonNull)
+                            .toList());
+        });
+    }
+
+    /** Liefert das Mitglied der Insel des Besitzers oder null, falls es keine Insel / kein Mitglied gibt. */
+    public CompletableFuture<IslandMember> getIslandMember(UUID ownerUUID, UUID memberUUID) {
+        return getPlayerIsland(ownerUUID).thenCompose(island -> {
+            if (island == null) {
+                return CompletableFuture.<IslandMember>completedFuture(null);
+            }
+
+            return getPlayerID(memberUUID).thenCompose(memberPlayerId -> {
+                if (memberPlayerId == -1) {
+                    return CompletableFuture.<IslandMember>completedFuture(null);
+                }
+
+                return getIslandMembers(island.getIslandId()).thenApply(members -> members.stream()
+                        .filter(member -> member.getPlayerId() == memberPlayerId)
+                        .findFirst()
+                        .orElse(null));
+            });
+        });
+    }
+
+    public CompletableFuture<MemberResult> addIslandMember(UUID ownerUUID, UUID targetUUID) {
+        if (ownerUUID.equals(targetUUID)) {
+            return CompletableFuture.completedFuture(MemberResult.IS_OWNER);
+        }
+
+        return getPlayerIsland(ownerUUID).thenCompose(island -> {
+            if (island == null) {
+                return CompletableFuture.completedFuture(MemberResult.NO_ISLAND);
+            }
+
+            return getPlayerID(targetUUID).thenCompose(targetPlayerId -> {
+                if (targetPlayerId == -1) {
+                    return CompletableFuture.completedFuture(MemberResult.NO_PLAYER_DATA);
+                }
+
+                return getIslandMembers(island.getIslandId()).thenCompose(members -> {
+                    if (members.stream().anyMatch(member -> member.getPlayerId() == targetPlayerId)) {
+                        return CompletableFuture.completedFuture(MemberResult.ALREADY_MEMBER);
+                    }
+
+                    Map<String, Object> data = new HashMap<>();
+                    data.put("island_id", island.getIslandId());
+                    data.put("player_id", targetPlayerId);
+                    data.put("role", "MEMBER");
+                    data.put("permissions", "");
+                    data.put("joined_at", System.currentTimeMillis());
+
+                    return dbm.insert("island_members", data).thenCompose(result -> {
+                        if (!Boolean.TRUE.equals(result)) {
+                            return CompletableFuture.completedFuture(MemberResult.ERROR);
+                        }
+
+                        return reloadCachedMembers(ownerUUID).thenApply(v -> MemberResult.ADDED);
+                    });
+                });
+            });
+        });
+    }
+
+    public CompletableFuture<MemberResult> removeIslandMember(UUID ownerUUID, UUID targetUUID) {
+        if (ownerUUID.equals(targetUUID)) {
+            return CompletableFuture.completedFuture(MemberResult.IS_OWNER);
+        }
+
+        return getPlayerIsland(ownerUUID).thenCompose(island -> {
+            if (island == null) {
+                return CompletableFuture.completedFuture(MemberResult.NO_ISLAND);
+            }
+
+            return getIslandMember(ownerUUID, targetUUID).thenCompose(member -> {
+                if (member == null) {
+                    return CompletableFuture.completedFuture(MemberResult.NOT_MEMBER);
+                }
+
+                return dbm.delete("island_members", "member_id", member.getMemberId())
+                        .thenCompose(ignored -> reloadCachedMembers(ownerUUID))
+                        .thenApply(v -> MemberResult.REMOVED);
+            });
+        });
+    }
+
+    public CompletableFuture<Boolean> updateMemberPermissions(UUID ownerUUID, IslandMember member) {
+        if (member == null) {
+            return CompletableFuture.completedFuture(false);
+        }
+
+        Map<String, Object> values = new HashMap<>();
+        values.put("permissions", member.permissionsToString());
+
+        return dbm.updateRow("island_members", values, "member_id", member.getMemberId())
+                .thenCompose(success -> {
+                    if (!Boolean.TRUE.equals(success)) {
+                        return CompletableFuture.completedFuture(false);
+                    }
+                    return reloadCachedMembers(ownerUUID).thenApply(v -> true);
+                });
+    }
+
+    private CompletableFuture<Void> reloadCachedMembers(UUID ownerUUID) {
+        IslandCache cache = islandCache;
+        if (cache == null) {
+            return CompletableFuture.completedFuture(null);
+        }
+        return cache.reloadMembers(ownerUUID);
+    }
+
+    public boolean hasPermission(UUID uuid, PlayerIsland island, OBPermission obPermission) {
+        if (uuid == null) return false;
+        if (island == null) return false;
+        if (obPermission == null) return false;
+
+        return island.hasPermission(uuid, obPermission);
+    }
+
+    public void sendMessageSync(Player player, String message) {
+        Runnable task = () -> {
+            if (player.isOnline()) {
+                MessageUtil.send(player, message);
+            }
+        };
+
+        if (Bukkit.isPrimaryThread()) {
+            task.run();
+        } else {
+            Bukkit.getScheduler().runTask(plugin, task);
+        }
+    }
+}

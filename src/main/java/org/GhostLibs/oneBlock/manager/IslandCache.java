@@ -81,16 +81,28 @@ public final class IslandCache {
                     if (island == null) {
                         return CompletableFuture.<Entry>completedFuture(null);
                     }
-                    return manager.getIslandPhase(island.getIslandId()).thenApply(phase -> {
+                    return manager.getIslandPhase(island.getIslandId()).thenCompose(phase -> {
                         if (phase == null) {
-                            return null;
+                            return CompletableFuture.<Entry>completedFuture(null);
                         }
-                        Entry entry = new Entry(island, phase);
-                        entries.put(owner, entry);
-                        return entry;
+                        return manager.getIslandMembers(island.getIslandId()).thenApply(members -> {
+                            island.setMembers(members);
+                            Entry entry = new Entry(island, phase);
+                            entries.put(owner, entry);
+                            return entry;
+                        });
                     });
                 })
                 .whenComplete((entry, ex) -> loading.remove(owner));
+    }
+
+    public CompletableFuture<Void> reloadMembers(UUID owner) {
+        Entry entry = entries.get(owner);
+        if (entry == null) {
+            return CompletableFuture.completedFuture(null);
+        }
+        return manager.getIslandMembers(entry.island().getIslandId())
+                .thenAccept(members -> entry.island().setMembers(members));
     }
 
     public void remove(UUID owner) {
@@ -127,4 +139,4 @@ public final class IslandCache {
             return (Void) null;
         });
     }
-}
+}
