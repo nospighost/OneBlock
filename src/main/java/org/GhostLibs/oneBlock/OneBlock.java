@@ -21,7 +21,7 @@ public final class OneBlock extends JavaPlugin {
     private OBManager obManager;
     private WorldManager worldManager;
     private static OneBlock instance;
-
+    private IslandCache cache;
     public static OneBlock getInstance() {
         return instance;
     }
@@ -45,7 +45,7 @@ public final class OneBlock extends JavaPlugin {
         worldManager = new WorldManager(this);
         obManager = new OBManager(dbm, this, worldManager);
 
-        IslandCache cache = new IslandCache(obManager);
+        cache = new IslandCache(obManager);
         obManager.setIslandCache(cache);
 
         Sprache.init(this, getConfig().getString("language"));
@@ -70,10 +70,10 @@ public final class OneBlock extends JavaPlugin {
     @Override
     public void onDisable() {
 
+        cache.saveAll();
         getLogger().info("╔════════════════════════════════════╗");
         getLogger().info("║     Oneblock Wurde deaktiviert!    ║");
         getLogger().info("╚════════════════════════════════════╝");
-
 
     }
 
